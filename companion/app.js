@@ -78,6 +78,8 @@ function render() {
   beta.textContent = 'Beta';
   beta.title = 'Tavern Client Mod Manager is in beta: it is actively being worked on and updates are frequent.';
   $('appVersion').appendChild(beta);
+  $('devBanner').hidden = !st.dev;
+  if (st.dev && !document.title.endsWith('(DEV)')) document.title += ' (DEV)'; // the window title follows the page's
   // Game
   const g = $('gameInfo');
   g.innerHTML = '';
@@ -251,7 +253,7 @@ function render() {
 
 // Games without their own tab: the app only shows how to join (Satisfactory: and which mods to get with SMM).
 const OTHER_GAMES = ['satisfactory', 'bedrock', 'terraria', 'spaceengineers', 'factorio', 'palworld', 'enshrouded', 'sevendays', 'zomboid', 'vrising'];
-const TABS = ['valheim', 'java', 'other'];
+const TABS = ['valheim', 'java', 'starvalor', 'other'];
 const tabOf = (game) => (OTHER_GAMES.includes(game) ? 'other' : game);
 let currentTab = (() => {
   try {
@@ -280,6 +282,10 @@ function renderTabs() {
     if (n) b.append(el('span', 'tab-count', String(n)));
   }
   for (const tab of TABS) $(`view-${tab}`).hidden = tab !== currentTab;
+  if (currentTab === 'starvalor') loadAchilles();
+  // Star Valor: Achilles takes over the whole window (no server links there, it manages the player's own mods);
+  // the game tabs stay as a slim bar on top to switch back.
+  document.body.classList.toggle('starvalor-mode', currentTab === 'starvalor');
   // Sync now / Play are Valheim's (Minecraft has its own Sync button).
   $('btnSync').hidden = $('btnPlay').hidden = currentTab !== 'valheim';
 }
@@ -287,6 +293,24 @@ $('gameTabs').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-game]');
   if (b) setTab(b.dataset.game);
 });
+
+// Star Valor: Achilles (its own page from its local server, started the first time this tab opens).
+let achillesLoading = null;
+function loadAchilles() {
+  if (achillesLoading) return;
+  achillesLoading = api
+    .achillesUrl()
+    .then((url) => {
+      const frame = $('achillesFrame');
+      frame.src = url;
+      frame.hidden = false;
+      $('achillesNote').hidden = true;
+    })
+    .catch((err) => {
+      $('achillesNote').textContent = `Achilles couldn't start: ${err.message}`;
+      achillesLoading = null; // try again next time the tab opens
+    });
+}
 
 /** The common top of a server box: name, a status pill, Remove. */
 function linkBox(l, pill) {

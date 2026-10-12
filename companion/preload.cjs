@@ -7,8 +7,12 @@ const call = async (name, ...args) => {
   return r.data;
 };
 
-contextBridge.exposeInMainWorld('modsync', {
+// This preload also runs in the Star Valor tab's Achilles frame (a page from Achilles' own 127.0.0.1 server): that
+// frame gets only `desktop` (below), the app's page only `modsync`. main.js checks the calling frame as well.
+if (location.protocol === 'file:') contextBridge.exposeInMainWorld('modsync', {
   state: () => call('state'),
+  /** Starts Achilles (Star Valor) if needed; the address for the Star Valor tab's frame. */
+  achillesUrl: () => call('achilles-url'),
   addLink: (raw) => call('add-link', String(raw)),
   removeLink: (raw) => call('remove-link', String(raw)),
   /** Downloads and safety-checks every change; returns what the review screen shows. Installs nothing. */
@@ -55,4 +59,22 @@ contextBridge.exposeInMainWorld('modsync', {
   on: (channel, fn) => {
     if (['log', 'installed', 'auto-synced', 'state-changed', 'needs-review', 'update-progress'].includes(channel)) ipcRenderer.on(channel, (_e, data) => fn(data));
   },
+});
+
+// Achilles' page (the same functions it had as its own app).
+if (location.protocol === 'http:' && location.hostname === '127.0.0.1') contextBridge.exposeInMainWorld('desktop', {
+  isDesktop: true,
+  /** Real path of a file dropped on the page. */
+  getPathForFile: (file) => webUtils.getPathForFile(file),
+  /** Opens the mod browser (Nexus Mods' Star Valor page); mod files downloaded there install through Achilles. */
+  browseMods: () => ipcRenderer.invoke('achilles-browse-mods'),
+  pickModFiles: () => ipcRenderer.invoke('achilles-pick-files'),
+  /** { filename, status: 'downloading'|'ready'|'failed', sourcePath?, error? } for downloads in the mod browser. */
+  onModDownload: (fn) => {
+    ipcRenderer.invoke('achilles-subscribe');
+    ipcRenderer.on('achilles-mod-download', (_e, info) => fn(info));
+  },
+  /** Nexus pages in the mod browser, anything else in the real browser. */
+  openModPage: (url) => ipcRenderer.invoke('achilles-open-mod-page', url),
+  openFolder: (folder) => ipcRenderer.invoke('achilles-open-folder', folder),
 });

@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; frame-src http://127.0.0.1:*">
 <title>Tavern Client Mod Manager</title>
 <link rel="stylesheet" href="style.css">
 <script type="module" src="app.js"></script>
 </head>
 <body>
+<div class="dev-banner" id="devBanner" hidden>DEVELOPMENT · running from source · its own settings and links (the game folders are the real ones)</div>
 <header>
   <div class="top-left">
     <span class="version" id="appVersion"></span>
@@ -39,7 +40,7 @@
     <button class="small primary" id="btnInstallAppUpdate">Update now</button>
   </div>
 
-  <section class="card">
+  <section class="card" id="addServerCard">
     <h3>Add a server</h3>
     <p class="muted">Paste the link from the server owner (their Tavern Host → the server's Mods tab → Share mods with players). Works for Valheim, Minecraft Java, Minecraft Bedrock, Satisfactory, Terraria (tModLoader), Space Engineers, Factorio, Palworld, Enshrouded, V Rising, Project Zomboid and 7 Days to Die servers.</p>
     <form id="linkForm" class="row">
@@ -50,8 +51,10 @@
   </section>
 
   <nav class="game-tabs" id="gameTabs">
+    <span class="sv-bar-brand" title="Tavern Client Mod Manager"><img src="icon.png" alt=""> Tavern Client Mod Manager</span>
     <button type="button" data-game="valheim">Valheim</button>
     <button type="button" data-game="java">Minecraft Java</button>
+    <button type="button" data-game="starvalor" title="Star Valor mods, managed by Achilles"><img class="tab-icon" src="achilles/public/img/favicon.png" alt="">Star Valor</button>
     <button type="button" data-game="other">Other servers</button>
   </nav>
 
@@ -64,6 +67,11 @@
       <p class="muted small">Each modded server gets its own profile in the Minecraft Launcher, with its own folder, so its mods never mix with your other worlds. Mods follow the server: added, updated and removed with it. Jars you add to that folder yourself are left alone. Servers without mods just need the normal launcher (their address is shown here).</p>
       <div id="mcLinks"></div>
     </section>
+  </div>
+
+  <div class="view" id="view-starvalor" hidden>
+    <p class="muted small achilles-note" id="achillesNote">Starting Achilles…</p>
+    <iframe class="achilles-frame" id="achillesFrame" title="Achilles Mod Manager for Star Valor" hidden></iframe>
   </div>
 
   <div class="view" id="view-other" hidden>

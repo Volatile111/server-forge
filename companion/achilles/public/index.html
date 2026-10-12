@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'">
+<!-- The UI only ever talks to its own local server; GitHub/Nexus calls happen server-side. -->
+<title>Achilles Mod Manager</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="/img/achilles-mark.png" alt="" class="brand-mark">
+    <div>
+      <div class="brand-name">Achilles <span>Mod Manager</span></div>
+      <div class="brand-sub" id="brandSub">Star Valor</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <div id="bridgePill" class="pill" title="Whether the in-game bridge plugin is connected right now">Game: not running</div>
+    <div id="statusPill" class="pill">Checking install…</div>
+    <button class="primary" id="btnLaunch" title="Start Star Valor through Steam with whatever mods are on right now">▶ Launch</button>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="mods" class="active">Mods</button>
+  <button data-tab="ships">Ships</button>
+  <button data-tab="updates">Updates <span class="tab-badge" id="updatesBadge" hidden></span></button>
+  <button data-tab="bepinex">BepInEx <span class="tab-badge warn" id="bepinexBadge" hidden>!</span></button>
+  <button data-tab="profiles">Profiles</button>
+  <button data-tab="saves">Saves</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<main>
+  <p class="error-banner" id="globalError" hidden></p>
+
+  <!-- ============================== MODS ============================== -->
+  <section class="tab" id="tab-mods">
+    <div id="healthBanner" class="health" hidden></div>
+
+    <div class="card">
+      <h2>Add mods</h2>
+      <label class="drop-zone" id="modDrop">
+        <span>Drop <b>.dll</b>, <b>.shipmod</b> or <b>.zip</b> files here, or <u>choose files</u></span>
+      </label>
+      <div class="btn-row">
+        <button class="primary" id="btnBrowseMods">🌐 Get mods from Nexus…</button>
+        <span class="muted small-text">Downloads there install automatically. A newer version of a mod you already have replaces it (the old one is backed up).</span>
+      </div>
+      <div id="downloadStatus" class="small-text"></div>
+    </div>
+
+    <div class="card">
+      <div class="row-head">
+        <h2>Installed <span class="count" id="modCount"></span></h2>
+        <button class="small ghost" id="btnRefreshMods">⟳ Refresh</button>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="modSearch" placeholder="Search mods…" autocomplete="off">
+        <div class="chips" id="modFilter">
+          <button data-filter="all" class="chip active">All</button>
+          <button data-filter="problems" class="chip">Problems</button>
+          <button data-filter="enabled" class="chip">On</button>
+          <button data-filter="disabled" class="chip">Off</button>
+        </div>
+      </div>
+      <div id="modList" class="mod-groups"></div>
+      <p class="muted small-text footnote">Turning a mod off moves it to <code>BepInEx\disabled_mods</code>, outside the folder BepInEx loads from. Removing a mod moves it to <code>BepInEx\achilles_backups</code> - nothing is ever deleted.</p>
+    </div>
+  </section>
+
+  <!-- ============================== SHIPS ============================= -->
+  <section class="tab" id="tab-ships" hidden>
+    <div class="card">
+      <div class="row-head">
+        <h2>Ships <span class="count" id="shipCount"></span></h2>
+        <button class="small ghost" data-tab-back="mods">← Back to mods</button>
+      </div>
+      <p class="muted small-text">One file per ship in the game (written by the "We Mod Any Ship" plugin). Turn a ship's file off to use the game's own stats for it, or press <b>Stats</b> to change them. Changes apply the next time Star Valor starts.</p>
+      <div class="toolbar">
+        <input type="search" id="shipSearch" placeholder="Search ships…" autocomplete="off">
+        <div class="chips" id="shipFilter">
+          <button data-filter="all" class="chip active">All</button>
+          <button data-filter="edited" class="chip">Edited</button>
+          <button data-filter="problems" class="chip">Problems</button>
+          <button data-filter="enabled" class="chip">On</button>
+          <button data-filter="disabled" class="chip">Off</button>
+        </div>
+      </div>
+      <div id="shipList" class="mod-groups"></div>
+    </div>
+  </section>
+
+  <!-- ============================= UPDATES ============================ -->
+  <section class="tab" id="tab-updates" hidden>
+    <div class="card update-hero">
+      <div>
+        <h2>Update your mods</h2>
+        <p class="muted small-text" id="updateIntro">Checks every plugin against GitHub and Nexus, installs every safe update automatically, and backs up the old versions.</p>
+      </div>
+      <div class="btn-row">
+        <button class="ghost" id="btnCheckUpdates">Check only</button>
+        <button class="primary big" id="btnUpdateAll">⬆ Update all</button>
+      </div>
+    </div>
+    <div id="updateSummary" class="update-summary" hidden></div>
+    <div class="card">
+      <div id="updateList" class="update-list"><p class="muted">Press <b>Update all</b> (or <b>Check only</b>) to look for new versions.</p></div>
+    </div>
+  </section>
+
+  <!-- ============================= BEPINEX ============================ -->
+  <section class="tab" id="tab-bepinex" hidden>
+    <div id="bepRecommendation" class="health" hidden></div>
+
+    <div class="card bep-overview">
+      <div class="bep-col">
+        <div class="bep-label">Star Valor runs on</div>
+        <div class="bep-value" id="bepEngine">…</div>
+        <div class="muted small-text" id="bepFits"></div>
+      </div>
+      <div class="bep-col">
+        <div class="bep-label">Installed BepInEx</div>
+        <div class="bep-value" id="bepInstalled">…</div>
+        <div class="small-text" id="bepInstalledVerdict"></div>
+      </div>
+      <div class="btn-row bep-actions">
+        <button class="ghost" id="btnBepTest" title="Launch the game and check it reaches the main menu with BepInEx and your mods">▶ Test launch</button>
+        <button class="primary" id="btnBepCheck">Check versions</button>
+      </div>
+    </div>
+
+    <div id="bepTestPanel" class="card test-panel" hidden></div>
+
+    <div class="card">
+      <h2>After installing a different version…</h2>
+      <p class="muted small-text">The only way to prove a BepInEx version works with Star Valor is to start the game and watch it load. Pick how that should happen - you can change this any time, including right before an install.</p>
+      <div class="mode-options" id="bepModes">
+        <label class="mode-option"><input type="radio" name="bepMode" value="auto-rollback">
+          <div><b>Test it, and roll back automatically if it fails</b><span>Launches Star Valor and watches it load. If it doesn't reach the main menu, the test launch is closed and your previous BepInEx is put back. If it works, the game stays open.</span></div></label>
+        <label class="mode-option"><input type="radio" name="bepMode" value="ask">
+          <div><b>Test it, and ask me before rolling back</b><span>Same test, but if it fails it just tells you - you decide whether to press Roll back.</span></div></label>
+        <label class="mode-option"><input type="radio" name="bepMode" value="none">
+          <div><b>Just install it - I'll test it by playing</b><span>No test launch. The next time you play, the manager reads the log and shows a Roll back button if that version failed.</span></div></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-head">
+        <h2>Versions for Star Valor</h2>
+        <label class="toggle small-text"><input type="checkbox" id="bepShowAll"> Show older versions</label>
+      </div>
+      <p class="muted small-text">Only builds that fit this game's engine are listed. <b>Mods</b> = your installed plugins checked against that version's own files. <b>This game build</b> = what real launches on your PC showed.</p>
+      <div id="bepVersions" class="update-list"></div>
+    </div>
+  </section>
+
+  <!-- ============================= PROFILES =========================== -->
+  <section class="tab" id="tab-profiles" hidden>
+    <div class="card">
+      <div class="row-head">
+        <h2>Profiles</h2>
+        <button class="primary small" id="btnNewProfile">+ New profile</button>
+      </div>
+      <p class="muted small-text">A profile is a saved set of mods. Applying one turns on exactly those mods and turns everything else off. <b>Vanilla</b> always means zero mods.</p>
+      <div id="profileList" class="profile-list"></div>
+    </div>
+  </section>
+
+  <!-- ============================== SAVES ============================= -->
+  <section class="tab" id="tab-saves" hidden>
+    <div class="card">
+      <div class="row-head">
+        <h2>Save slots</h2>
+        <button class="small ghost" id="btnRefreshSaves">⟳ Refresh</button>
+      </div>
+      <p class="muted small-text">Whichever profile is linked to a slot is what gets applied when you launch into it. Slots played before this tool existed show as <b>Unknown</b> until you tag them once.</p>
+      <div id="saveList" class="save-list"></div>
+    </div>
+  </section>
+
+  <!-- ============================= SETTINGS =========================== -->
+  <section class="tab" id="tab-settings" hidden>
+    <div class="card">
+      <h2>Nexus Mods</h2>
+      <p class="muted small-text">A <b>free</b> personal API key lets the updater recognise mods that came from Nexus and check them for new versions. Get yours at the bottom of <a href="#" id="linkNexusKeys">nexusmods.com → Site preferences → API Keys</a>.</p>
+      <form id="nexusKeyForm" class="inline-form">
+        <input type="password" id="nexusKey" placeholder="Paste your personal API key" autocomplete="off">
+        <button type="submit" class="primary">Save key</button>
+        <button type="button" class="ghost" id="btnClearKey">Remove</button>
+      </form>
+      <div id="nexusKeyStatus" class="small-text muted"></div>
+    </div>
+
+    <div class="card">
+      <h2>Game & folders</h2>
+      <dl class="facts" id="facts"></dl>
+    </div>
+  </section>
+</main>
+
+<dialog id="profileDialog">
+  <form id="profileForm" class="dialog-body wide">
+    <h2 id="profileDialogTitle">New profile</h2>
+    <label for="profileName">Name</label>
+    <input id="profileName" maxlength="60" required placeholder="e.g. Full modded">
+    <div class="picker-head">
+      <label>Mods in this profile <span class="count" id="pickerCount"></span></label>
+      <div class="btn-row">
+        <button type="button" class="small ghost" data-pick="all">Select all</button>
+        <button type="button" class="small ghost" data-pick="none">Select none</button>
+        <button type="button" class="small ghost" data-pick="ok">Only working ones</button>
+      </div>
+    </div>
+    <input type="search" id="pickerSearch" placeholder="Filter…" autocomplete="off">
+    <div id="profileModPicker" class="mod-picker"></div>
+    <p class="error" id="profileError"></p>
+    <div class="form-actions">
+      <button type="button" class="ghost" id="profileCancel">Cancel</button>
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="sourceDialog">
+  <form id="sourceForm" class="dialog-body">
+    <h2>Where does <span id="sourceModName"></span> come from?</h2>
+    <p class="muted small-text">Used by the updater. Enter a GitHub repo (<code>owner/repo</code> or its link), a Nexus Star Valor mod link or number, <code>none</code> to never check it, or leave empty to go back to automatic detection.</p>
+    <input id="sourceValue" placeholder="e.g. MPC88/MC_SVPlayerWarpIn  or  https://www.nexusmods.com/starvalor/mods/12" autocomplete="off">
+    <p class="error" id="sourceError"></p>
+    <div class="form-actions">
+      <button type="button" class="ghost" id="sourceCancel">Cancel</button>
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="shipDialog">
+  <form id="shipForm" class="dialog-body wide">
+    <h2 id="shipTitle">Ship stats</h2>
+    <p class="muted small-text" id="shipIntro"></p>
+    <div id="shipFields" class="ship-fields"></div>
+    <p class="error" id="shipError"></p>
+    <div class="form-actions">
+      <button type="button" class="ghost danger-text" id="shipReset" hidden>Reset to original</button>
+      <span class="muted small-text push" id="shipChanged"></span>
+      <button type="button" class="ghost" id="shipCancel">Close</button>
+      <button type="submit" class="primary" id="shipSave" disabled>Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="askDialog">
+  <form id="askForm" class="dialog-body">
+    <h2 id="askTitle"></h2>
+    <p class="ask-text" id="askText"></p>
+    <div class="form-actions">
+      <button type="button" class="ghost" id="askCancel">Cancel</button>
+      <button type="submit" class="primary" id="askOk">OK</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast"></div>
+</body>
+</html>

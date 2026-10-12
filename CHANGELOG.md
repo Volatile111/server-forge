@@ -1,5 +1,22 @@
 # Changelog
 
+## Tavern Client Mod Manager 0.5.5
+
+**New**
+- **Star Valor tab: Achilles Mod Manager is now built in.** Achilles, the Star Valor mod manager, is now the mod manager's **Star Valor** tab, with its own look and ship icon, and the tab fills the window while it's open. It finds Star Valor through Steam and handles BepInEx plugins and We Mod Any Ship ship files:
+  - turn mods on and off one at a time, in bulk or with profiles (**Vanilla** turns everything off), and drop in `.dll`, `.shipmod` or `.zip` files
+  - a compatibility check for every mod against your installed game version, plus errors from your last launch, named after the mod that caused them
+  - **Update all** for mods from GitHub and Nexus Mods
+  - install, update or roll back BepInEx, with a test launch that checks the game reaches the main menu
+  - see your saves, then launch the game
+  - Nothing is ever deleted: removed and replaced files go to `BepInEx\achilles_backups`.
+- **Ships tab.** Ship mods have their own list, with search and filters (Edited, Problems, On, Off), so they no longer fill the Mods list.
+- **Ship stats editor.** Hover a ship and click **Stats** to change its hull, handling, cargo and equipment space, crew seats, weapon slots, built-in bonuses, which NPC factions fly it, and whether shipyards sell it. For example, **Make it buyable** puts boss ships like the Tri-Cerberus on sale in their faction's shipyards. Values are checked so a typo can't stop We Mod Any Ship loading your ships, the original file is kept, and **Reset** puts it back.
+
+**Moving from the standalone Achilles app**
+- Your profiles, settings, Nexus key, update sources and BepInEx history are copied over the first time you open the Star Valor tab. Your old app's own files aren't changed.
+- **Close the standalone Achilles app and stop using it.** Two managers moving the same mod files at once can undo each other's changes.
+
 ## Tavern Host 0.7.1
 
 **Fixed**

@@ -2,7 +2,7 @@
 // (from a thmods:// link), installs BepInEx, and has a Play button that syncs first and then starts Valheim.
 // Uses the same install code as Tavern Host (compiled to dist/), so both sides lay out mods identically.
 import { app, BrowserWindow, dialog, ipcMain, shell, Menu, nativeImage, safeStorage } from 'electron';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, createWriteStream, mkdtempSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, createWriteStream, mkdtempSync, cpSync, statSync } from 'node:fs';
 import { randomBytes, createHash } from 'node:crypto';
 import { execFileSync, spawn } from 'node:child_process';
 import path from 'node:path';
@@ -18,8 +18,13 @@ const vm = await lib('valheim-mods.js');
 const scan = await lib('modscan.js');
 const nexus = await lib('nexus.js');
 
-app.setAppUserModelId('TavernClientModManager');
+// Run from the source files (npm run client), not installed: a development copy. It keeps its own data folder and
+// taskbar identity, so it runs next to the installed app (the one-copy lock is per data folder) and never touches the
+// installed app's settings, links or profiles. The game folders are still the real ones.
+const DEV = !app.isPackaged;
+app.setAppUserModelId(DEV ? 'TavernClientModManager.Dev' : 'TavernClientModManager');
 app.setName('Tavern Client Mod Manager');
+if (DEV) app.setPath('userData', path.join(app.getPath('appData'), 'Tavern Client Mod Manager (dev)'));
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 if (!app.requestSingleInstanceLock()) app.quit();
 
@@ -185,11 +190,13 @@ function createWindow() {
     height: 760,
     minWidth: 720,
     minHeight: 520,
-    title: 'Tavern Client Mod Manager',
+    title: `Tavern Client Mod Manager${DEV ? ' (DEV)' : ''}`,
     icon: path.join(here, 'icon.png'),
     backgroundColor: '#0d1219',
     autoHideMenuBar: true,
-    webPreferences: { preload: path.join(here, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
+    // Subframes get the preload too: the Star Valor tab's Achilles frame needs window.desktop (preload.cjs gives each
+    // frame only its own functions).
+    webPreferences: { preload: path.join(here, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, nodeIntegrationInSubFrames: true },
   });
   win.loadFile(path.join(here, 'index.html'));
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -257,6 +264,7 @@ async function state() {
   const firstLink = linksFor('valheim')[0] ? sync.parseLink(linksFor('valheim')[0].raw) : null;
   return {
     version: app.getVersion(),
+    dev: DEV,
     gameDir: dir,
     bepinex: dir ? vm.bepinexStatus(dir) : null,
     profiles: profiles().map((p) => ({ id: p.id, name: p.name, off: p.disabled.length })),
@@ -398,8 +406,10 @@ async function applyPending(approveNow = []) {
 
 // ---------- IPC ----------
 
+// The app's own page only: not the Star Valor tab's Achilles frame (which has its own handlers further down).
 const handle = (name, fn) =>
-  ipcMain.handle(name, async (_e, ...args) => {
+  ipcMain.handle(name, async (e, ...args) => {
+    if (!win || e.senderFrame !== win.webContents.mainFrame) return { ok: false, error: 'Not allowed.' };
     try {
       return { ok: true, data: await fn(...args) };
     } catch (err) {
@@ -721,8 +731,8 @@ handle('delete-profile', async (id) => deleteProfile(String(id)));
 handle('set-nexus-key', async (key) => setNexusKey(key));
 // A pasted nxm:// link or nexusmods.com/valheim/mods/… address (the latter needs Premium).
 handle('install-nexus', async (input) => installFromNexus(String(input)));
-ipcMain.handle('set-icon', async (_e, dataUrl) => {
-  if (!win || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/png;base64,') || dataUrl.length > 2_000_000) return;
+ipcMain.handle('set-icon', async (e, dataUrl) => {
+  if (!win || e.senderFrame !== win.webContents.mainFrame || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/png;base64,') || dataUrl.length > 2_000_000) return;
   const image = nativeImage.createFromDataURL(dataUrl);
   if (!image.isEmpty()) win.setIcon(image);
 });
@@ -957,6 +967,133 @@ setInterval(async () => {
     send('state-changed');
   } catch {}
 }, 10 * 60_000);
+
+// ---------- Star Valor: Achilles ----------
+// Achilles (achilles/) was its own app, the Achilles Mod Manager; it now runs inside this one on the Star Valor tab.
+// Its local server (achilles/server/http.js) serves its page and a JSON API on a random 127.0.0.1 port; the tab shows
+// that page in a frame. Every API call needs this session's key, which only that frame gets (in its URL fragment).
+// The frame gets `window.desktop` from preload.cjs (preloads run in subframes, see createWindow); the handlers below
+// only answer the Achilles frame.
+
+const ACHILLES_LEGACY = () => path.join(app.getPath('appData'), 'Achilles Mod Manager');
+const achillesData = () => path.join(app.getPath('userData'), 'achilles');
+let achilles = null; // { port, key, origin }
+let achillesFrame = null; // the frame that asked for download events
+let achillesBrowser = null;
+
+/** First start: copies the standalone app's data (profiles, settings, Nexus key, source links, BepInEx history and
+ * caches). Copies only, once, never overwriting; the old folder stays as it was. */
+function migrateAchillesData() {
+  const from = ACHILLES_LEGACY();
+  const to = achillesData();
+  if (existsSync(to) || !existsSync(path.join(from, 'profiles.json'))) return;
+  mkdirSync(to, { recursive: true });
+  for (const name of ['mods.json', 'profiles.json', 'save-links.json', 'settings.json', 'sources.json', 'bepinex-history.json', 'bepinex-evals.json', 'bepinex-releases.json', 'inspect-cache.json', 'bepinex-cache', 'update-cache']) {
+    const f = path.join(from, name);
+    try {
+      if (existsSync(f)) cpSync(f, path.join(to, name), { recursive: true, errorOnExist: false, force: false });
+    } catch (err) {
+      log(`Achilles: couldn't copy ${name} from the old app: ${err.message}`);
+    }
+  }
+  log('Achilles: copied your profiles and settings from the Achilles Mod Manager app.');
+}
+
+async function startAchilles() {
+  if (achilles) return achilles;
+  migrateAchillesData();
+  const { startServer } = await import(pathToFileURL(path.join(here, 'achilles', 'server', 'http.js')).href);
+  const key = randomBytes(32).toString('hex');
+  const { port } = await startServer(achillesData(), { key, hostVersion: app.getVersion() });
+  achilles = { port, key, origin: `http://127.0.0.1:${port}` };
+  return achilles;
+}
+
+handle('achilles-url', async () => {
+  const a = await startAchilles();
+  return `${a.origin}/#k=${a.key}`;
+});
+
+/** Desktop functions for the Achilles frame only (checked by where the call comes from). */
+const achillesHandle = (name, fn) =>
+  ipcMain.handle(name, async (e, ...args) => {
+    if (!achilles || !e.senderFrame || new URL(e.senderFrame.url).origin !== achilles.origin) throw new Error('Not allowed.');
+    return fn(e, ...args);
+  });
+
+function sendAchillesDownload(info) {
+  if (achillesFrame && !achillesFrame.isDestroyed?.()) achillesFrame.send('achilles-mod-download', info);
+}
+
+const STAR_VALOR_MOD = /\.(dll|zip|shipmod)$/i;
+
+/** A browser window on Nexus Mods (Star Valor). Mod files downloaded in it go to Achilles to install, not Downloads. */
+function openAchillesBrowser(url) {
+  if (achillesBrowser && !achillesBrowser.isDestroyed()) {
+    achillesBrowser.loadURL(url);
+    achillesBrowser.focus();
+    return;
+  }
+  achillesBrowser = new BrowserWindow({
+    width: 1200,
+    height: 850,
+    title: 'Achilles – Star Valor mods',
+    icon: path.join(here, 'achilles', 'public', 'img', 'favicon.png'),
+    webPreferences: { partition: 'persist:achilles', contextIsolation: true, sandbox: true, nodeIntegration: false },
+  });
+  const go = (fn) => () => achillesBrowser && !achillesBrowser.isDestroyed() && fn(achillesBrowser.webContents);
+  achillesBrowser.setMenu(
+    Menu.buildFromTemplate([
+      { label: '◀ Back', click: go((w) => w.navigationHistory.canGoBack() && w.navigationHistory.goBack()) },
+      { label: 'Forward ▶', click: go((w) => w.navigationHistory.canGoForward() && w.navigationHistory.goForward()) },
+      { label: '⟳ Reload', accelerator: 'F5', click: go((w) => w.reload()) },
+      { label: '⌂ Home', click: go((w) => w.loadURL(url)) },
+      { label: 'Open in my browser', click: go((w) => shell.openExternal(w.getURL())) },
+    ]),
+  );
+  achillesBrowser.webContents.setWindowOpenHandler(({ url: next }) => {
+    if (/^https?:\/\//.test(next)) achillesBrowser.loadURL(next);
+    return { action: 'deny' };
+  });
+  achillesBrowser.webContents.session.on('will-download', (_e, item) => {
+    const filename = item.getFilename();
+    if (!STAR_VALOR_MOD.test(filename)) return; // anything else downloads normally
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'achilles-dl-'));
+    item.setSavePath(path.join(dir, filename.replace(/[^\w.\- ]/g, '_')));
+    sendAchillesDownload({ filename, status: 'downloading' });
+    item.once('done', (_ev, state) => {
+      if (state !== 'completed') {
+        rmSync(dir, { recursive: true, force: true });
+        sendAchillesDownload({ filename, status: 'failed', error: `Download ${state}.` });
+      } else sendAchillesDownload({ filename, status: 'ready', sourcePath: item.getSavePath() });
+    });
+  });
+  achillesBrowser.on('closed', () => (achillesBrowser = null));
+  achillesBrowser.loadURL(url);
+}
+
+achillesHandle('achilles-subscribe', (e) => {
+  achillesFrame = e.senderFrame;
+});
+achillesHandle('achilles-browse-mods', async () => {
+  const { nexusBrowseUrl } = await import(pathToFileURL(path.join(here, 'achilles', 'server', 'lib', 'nexus.js')).href);
+  openAchillesBrowser(nexusBrowseUrl());
+});
+achillesHandle('achilles-pick-files', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Choose Star Valor mod files', filters: [{ name: 'Star Valor mods', extensions: ['dll', 'shipmod', 'zip'] }], properties: ['openFile', 'multiSelections'] });
+  return r.canceled ? [] : r.filePaths;
+});
+// Nexus pages open in the mod browser (a download there installs as an update); others (GitHub) in the real browser.
+achillesHandle('achilles-open-mod-page', async (_e, url) => {
+  if (typeof url !== 'string' || !/^https:\/\//.test(url)) return;
+  if (/^https:\/\/((www|next)\.)?nexusmods\.com\//.test(url)) openAchillesBrowser(url);
+  else await shell.openExternal(url);
+});
+// Folders only (backups, data, the game folder), never files.
+achillesHandle('achilles-open-folder', async (_e, folder) => {
+  if (typeof folder !== 'string' || !existsSync(folder) || !statSync(folder).isDirectory()) return 'Folder not found.';
+  return shell.openPath(folder);
+});
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());

@@ -20,7 +20,7 @@ Tavern Host is a Windows app for running your own game servers from one panel. I
 | App | Who it's for | Download |
 |---|---|---|
 | **Tavern Host** | Server owners | [Latest release](https://github.com/Volatile111/tavern-host/releases/latest) |
-| **Tavern Client Mod Manager** | Players (Valheim, Minecraft Java, Satisfactory and more) | [Latest release](https://github.com/Volatile111/tavern-client-releases/releases/latest) |
+| **Tavern Client Mod Manager** | Players (Valheim, Minecraft Java, Satisfactory, Star Valor and more) | [Latest release](https://github.com/Volatile111/tavern-client-releases/releases/latest) |
 
 Both apps tell you when a new version is out and can install it for you.
 
@@ -40,6 +40,8 @@ Your game servers keep running when you close the Tavern Host window, and while 
 2. Paste the link the server owner gives you (it starts with `thmods://`) and click **Add server**. The server shows on its game's tab.
 3. **Valheim:** click **▶ Play Valheim**. Your mods are matched to the server first. A **Vanilla** profile switches mods off for playing other servers.
 4. **Minecraft Java:** click **Sync now**, then pick the server's profile in the Minecraft Launcher. It has its own folder, so your other worlds and mods aren't touched. (Forge and NeoForge: run the installer the app gives you once.)
+
+**Star Valor** (single player, no server link needed): the **Star Valor** tab is the built-in Achilles Mod Manager. It turns BepInEx mods and ship files on and off, checks them against your game version, updates them, manages BepInEx, and edits ship stats.
 
 ## Privacy
 
