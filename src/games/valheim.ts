@@ -22,8 +22,11 @@ const LIST_FILES: Record<string, string> = {
 const TIME_RE = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2}): (.*)$/;
 const P = {
   // Only after the world has loaded. ("Loading: Done" also appears earlier, for the start-up scene.)
-  ready: /^Opened Steam server|^Opened PlayFab server|registered with join code/,
-  stop: /^OnApplicationQuit|^Net scene destroyed|^Game server disconnected/,
+  ready: /^Opened Steam server|^Opened PlayFab server|registered with join code|^Game server connected$/,
+  stop: /^OnApplicationQuit|^Net scene destroyed/,
+  // The running server briefly lost Steam ("Game server disconnected"), then "Game server connected" once it's back.
+  // The world and its players carry on, so only new joins are affected: not ready, but nothing else is reset.
+  steamLost: /^Game server disconnected/,
   version: /^Valheim version: (\S+)/,
   saved: /^World save \(5\/5\) done/,
   history: /^Player history entry with index \d+:\s+(.+?) \(([^,]+), [^)]*\)$/,
@@ -80,6 +83,7 @@ function createValheimParser(): LogParser {
 
       if (msg.startsWith('ZNet.LoadWorld:')) reset();
       else if (P.stop.test(msg)) reset();
+      else if (P.steamLost.test(msg)) ready = false;
       else if (P.ready.test(msg)) ready = true;
 
       if ((x = P.version.exec(msg))) version = x[1];

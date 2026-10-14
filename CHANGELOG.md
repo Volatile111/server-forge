@@ -1,5 +1,10 @@
 # Changelog
 
+## Tavern Host 0.7.2
+
+**Fixed**
+- **Valheim stuck as "not ready" after a Steam blip.** When a running Valheim server briefly lost its connection to Steam ("Game server disconnected") and reconnected a few seconds later, Tavern Host treated it as the server stopping: it stayed "not ready" until the server was restarted, and its crossplay join code disappeared. Anything reading the API, like a website status page, showed the server as offline. Tavern Host now shows it as not ready only while Steam is away, and ready again as soon as it reconnects, keeping the join code and player list.
+
 ## Tavern Client Mod Manager 0.5.5
 
 **New**
