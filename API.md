@@ -1,6 +1,6 @@
 # Tavern Host HTTP API
 
-Reference for Tavern Host 0.7.2. This file is generated from the list in `public/app.js` (the same one the panel shows in Settings → API reference) by `node tools/make-api-docs.mjs`.
+Reference for Tavern Host 0.8.0. This file is generated from the list in `public/app.js` (the same one the panel shows in Settings → API reference) by `node tools/make-api-docs.mjs`.
 
 > Tavern Host is in beta and updates are frequent. Routes can change between versions; check this file for the version you run.
 
@@ -198,6 +198,9 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `POST /api/servers/{id}/addons/hexium` | Valheim: install from Hexium with dependencies: {"input":"https://valheim.hexium.gg/mods/Author/Mod"} or {"namespace","name","version"?} | Manage mods / plugins / addons |
 | `POST /api/servers/{id}/addons/nexus` | Valheim: install a Nexus Mods file: {"input":"nxm://…"} (needs the Nexus key in Integrations; a mod page address needs Premium) | Manage mods / plugins / addons |
 | `POST /api/servers/{id}/addons/adopt` | Valheim: take over mods added without Tavern Host (r2modman, by hand) so they can be shared: {adopted, skipped} | Manage mods / plugins / addons |
+| `GET /api/servers/{id}/plugins` | Bedrock on Endstone: its plugins (.whl/.dll). Every /addons route above also works under /plugins for them (upload, {item}/enabled, DELETE, check-updates, {item}/update, setup) | See the server |
+| `GET /api/servers/{id}/plugins/search?q=` | Endstone: search plugins on GitHub and PyPI: {results:[{id, name, summary, author, url, source, version?, stars?}], errors} | See the server |
+| `POST /api/servers/{id}/plugins/found` | Endstone: install the newest file of a search result: {"id":"pypi:endstone-essentials"} or {"id":"github:owner/repo"} | Manage mods / plugins / addons |
 | `GET /api/servers/{id}/share` | Players' share link (Valheim, Minecraft Java, Satisfactory, Bedrock, Terraria tModLoader, Space Engineers): links, public link, what's shared (summary, with mode sync\|links\|info), Remote access status | Share mods with players |
 | `POST /api/servers/{id}/share` | Sharing on/off or a new link: {"enabled":true,"newLink":false} | Share mods with players |
 | `GET /api/share/{token}` | What the players' Tavern Client Mod Manager reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion | The share link token (no login) |

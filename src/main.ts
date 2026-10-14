@@ -3,6 +3,7 @@ import { readFileSync, existsSync, writeFileSync, createWriteStream, createReadS
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { curseforgeKey, setCurseforgeKey, searchProjects, latestFile, newestFile } from './curseforge.ts';
 import { linkPacks, unlinkPack, getUpdateSettings, setUpdateSettings } from './games/bedrock-addons.ts';
 import { listProxyServers, addProxyServer, removeProxyServer, setDefaultProxyServer, proxyName, prepareBackend } from './games/bungee-network.ts';
@@ -48,7 +49,7 @@ import { logActivity, readActivity } from './audit.ts';
 import { readChat, recordChat } from './chat.ts';
 import { cloneServer } from './clone.ts';
 import { listNodes, addNode, removeNode, renameNode, getNode, nodeJson, nodeRequest, remoteServers, remoteId, parseRemoteId, isRemoteId, startNodes } from './nodes.ts';
-import { checkUpdates, updateInfo, updateGame, startUpdateChecks, updatesSupported } from './game-updates.ts';
+import { checkUpdates, updateInfo, updateGame, startUpdateChecks, updatesSupported, updateKey } from './game-updates.ts';
 import { checkAppUpdate, appUpdateInfo, startAppUpdateChecks } from './app-updates.ts';
 import { lookupPublicIp } from './public-ip.ts';
 import { portHelp } from './port-help.ts';
@@ -57,7 +58,7 @@ import { supportsWorlds, listWorlds, setActiveWorld, exportWorld, importWorld, d
 import { listAlerts, dismissAlert, startHealthChecks, type Alert } from './health.ts';
 import { vaultState, vaultCall, vaultEvents, vaultUiFile, vaultShim, vaultPage, isViewMethod, UI_FILES as VAULT_UI } from './vault.ts';
 import { worldCheckInfo, checkNow, acceptCurrent, startWorldChecks } from './world-check.ts';
-import { GAMES, events, loadInstances, listInstances, getInstance, createServer, createNewServer, updateServer, deleteServer, reorderServers } from './instances.ts';
+import { GAMES, events, loadInstances, listInstances, getInstance, importServer, createNewServer, updateServer, deleteServer, reorderServers } from './instances.ts';
 
 interface PanelConfig {
   port: number;
@@ -404,9 +405,11 @@ route('GET', '/api/servers', async (ctx) => {
 
 route('POST', '/api/servers', async (ctx) => {
   const p = needGlobal(ctx, 'servers.create');
-  const snap = await createServer(await readBody(ctx.req)).snapshot();
+  const { inst, notes } = await importServer(await readBody(ctx.req));
+  const snap = await inst.snapshot();
   audit(p, `added server "${snap.name}"`);
-  return snap;
+  // What the import found or brought along (Endstone: addons, plugins), shown in the panel.
+  return { ...snap, importNotes: notes };
 });
 
 route('POST', '/api/servers/new', async (ctx) => {
@@ -801,7 +804,8 @@ async function createOnNode(ctx: Ctx, nodePath: '/api/servers/new' | '/api/serve
   const body = await readBody(ctx.req);
   let snap: Record<string, unknown>;
   try {
-    snap = await nodeJson<Record<string, unknown>>(node, 'POST', nodePath, body);
+    // An import can take a few minutes (Endstone: finding its Python and bringing plugins in).
+    snap = await nodeJson<Record<string, unknown>>(node, 'POST', nodePath, body, nodePath === '/api/servers' ? 5 * 60_000 : undefined);
   } catch (err) {
     throw new HttpError((err as { status?: number }).status && (err as { status: number }).status < 500 ? (err as { status: number }).status : 502, `${node.name}: ${(err as Error).message}`);
   }
@@ -852,7 +856,7 @@ for (const route_ of ['game-update', 'bedrock-update']) {
     if (!updatesSupported(inst.record.game)) throw new HttpError(404, `${inst.module.name} servers don't have update checks.`);
     const force = new URL(ctx.req.url ?? '', 'http://x').searchParams.get('check') === '1';
     try {
-      await checkUpdates(force, inst.record.game);
+      await checkUpdates(force, updateKey(inst));
     } catch (err) {
       return { ...updateInfo(inst), error: (err as Error).message };
     }
@@ -868,7 +872,7 @@ for (const route_ of ['game-update', 'bedrock-update']) {
     if (inst.isRunning) needServer(ctx, 'control.stop', ctx.params[0]);
     const { countdownMinutes, force } = await readBody(ctx.req);
     try {
-      await checkUpdates(!!force, inst.record.game);
+      await checkUpdates(!!force, updateKey(inst));
     } catch (err) {
       if (!force) throw new HttpError(502, (err as Error).message);
     }
@@ -1024,16 +1028,22 @@ route('POST', '/api/servers/:id/properties/repair', async (ctx) => {
 
 // ---------- addons / mods / plugins ----------
 
+// /api/servers/:id/plugins/... is the second manager (GameModule.plugins, e.g. Endstone plugins next to Bedrock addons).
+// It's answered by the /addons routes below, which pick the manager from this.
+const addonKind = new AsyncLocalStorage<'addons' | 'plugins'>();
+
 /** `changing`: the request changes files; games whose mod files are locked while running need the server stopped. */
 function addonsOf(id: string, changing = false) {
   const inst = getInstance(id);
-  if (!inst.module.addons || inst.module.addons.available?.(inst.record) === false) {
-    throw new HttpError(404, `This ${inst.module.name} server has no addon, mod or plugin manager.`);
+  const plugins = addonKind.getStore() === 'plugins';
+  const addons = plugins ? inst.module.plugins : inst.module.addons;
+  if (!addons || addons.available?.(inst.record) === false) {
+    throw new HttpError(404, `This ${inst.module.name} server has no ${plugins ? 'plugin' : 'addon, mod or plugin'} manager.`);
   }
-  if (changing && inst.module.addons.needsStopped && inst.isRunning) {
+  if (changing && addons.needsStopped && inst.isRunning) {
     throw new HttpError(409, `Stop the server first: ${inst.module.name} keeps its mod files locked while it runs.`);
   }
-  return { inst, addons: inst.module.addons };
+  return { inst, addons };
 }
 
 const MAX_UPLOAD = 512 * 1024 * 1024;
@@ -1092,11 +1102,36 @@ route('GET', '/api/servers/:id/addons', async (ctx) => {
     // Added by ID or link instead of a file (Space Engineers: Steam Workshop).
     canAddById: !!addons.addById,
     byIdPlaceholder: addons.addByIdPlaceholder ?? null,
-    share: canShare(inst.record.game) ? { enabled: !!shareToken(inst.id) } : null,
+    share: addons === inst.module.addons && canShare(inst.record.game) ? { enabled: !!shareToken(inst.id) } : null,
     locations: addons.locations
       ? { options: addons.locations.options, current: addons.locations.get(inst.record), paths: addons.locations.describe(inst.record) }
       : null,
+    // A built-in search with one-click installs (Endstone plugins).
+    canSearch: !!addons.search,
   };
+});
+
+route('GET', '/api/servers/:id/addons/search', async (ctx) => {
+  needServer(ctx, 'view', ctx.params[0]);
+  const { inst, addons } = addonsOf(ctx.params[0]);
+  if (!addons.search) throw new HttpError(404, 'No search here.');
+  const q = new URL(ctx.req.url ?? '', 'http://x').searchParams.get('q') ?? '';
+  return addons.search(inst.record, q.slice(0, 100));
+});
+
+route('POST', '/api/servers/:id/addons/found', async (ctx) => {
+  const p = needServer(ctx, 'addons.manage', ctx.params[0]);
+  const { inst, addons } = addonsOf(ctx.params[0], true);
+  if (!addons.installFound) throw new HttpError(404, 'No search here.');
+  const { id } = await readBody(ctx.req);
+  let result;
+  try {
+    result = await addons.installFound(inst.record, String(id ?? ''));
+  } catch (err) {
+    throw new HttpError(400, (err as Error).message);
+  }
+  audit(p, `installed ${id} on "${inst.record.name}"`);
+  return { ...result, running: inst.isRunning, packs: addons.list(inst.record) };
 });
 
 route('POST', '/api/servers/:id/addons/setup', async (ctx) => {
@@ -2733,9 +2768,9 @@ function permFor(method: string, sub: string): { server?: ServerPerm; also?: Ser
     [/^\/backups\/[^/]+\/restore$/, null, 'backups.restore'],
     [/^\/backups\/[^/]+$/, null, 'backups.delete'],
     [/^\/share/, 'addons.share', 'addons.share'],
-    [/^\/addons\/check-updates$/, null, 'view'],
-    [/^\/addons\/settings/, 'addons.manage', 'addons.manage'],
-    [/^\/addons/, 'view', 'addons.manage'],
+    [/^\/(addons|plugins)\/check-updates$/, null, 'view'],
+    [/^\/(addons|plugins)\/settings/, 'addons.manage', 'addons.manage'],
+    [/^\/(addons|plugins)/, 'view', 'addons.manage'],
     [/^\/tasks\/[^/]+\/run$/, null, 'tasks.run'],
     [/^\/tasks/, 'view', 'tasks.edit'],
     [/^\/(server-files|files)/, 'files.view', 'files.edit'],
@@ -2864,10 +2899,14 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse, remot
         await proxyToNode(req, res, principal, decodeURIComponent(nodeServer[1]), nodeServer[2] ?? '', url.search);
         return;
       }
+      // The plugins manager uses the addon routes (see addonsOf).
+      const pluginsPath = /^(\/api\/servers\/[^/]+\/)plugins(\/.*)?$/.exec(url.pathname);
+      const pathname = pluginsPath ? `${pluginsPath[1]}addons${pluginsPath[2] ?? ''}` : url.pathname;
       for (const [method, re, handler] of routes) {
-        const m = req.method === method && re.exec(url.pathname);
+        const m = req.method === method && re.exec(pathname);
         if (m) {
-          const result = await handler({ req, res, principal, user, params: m.slice(1).map(decodeURIComponent), token, remote });
+          const ctx = { req, res, principal, user, params: m.slice(1).map(decodeURIComponent), token, remote };
+          const result = await addonKind.run(pluginsPath ? 'plugins' : 'addons', () => handler(ctx));
           if (result !== undefined) send(res, 200, result);
           return;
         }

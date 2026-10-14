@@ -1,5 +1,24 @@
 # Changelog
 
+## Tavern Host 0.8.0
+
+Endstone servers with plugins, a Plugins tab, and importing existing Endstone servers.
+
+**New**
+- **Endstone for Bedrock servers.** Bedrock servers have a new **Server software** setting: Vanilla (Mojang) or **Endstone**, which adds plugin support (Python and C++ plugins) and still loads addons. Choose it when creating a server, or switch an existing one in Settings: worlds, settings and addons are kept. Tavern Host sets everything up itself on the server's PC: its own Python, its own copy of Endstone for each server, and the Bedrock version Endstone supports. Nothing is installed system-wide.
+- **Endstone updates.** Endstone supports one Bedrock version at a time, so Endstone servers are offered Endstone updates (each brings its Bedrock version) instead of Mojang's. If a vanilla server already runs a newer Bedrock than Endstone supports, switching it is stopped rather than going back a version, which could break the world.
+- **Plugins tab.** Endstone servers get a **Plugins** tab next to Addons: drop in `.whl` or `.dll` plugin files, switch plugins on and off, remove them, and check for updates. Plugins get the same Windows Defender check as addons.
+- **Find plugins.** Search Endstone plugins on GitHub and PyPI from the Plugins tab and install one with a click. The **Get plugins** buttons open GitHub, PyPI and the Endstone docs, and plugins downloaded there install on the server by themselves (desktop app).
+- **Import existing Endstone servers.** Choose the folder you ran Endstone in (or its `bedrock_server` folder) under **Import**. Its addons come along in the same order, plugin files in its plugins folder come along, and plugins installed with pip into its old Python are brought in too, as the same version from PyPI or rebuilt from the installed files. It keeps the Endstone version it was running, and your old Python isn't changed. Tavern Host tells you what it found and brought in.
+- **Endstone icon.** Endstone servers show the Bedrock icon with end stone below the Minecraft logo and "ENDSTONE" in Endstone's blue, and "Bedrock · Endstone" in the server list.
+
+**Fixed**
+- **Updating an addon kept moving it to the top.** An updated addon now keeps its place in the load order. Only newly added addons go to the top.
+
+**Good to know**
+- On a PC that has never run Endstone, Windows may ask once for permission (UAC) so a Minecraft client on that same PC can connect to it. The server starts either way.
+- Servers on other PCs (nodes) need Tavern Host 0.8.0 there too for the Plugins tab and Endstone.
+
 ## Tavern Host 0.7.2
 
 **Fixed**

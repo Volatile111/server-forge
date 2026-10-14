@@ -132,6 +132,7 @@
           <button data-tab="properties" id="tabBtnProperties" hidden>Properties</button>
           <button data-tab="backups" id="tabBtnBackups" hidden>Backups</button>
           <button data-tab="addons" id="tabBtnAddons" hidden>Addons</button>
+          <button data-tab="plugins" id="tabBtnPlugins" hidden>Plugins</button>
           <button data-tab="world" id="tabBtnWorld" hidden>World</button>
           <button data-tab="worlds" id="tabBtnWorlds" hidden>Worlds</button>
           <button data-tab="tasks">Tasks</button>
@@ -460,6 +461,16 @@
             <h3 id="addonSitesTitle">Get addons</h3>
             <p class="muted" id="addonSitesHelp"></p>
             <div class="addon-sites" id="addonSites"></div>
+          </section>
+
+          <section class="card" data-perm="addons.manage" id="pluginSearchCard" hidden>
+            <h3>Find plugins</h3>
+            <p class="muted">Searches Endstone plugins on GitHub (projects tagged <i>endstone-plugin</i>) and PyPI. <b>Install</b> downloads the newest plugin file straight onto the server. Leave the box empty to list them all.</p>
+            <form id="pluginSearchForm" class="cf-search">
+              <input id="pluginQuery" placeholder="Search plugins, e.g. economy, homes, essentials…" autocomplete="off" spellcheck="false">
+              <button class="primary" type="submit">Search</button>
+            </form>
+            <div id="pluginResults" class="cf-results"></div>
           </section>
 
           <section class="card" data-perm="addons.manage" id="nexusCard" hidden>
@@ -1023,9 +1034,10 @@
       <input id="addInstall" required placeholder="C:\GameServers\My server">
       <button type="button" data-global="files.browse" data-browse="addInstall">Browse…</button>
     </div>
+    <div class="field-help" id="addEndstoneHelp" hidden><b>Endstone servers</b> are recognised by themselves: choose the folder you ran Endstone in (or its <i>bedrock_server</i> folder). Its addons and plugins come along, including plugins installed with pip.</div>
     <p class="error" id="addError"></p>
     <div class="form-actions">
-      <button class="primary" type="submit">Add server</button>
+      <button class="primary" type="submit" id="addSubmit">Add server</button>
       <button type="button" class="ghost" id="addCancel">Cancel</button>
     </div>
   </form>

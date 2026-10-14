@@ -15,6 +15,9 @@ const ICONS = {
   // (Microsoft Store), like the launcher's flat Bedrock Edition tile.
   vanilla: logo('vanilla', { pixel: true }),
   bedrock: logo('bedrock'),
+  // Bedrock running on Endstone: the same icon with end stone below the wordmark and "ENDSTONE" in endstone.dev's
+  // title colour (made by tools/make-endstone-icon.py in the session folder).
+  endstone: logo('bedrock-endstone'),
   paper: logo('paper'),
   spigot: logo('spigot'),
   fabric: logo('fabric', { pixel: true }),
@@ -48,6 +51,7 @@ const ICONS = {
 /** Icon key for a server (Java servers use their type, e.g. "paper"). */
 export function iconKey(server) {
   if (server.game === 'java') return ICONS[server.settings?.flavor] ? server.settings.flavor : 'custom';
+  if (server.game === 'bedrock' && server.settings?.software === 'endstone') return 'endstone';
   return ICONS[server.game] ? server.game : 'custom';
 }
 

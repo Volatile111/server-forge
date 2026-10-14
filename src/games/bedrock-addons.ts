@@ -377,9 +377,11 @@ export function movePack(installDir: string, level: string, id: string, to: Pack
 
 function setEnabledIn(installDir: string, level: string, type: PackType, uuid: string, version: number[] | null) {
   const file = worldListFile(installDir, level, type);
-  const list = readJsonList(file).filter((e) => String(e.pack_id).toLowerCase() !== uuid);
-  // New packs go first: Bedrock gives the top of the list the highest priority.
-  if (version) list.unshift({ pack_id: uuid, version });
+  const all = readJsonList(file);
+  const at = all.findIndex((e) => String(e.pack_id).toLowerCase() === uuid);
+  const list = all.filter((_, i) => i !== at);
+  // An update keeps the pack's place; new packs go first (Bedrock gives the top of the list the highest priority).
+  if (version) list.splice(at >= 0 ? at : 0, 0, { pack_id: uuid, version });
   writeJsonList(file, list);
 }
 

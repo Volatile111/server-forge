@@ -138,6 +138,9 @@ export interface AddonSupport {
   /** Per-item "who needs it" choice (Valheim: server + players / server only / players only). */
   sides?: { value: string; label: string }[];
   setSide?(record: ServerRecord, id: string, side: string): void;
+  /** A built-in search (Endstone plugins: GitHub + PyPI); results are installed with installFound(id). */
+  search?(record: ServerRecord, query: string): Promise<{ results: { id: string; name: string; summary: string; author: string | null; url: string; source: string; stars?: number; version?: string }[]; errors: string[] }>;
+  installFound?(record: ServerRecord, id: string): Promise<{ installed: unknown[]; warnings: string[] }>;
   /** Newer versions available: id -> version. */
   checkUpdates?(record: ServerRecord): Promise<Record<string, string>>;
   update?(record: ServerRecord, id: string): Promise<{ installed: unknown[]; warnings: string[] }>;
@@ -207,6 +210,12 @@ export interface GameModule {
   checkInstall(installDir: string): void;
   /** For Import: settings worked out from an existing server folder (e.g. which jar and Java version). */
   detect?(installDir: string): Settings;
+  /**
+   * For Import, before the folder is checked: may point at the real server folder (Endstone: the bedrock_server folder
+   * inside the one chosen) and bring things in (Endstone: plugins pip-installed into the old Python). `notes` are shown
+   * to whoever imported it.
+   */
+  prepareImport?(installDir: string): Promise<{ installDir: string; notes: string[] }>;
   launch(record: ServerRecord, logFile: string): StartOptions;
   /** Executable name, used to make sure a saved PID still belongs to this server. */
   processName: string;
@@ -257,6 +266,11 @@ export interface GameModule {
   backup?: BackupSupport;
   /** Addon/mod/plugin manager. */
   addons?: AddonSupport;
+  /**
+   * A second manager with its own tab, for servers that take two kinds (Bedrock on Endstone: addons and plugins).
+   * Served at /api/servers/:id/plugins/... with the same routes as /addons.
+   */
+  plugins?: AddonSupport;
   /** Crash checker: reads the logs since `since` and explains what went wrong. */
   diagnose?(record: ServerRecord, logFile: string, since: number): unknown;
   /** The port players connect to (shown with the system's IP at the top of the server page), and the player limit. */

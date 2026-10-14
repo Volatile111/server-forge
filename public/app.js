@@ -123,6 +123,16 @@ function confirmBox(message, okLabel = 'OK') {
   });
 }
 
+/** A message with just an OK button (the confirm dialog without Cancel). */
+async function noticeBox(message) {
+  $('confirmCancel').hidden = true;
+  try {
+    await confirmBox(message);
+  } finally {
+    $('confirmCancel').hidden = false;
+  }
+}
+
 function show(view) {
   for (const v of ['viewSetup', 'viewLogin', 'viewApp']) $(v).hidden = v !== view;
 }
@@ -721,7 +731,10 @@ function serverLink(s, game) {
   text.appendChild(el('div', null, s.name));
   const players = s.status === 'running' ? ` · ${s.live.playerCount ?? 0} online` : '';
   // Server type: the Java flavour (Paper, Fabric...) or the game.
-  const kind = s.game === 'java' ? `Java · ${JAVA_FLAVOR_NAMES[s.settings?.flavor] ?? 'Custom jar'}` : `${s.gameName.replace(/^Minecraft /, '')}${s.modded ? ' · Modded' : ''}`;
+  const kind =
+    s.game === 'java'
+      ? `Java · ${JAVA_FLAVOR_NAMES[s.settings?.flavor] ?? 'Custom jar'}`
+      : `${s.gameName.replace(/^Minecraft /, '')}${s.modded ? ' · Modded' : ''}${s.game === 'bedrock' && s.settings?.software === 'endstone' ? ' · Endstone' : ''}`;
   text.appendChild(el('div', 'sub', `${kind} · ${STATUS_LABEL[s.status]}${players}`));
   // Mini CPU/RAM view (filled in by updateSidebarStats) for servers that are running.
   if (['running', 'starting', 'stopping'].includes(s.status)) {
@@ -754,6 +767,8 @@ async function selectServer(id) {
   $('tabBtnAddons').hidden = !state.detail.hasAddons;
   $('tabBtnAddons').textContent = state.detail.addonsTab ?? 'Addons';
   if (state.tab === 'addons' && !state.detail.hasAddons) state.tab = 'overview';
+  $('tabBtnPlugins').hidden = !state.detail.hasPlugins;
+  if (state.tab === 'plugins' && !state.detail.hasPlugins) state.tab = 'overview';
   if (state.tab === 'console' && !hasPerm('console.view')) state.tab = 'overview';
   if (state.tab === 'properties' && !state.detail.hasProperties) state.tab = 'overview';
   if (state.tab === 'files' && !hasPerm('files.view')) state.tab = 'overview';
@@ -990,13 +1005,18 @@ function setTab(tab) {
   for (const b of $('tabs').children) b.classList.toggle('active', b.dataset.tab === tab);
   if (tab === 'players') renderPlayersTab();
   if (tab === 'tasks') loadTasks();
-  for (const t of ['overview', 'players', 'tasks', 'console', 'chat', 'settings', 'properties', 'backups', 'addons', 'world', 'worlds', 'access', 'files']) $(`tab-${t}`).hidden = t !== tab;
+  // The Plugins tab (Endstone) uses the Addons panel with the plugins manager.
+  const panel = tab === 'plugins' ? 'addons' : tab;
+  for (const t of ['overview', 'players', 'tasks', 'console', 'chat', 'settings', 'properties', 'backups', 'addons', 'world', 'worlds', 'access', 'files']) $(`tab-${t}`).hidden = t !== panel;
   if (tab === 'worlds') loadWorlds();
   if (tab === 'world') loadWorld();
   if (tab === 'chat') loadChat();
   if (tab === 'files') openServerFiles();
   if (tab === 'backups') loadBackups();
-  if (tab === 'addons') loadAddons();
+  if (tab === 'addons' || tab === 'plugins') {
+    addonKind = tab;
+    loadAddons();
+  }
   if (tab === 'overview') renderOverview();
   if (tab === 'console') renderConsole();
   if (tab === 'settings') renderSettings();
@@ -3575,6 +3595,7 @@ $('btnAddServer').addEventListener('click', async () => {
   $('addError').textContent = '';
   await useSystem('');
   resetAddGames();
+  $('addEndstoneHelp').hidden = $('addGame').value !== 'bedrock';
   $('addDialog').showModal();
   await fillSystemPicker($('addSystem'), $('addSystemWrap'));
 });
@@ -3586,6 +3607,9 @@ $('addSystem').addEventListener('change', async () => {
 $('addCancel').addEventListener('click', () => $('addDialog').close());
 $('addForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  // Importing an Endstone server can take a while (it looks for its Python and brings plugins in).
+  $('addSubmit').disabled = true;
+  $('addSubmit').textContent = 'Adding…';
   try {
     const snap = await api('POST', newTarget ? `/api/nodes/${encodeURIComponent(newTarget)}/servers` : '/api/servers', { game: $('addGame').value, name: $('addName').value, installDir: $('addInstall').value });
     state.servers.set(snap.id, snap);
@@ -3595,10 +3619,17 @@ $('addForm').addEventListener('submit', async (e) => {
     renderSidebar();
     await selectServer(snap.id);
     toast(snap.node ? `Server added on ${snap.node.name}. Check its settings, then press Start.` : 'Server added. Check its settings, then press Start.');
+    // What came along (Endstone: its addons, and plugins brought in from its old Python).
+    if (snap.importNotes?.length) await noticeBox(`"${snap.name}" was added.\n\n${snap.importNotes.map((n) => `• ${n}`).join('\n')}`);
   } catch (err) {
     $('addError').textContent = err.message;
+  } finally {
+    $('addSubmit').disabled = false;
+    $('addSubmit').textContent = 'Add server';
   }
 });
+// Endstone servers: the folder Endstone was run in works too (the server is in its bedrock_server folder).
+$('addGame').addEventListener('change', () => ($('addEndstoneHelp').hidden = $('addGame').value !== 'bedrock'));
 
 // ---------- panel settings (owner) ----------
 
@@ -4882,6 +4913,9 @@ const API_DOCS = [
     ['POST', '/api/servers/{id}/addons/hexium', 'Valheim: install from Hexium with dependencies: {"input":"https://valheim.hexium.gg/mods/Author/Mod"} or {"namespace","name","version"?}', 'Manage mods / plugins / addons'],
     ['POST', '/api/servers/{id}/addons/nexus', 'Valheim: install a Nexus Mods file: {"input":"nxm://…"} (needs the Nexus key in Integrations; a mod page address needs Premium)', 'Manage mods / plugins / addons'],
     ['POST', '/api/servers/{id}/addons/adopt', 'Valheim: take over mods added without Tavern Host (r2modman, by hand) so they can be shared: {adopted, skipped}', 'Manage mods / plugins / addons'],
+    ['GET', '/api/servers/{id}/plugins', 'Bedrock on Endstone: its plugins (.whl/.dll). Every /addons route above also works under /plugins for them (upload, {item}/enabled, DELETE, check-updates, {item}/update, setup)', 'See the server'],
+    ['GET', '/api/servers/{id}/plugins/search?q=', 'Endstone: search plugins on GitHub and PyPI: {results:[{id, name, summary, author, url, source, version?, stars?}], errors}', 'See the server'],
+    ['POST', '/api/servers/{id}/plugins/found', 'Endstone: install the newest file of a search result: {"id":"pypi:endstone-essentials"} or {"id":"github:owner/repo"}', 'Manage mods / plugins / addons'],
     ['GET', '/api/servers/{id}/share', "Players' share link (Valheim, Minecraft Java, Satisfactory, Bedrock, Terraria tModLoader, Space Engineers): links, public link, what's shared (summary, with mode sync|links|info), Remote access status", 'Share mods with players'],
     ['POST', '/api/servers/{id}/share', 'Sharing on/off or a new link: {"enabled":true,"newLink":false}', 'Share mods with players'],
     ['GET', '/api/share/{token}', "What the players' Tavern Client Mod Manager reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion", 'The share link token (no login)'],
@@ -5344,19 +5378,31 @@ $('btnOpenBackups').addEventListener('click', () => window.desktop?.openFolder?.
 let addonState = { packs: [], curseforge: null, links: [], running: false };
 // CurseForge only gives catalogue access to approved third-party apps, so its UI is off for now (the backend stays).
 const CURSEFORGE_UI = false;
+// The Addons and Plugins tabs (Bedrock on Endstone has both) share this panel; this says which one is showing.
+let addonKind = 'addons';
+const addonApi = () => `/api/servers/${state.selected}/${addonKind}`;
 
 async function loadAddons() {
+  const kind = addonKind;
+  let data;
   try {
-    addonState = await api('GET', `/api/servers/${state.selected}/addons`);
+    data = await api('GET', `${addonApi()}`);
   } catch (err) {
     return toast(err.message, true);
   }
-  $('addonFile').accept = addonState.accept ?? '';
-  // Install messages belong to one server: clear them when showing another.
-  if ($('addonResult').dataset.server !== state.selected) {
+  // Switched tabs while this was loading.
+  if (kind !== addonKind) return;
+  // Install messages and update labels belong to one server's tab: clear them when showing another.
+  if ($('addonResult').dataset.server !== `${state.selected}:${kind}`) {
     $('addonResult').innerHTML = '';
-    $('addonResult').dataset.server = state.selected;
+    $('addonResult').dataset.server = `${state.selected}:${kind}`;
+    $('pluginResults').innerHTML = '';
+    addonUpdates = {};
   }
+  addonState = data;
+  $('addonFile').accept = addonState.accept ?? '';
+  // The built-in search (Endstone plugins: GitHub and PyPI).
+  $('pluginSearchCard').hidden = !addonState.canSearch;
   // Wording for this server type: addons (Bedrock), mods or plugins (Java).
   const L = addonState.labels;
   // Listed only (Satisfactory: mods are managed with Satisfactory Mod Manager): no upload box.
@@ -5416,7 +5462,7 @@ function renderAddonSites() {
     btn.append(el('b', null, link.label));
     if (link.help) btn.append(el('span', 'muted small-text', link.help));
     btn.addEventListener('click', () => {
-      if (inApp) window.desktop.browseAddons({ url: link.url, serverId: state.selected, serverName: state.detail.name, accept: addonState.accept });
+      if (inApp) window.desktop.browseAddons({ url: link.url, serverId: state.selected, serverName: state.detail.name, accept: addonState.accept, kind: addonKind });
       else window.open(link.url, '_blank', 'noopener');
     });
     box.appendChild(btn);
@@ -5441,7 +5487,7 @@ function renderAddonLocation() {
 }
 $('addonLocationSelect').addEventListener('change', async () => {
   try {
-    const { current } = await api('PUT', `/api/servers/${state.selected}/addons/location`, { location: $('addonLocationSelect').value });
+    const { current } = await api('PUT', `${addonApi()}/location`, { location: $('addonLocationSelect').value });
     addonState.locations.current = current;
     renderAddonLocation();
     toast(`New addons will go in the ${locationLabel(current).toLowerCase()}`);
@@ -5468,7 +5514,7 @@ function renderAddonStatus() {
       btn.disabled = true;
       btn.textContent = 'Installing…';
       try {
-        const r = await api('POST', `/api/servers/${state.selected}/addons/setup`);
+        const r = await api('POST', `${addonApi()}/setup`);
         toast(r.message);
         loadAddons();
       } catch (err) {
@@ -5491,7 +5537,7 @@ $('addonByIdForm').addEventListener('submit', async (e) => {
   const btn = $('addonByIdForm').querySelector('button');
   btn.disabled = true;
   try {
-    const r = await api('POST', `/api/servers/${state.selected}/addons/by-id`, { input });
+    const r = await api('POST', `${addonApi()}/by-id`, { input });
     $('addonByIdInput').value = '';
     addonState.packs = r.packs;
     showInstallResult(r);
@@ -5544,7 +5590,7 @@ async function linkCurseforge(p, packUrl) {
   if (!query) return;
   let found;
   try {
-    found = await api('GET', `/api/servers/${state.selected}/addons/curseforge/search?q=${encodeURIComponent(query)}`);
+    found = await api('GET', `${addonApi()}/curseforge/search?q=${encodeURIComponent(query)}`);
   } catch (err) {
     return toast(err.message, true);
   }
@@ -5578,20 +5624,20 @@ async function unlinkCurseforge(p, packUrl) {
 
 // Bedrock update settings (channel, automatic), loaded once per server.
 async function loadAddonUpdateSettings() {
-  const show = state.detail?.game === 'bedrock' && addonState.canCheckUpdates;
+  const show = state.detail?.game === 'bedrock' && addonKind === 'addons' && addonState.canCheckUpdates;
   $('addonUpdateSettings').hidden = !show || !hasPerm('addons.manage');
   $('addonUpdateHelp').hidden = !show;
   if (!show || addonState.updateSettingsFor === state.selected) return;
   addonState.updateSettingsFor = state.selected;
   try {
-    const s = await api('GET', `/api/servers/${state.selected}/addons/update-settings`);
+    const s = await api('GET', `${addonApi()}/update-settings`);
     $('addonChannel').value = s.channel;
     $('addonAutoUpdate').checked = s.auto;
   } catch {}
 }
 async function saveAddonUpdateSettings() {
   try {
-    const s = await api('PUT', `/api/servers/${state.selected}/addons/update-settings`, { channel: $('addonChannel').value, auto: $('addonAutoUpdate').checked });
+    const s = await api('PUT', `${addonApi()}/update-settings`, { channel: $('addonChannel').value, auto: $('addonAutoUpdate').checked });
     toast(`Addon updates: ${{ release: 'releases only', beta: 'releases + beta', alpha: 'releases + beta + alpha' }[s.channel]}${s.auto ? ', installed automatically' : ''}`);
     addonUpdates = {};
     renderAddons();
@@ -5606,7 +5652,7 @@ $('addonCheckUpdates').addEventListener('click', async () => {
   btn.disabled = true;
   btn.textContent = 'Checking…';
   try {
-    addonUpdates = (await api('POST', `/api/servers/${state.selected}/addons/check-updates`)).updates;
+    addonUpdates = (await api('POST', `${addonApi()}/check-updates`)).updates;
     const n = Object.keys(addonUpdates).length;
     toast(n ? `${n} update${n === 1 ? '' : 's'} available` : 'Everything is up to date');
     renderAddons();
@@ -5658,7 +5704,7 @@ function renderShareSummary(body, s) {
         btn.disabled = true;
         btn.textContent = 'Looking them up…';
         try {
-          const r = await api('POST', `/api/servers/${state.selected}/addons/adopt`);
+          const r = await api('POST', `${addonApi()}/adopt`);
           const lines = [];
           if (r.adopted.length) lines.push(`Taken over: ${r.adopted.join(', ')}.`);
           for (const k of r.skipped) lines.push(`Left as is: ${k.name}: ${k.reason}.`);
@@ -5779,7 +5825,7 @@ function renderMoveAll() {
 async function moveAllAddons(to) {
   const label = locationLabel(to).toLowerCase();
   try {
-    const result = await api('POST', `/api/servers/${state.selected}/addons/move-all`, { to });
+    const result = await api('POST', `${addonApi()}/move-all`, { to });
     addonState.packs = result.packs;
     renderAddons();
     if (result.moved.length) noteRestart();
@@ -5798,7 +5844,7 @@ const locationLabel = (value) => addonState.locations?.options.find((o) => o.val
 // Downloads from the desktop addon browser report back here.
 window.desktop?.onAddonDownload?.((info) => {
   if (info.status === 'downloading') return toast(`Downloading ${info.filename}…`);
-  const here = info.serverId === state.selected && state.tab === 'addons';
+  const here = info.serverId === state.selected && state.tab === (info.kind ?? 'addons');
   if (info.status === 'installed') {
     toast(`Installed ${info.filename}`);
     if (here) {
@@ -5862,7 +5908,7 @@ const msSplit = (id) => {
 async function openModSettings(file) {
   let data;
   try {
-    data = await api('GET', `/api/servers/${state.selected}/addons/settings/${encodeURIComponent(file)}`);
+    data = await api('GET', `${addonApi()}/settings/${encodeURIComponent(file)}`);
   } catch (err) {
     return toast(err.message, true);
   }
@@ -6083,7 +6129,7 @@ function renderOrderedAddons(list) {
 
 async function savePackOrder(type, ids) {
   try {
-    const r = await api('PUT', `/api/servers/${state.selected}/addons/order`, { type, ids });
+    const r = await api('PUT', `${addonApi()}/order`, { type, ids });
     addonState.packs = r.packs;
     renderAddons();
     noteRestart();
@@ -6137,7 +6183,7 @@ function enablePackDrag(row, p, type, active) {
 /** compact: the narrower layout used in the side-by-side load-order columns (Bedrock). */
 function addonRow(p, compact = false) {
   const row = el('div', `addon${p.enabled ? '' : ' off'}${compact ? ' compact' : ''}`);
-  const packUrl = `/api/servers/${state.selected}/addons/${encodeURIComponent(p.id ?? p.uuid)}`;
+  const packUrl = `${addonApi()}/${encodeURIComponent(p.id ?? p.uuid)}`;
   // Its own icon if it has one, otherwise a coloured letter tile (most plugins ship without an icon).
   const letter = () => {
     const tile = letterHead(p.name);
@@ -6223,7 +6269,7 @@ function addonRow(p, compact = false) {
       actions.appendChild(up);
     }
     // Bedrock: link to a CurseForge project (so updates can be found), or remove the link.
-    if (state.detail.game === 'bedrock' && !compact) {
+    if (state.detail.game === 'bedrock' && addonKind === 'addons' && !compact) {
       const link = el('button', 'small ghost', p.curseforge ? 'Unlink' : 'Link to CurseForge…');
       link.title = p.curseforge ? `Stop checking ${p.curseforge.name} on CurseForge for updates` : 'Find this addon on CurseForge so Tavern Host can update it';
       link.addEventListener('click', () => (p.curseforge ? unlinkCurseforge(p, packUrl) : linkCurseforge(p, packUrl)));
@@ -6360,7 +6406,7 @@ $('nexusForm').addEventListener('submit', async (e) => {
   btn.textContent = 'Installing…';
   try {
     const hexium = /hexium\.gg\//i.test(input);
-    const result = await api('POST', `/api/servers/${state.selected}/addons/${hexium ? 'hexium' : 'nexus'}`, { input });
+    const result = await api('POST', `${addonApi()}/${hexium ? 'hexium' : 'nexus'}`, { input });
     $('nexusInput').value = '';
     toast(`Installed from ${hexium ? 'Hexium' : 'Nexus Mods'}`);
     showInstallResult(result);
@@ -6379,12 +6425,12 @@ function showInstallResult(result) {
   for (const p of result.installed) ul.appendChild(el('li', null, `${{ installed: 'Installed', updated: 'Updated', reinstalled: 'Reinstalled' }[p.action.replace('-off', '')] ?? 'Installed'}${p.action.endsWith('-off') ? ' (switched off)' : ''} ${p.name} (${['behavior', 'resource'].includes(p.type) ? `${p.type} pack` : p.type}${p.version ? `, v${p.version}` : ''})`));
   box.appendChild(ul);
   for (const w of result.warnings) box.appendChild(el('div', 'warn-banner', w));
-  if (result.running) box.appendChild(el('div', 'muted small-text', 'Restart the server to load the new packs.'));
+  if (result.running) box.appendChild(el('div', 'muted small-text', `Restart the server to load the new ${addonKind === 'plugins' ? 'plugins' : 'packs'}.`));
   $('addonResult').prepend(box);
 }
 
 async function uploadAddon(file) {
-  const res = await fetch(`/api/servers/${state.selected}/addons/upload`, {
+  const res = await fetch(`${addonApi()}/upload`, {
     method: 'POST',
     headers: { 'X-Panel': '1', 'X-Filename': encodeURIComponent(file.name), 'Content-Type': 'application/octet-stream' },
     body: file,
@@ -6494,7 +6540,7 @@ async function uploadFolder(name, files) {
   const len = new Uint8Array(4);
   new DataView(len.buffer).setUint32(0, header.length, true);
   toast(`Installing ${name}…`);
-  const res = await fetch(`/api/servers/${state.selected}/addons/upload-folder`, {
+  const res = await fetch(`${addonApi()}/upload-folder`, {
     method: 'POST',
     headers: { 'X-Panel': '1', 'X-Filename': encodeURIComponent(`${name}.folder`), 'Content-Type': 'application/octet-stream' },
     body: new Blob([len, header, ...files.map((f) => f.file)]),
@@ -6504,13 +6550,70 @@ async function uploadFolder(name, files) {
   showInstallResult(data);
 }
 
+// Endstone plugins: search GitHub and PyPI through the server, install with one click.
+$('pluginSearchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const box = $('pluginResults');
+  box.innerHTML = '';
+  box.appendChild(el('p', 'muted', 'Searching GitHub and PyPI…'));
+  let found;
+  try {
+    found = await api('GET', `${addonApi()}/search?q=${encodeURIComponent($('pluginQuery').value)}`);
+  } catch (err) {
+    box.innerHTML = '';
+    return toast(err.message, true);
+  }
+  box.innerHTML = '';
+  for (const msg of found.errors) box.appendChild(el('p', 'warn-banner', msg));
+  if (!found.results.length) box.appendChild(el('p', 'muted', 'Nothing found.'));
+  const installed = new Set(addonState.packs.map((p) => p.id));
+  for (const r of found.results) {
+    const item = el('div', 'cf-item');
+    const tile = letterHead(r.name);
+    tile.classList.add('addon-icon');
+    item.appendChild(tile);
+    const info = el('div');
+    info.appendChild(el('div', 'name', r.name));
+    info.appendChild(el('div', 'meta', [r.source, r.version ? `v${r.version}` : null, r.author ? `by ${r.author}` : null, r.stars ? `★ ${r.stars}` : null].filter(Boolean).join(' · ')));
+    if (r.summary) info.appendChild(el('div', 'summary', r.summary));
+    const row = el('div', 'with-button');
+    const already = r.id.startsWith('pypi:') && installed.has(r.id.slice(5));
+    const install = el('button', 'small primary', already ? 'Reinstall' : 'Install');
+    install.addEventListener('click', async () => {
+      install.disabled = true;
+      install.textContent = 'Installing…';
+      try {
+        const result = await api('POST', `${addonApi()}/found`, { id: r.id });
+        showInstallResult(result);
+        addonState.packs = result.packs;
+        renderAddons();
+        noteRestart();
+        install.textContent = 'Installed';
+      } catch (err) {
+        toast(err.message, true);
+        install.disabled = false;
+        install.textContent = already ? 'Reinstall' : 'Install';
+      }
+    });
+    row.appendChild(install);
+    const page = el('a', 'small button-like', r.source === 'GitHub' ? 'On GitHub' : 'On PyPI');
+    page.href = r.url;
+    page.target = '_blank';
+    page.rel = 'noopener';
+    row.appendChild(page);
+    info.appendChild(row);
+    item.appendChild(info);
+    box.appendChild(item);
+  }
+});
+
 $('cfForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const box = $('cfResults');
   box.innerHTML = '';
   box.appendChild(el('p', 'muted', 'Searching…'));
   try {
-    const { results } = await api('GET', `/api/servers/${state.selected}/addons/curseforge/search?q=${encodeURIComponent($('cfQuery').value)}`);
+    const { results } = await api('GET', `${addonApi()}/curseforge/search?q=${encodeURIComponent($('cfQuery').value)}`);
     box.innerHTML = '';
     if (!results.length) box.appendChild(el('p', 'muted', 'Nothing found.'));
     for (const r of results) {
@@ -6529,7 +6632,7 @@ $('cfForm').addEventListener('submit', async (e) => {
         install.disabled = true;
         install.textContent = 'Installing…';
         try {
-          const result = await api('POST', `/api/servers/${state.selected}/addons/curseforge`, { projectId: r.id });
+          const result = await api('POST', `${addonApi()}/curseforge`, { projectId: r.id });
           if (result.needsBrowser) {
             toast(result.message);
             if (result.url) window.open(result.url, '_blank');

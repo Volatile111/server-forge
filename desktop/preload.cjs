@@ -11,8 +11,8 @@ contextBridge.exposeInMainWorld('desktop', {
   setIcon: (dataUrl) => ipcRenderer.invoke('set-icon', String(dataUrl)),
   /** Opens an addon site in a browser window; addon files downloaded there are installed on the given server. */
   browseAddons: (opts) =>
-    ipcRenderer.invoke('browse-addons', { url: String(opts?.url), serverId: String(opts?.serverId), serverName: String(opts?.serverName ?? ''), accept: String(opts?.accept ?? '') }),
-  /** Called with { serverId, filename, status: 'downloading'|'installed'|'failed', result?, error? }. */
+    ipcRenderer.invoke('browse-addons', { url: String(opts?.url), serverId: String(opts?.serverId), serverName: String(opts?.serverName ?? ''), accept: String(opts?.accept ?? ''), kind: opts?.kind === 'plugins' ? 'plugins' : 'addons' }),
+  /** Called with { serverId, kind, filename, status: 'downloading'|'installed'|'failed', result?, error? }. */
   onAddonDownload: (fn) => ipcRenderer.on('addon-download', (_e, info) => fn(info)),
   /** Lets the user pick a Tavern Host installer; resolves to its details (or null if cancelled). */
   pickInstaller: () => ipcRenderer.invoke('pick-installer'),

@@ -10,6 +10,7 @@ import { readWorldSettings, writeWorldSettings } from './bedrock-world.ts';
 import { chatStatus, setChatRelay, chatSayCommand } from './bedrock-chat.ts';
 import { listPacks, installAddonFile, removePack, setPackEnabled, reorderPacks, packIcon, movePack, getInstallLocation, setInstallLocation, type PackLocation, type PackType } from './bedrock-addons.ts';
 import { checkPackUpdates, installPackUpdate } from './bedrock-updates.ts';
+import { isEndstone, setupEndstone, endstoneLaunch, endstonePlugins, installedEndstone, endstoneBedrockVersion, envPython, recordBedrockVersion, importEndstone } from './endstone.ts';
 
 const EXE = 'bedrock_server.exe';
 const LINKS_API = 'https://net-secondary.web.minecraft-services.net/api/v1.0/download/links';
@@ -60,6 +61,21 @@ function checkValue(key: string, value: string) {
 
 // "[2026-09-22 15:28:07:282 INFO] Player connected: CorVariant, xuid: 2535..."
 const TIME_RE = /^\[(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}):\d+ \w+\] (.*)$/;
+// Endstone's logger: "[18:05:49 INFO]: Player connected: ..." (time only).
+const ENDSTONE_TIME_RE = /^\[(\d{2}):(\d{2}):(\d{2}) \w+\]: (.*)$/;
+const ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
+
+/** A console line's time and message, in either format; null for lines without a time. */
+function parseLine(raw: string): { ts: number; msg: string } | null {
+  const line = raw.replace(ANSI, '');
+  const m = TIME_RE.exec(line);
+  if (m) return { ts: new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`).getTime(), msg: m[7] };
+  const e = ENDSTONE_TIME_RE.exec(line);
+  if (!e) return null;
+  const d = new Date();
+  d.setHours(Number(e[1]), Number(e[2]), Number(e[3]), 0);
+  return { ts: d.getTime(), msg: e[4] };
+}
 
 function createBedrockParser(): LogParser {
   let ready = false;
@@ -71,10 +87,9 @@ function createBedrockParser(): LogParser {
 
   return {
     feed(line) {
-      const m = TIME_RE.exec(line);
-      if (!m) return;
-      const [, y, mo, d, h, mi, s, msg] = m;
-      const ts = new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}`).getTime();
+      const parsed = parseLine(line);
+      if (!parsed) return;
+      const { ts, msg } = parsed;
       let x: RegExpExecArray | null;
       if (/^Starting Server/.test(msg)) {
         ready = false;
@@ -86,6 +101,7 @@ function createBedrockParser(): LogParser {
       } else if ((x = /^Version:? (\S+)/.exec(msg))) version = x[1];
       else if ((x = /^Level Name: (.+)$/.exec(msg))) levelName = x[1];
       else if ((x = /^IPv4 supported, port: (\d+)/.exec(msg))) port = x[1];
+      else if ((x = /^Accepting clients on .*:(\d+)$/.exec(msg)) && !port) port = x[1];
       else if ((x = /^Player connected: (.+?), xuid: (\d*)/.exec(msg))) {
         players.set(x[1], { name: x[1], joinedAt: ts, platformId: x[2] || null });
         if (x[2]) known[x[2]] = x[1];
@@ -155,7 +171,24 @@ interface PermissionEntry {
 
 // ---------- module ----------
 
+const softwareField: SettingField = {
+  key: 'software',
+  label: 'Server software',
+  type: 'select',
+  options: [
+    { value: 'vanilla', label: 'Vanilla (Mojang)', help: "Mojang's Bedrock Dedicated Server. Addons only." },
+    {
+      value: 'endstone',
+      label: 'Endstone (plugins)',
+      help: 'Endstone runs the Bedrock server with plugin support (Python and C++ plugins) and still loads addons. Tavern Host downloads Python and Endstone itself. Endstone supports one Bedrock version at a time, so new Bedrock versions arrive with Endstone updates, usually a few days after Mojang releases them.',
+    },
+  ],
+  help: 'Switching takes effect at the next start (Tavern Host sets Endstone up then). Worlds, settings and addons are kept.',
+  restart: true,
+};
+
 const newFields: SettingField[] = [
+  softwareField,
   { key: 'prop:server-name', label: 'Server name', type: 'text', help: 'Shown in the Minecraft server list.' },
   { key: 'prop:server-port', label: 'Port', type: 'number', help: 'Default 19132. Each Bedrock server on this system needs its own port.' },
   { key: 'prop:level-name', label: 'World name', type: 'text' },
@@ -172,14 +205,16 @@ export const bedrock: GameModule = {
   processName: EXE,
   commands: { stop: 'stop' },
   eula: { label: 'I agree to the Minecraft End User License Agreement and Privacy Policy', url: 'https://www.minecraft.net/eula' },
-  // Bedrock's settings live in server.properties (Properties tab), not in panel settings.
-  fields: [],
+  // Bedrock's settings live in server.properties (Properties tab); the panel only keeps which software runs it.
+  fields: [softwareField],
   newFields,
 
-  defaults: () => ({}),
+  defaults: () => ({ software: 'vanilla' }),
 
   validate(s: Settings): Settings {
-    const out: Settings = {};
+    const software = String(s.software ?? 'vanilla');
+    if (!['vanilla', 'endstone'].includes(software)) throw new Error('Server software must be Vanilla or Endstone.');
+    const out: Settings = { software };
     for (const [k, v] of Object.entries(s)) {
       if (!k.startsWith(PROP_PREFIX)) continue;
       const key = k.slice(PROP_PREFIX.length);
@@ -196,13 +231,50 @@ export const bedrock: GameModule = {
     if (!existsSync(path.join(installDir, EXE))) throw new Error(`${EXE} was not found in that folder.`);
   },
 
+  // An imported Endstone server (it has Endstone's config) keeps running on Endstone.
+  detect: (installDir) => ({ software: existsSync(path.join(installDir, 'endstone.toml')) ? 'endstone' : 'vanilla' }),
+
+  // Import: an Endstone server may be in the chosen folder's bedrock_server folder, and its pip-installed plugins are
+  // brought in (see endstone.ts). Addons stay where they are, so they just need listing.
+  async prepareImport(chosen) {
+    const r = await importEndstone(chosen);
+    const notes = [...r.notes];
+    if (existsSync(path.join(r.installDir, EXE))) {
+      try {
+        const level = readProperties(path.join(r.installDir, 'server.properties')).values.get('level-name') || 'Bedrock level';
+        const packs = listPacks(r.installDir, level);
+        const on = packs.filter((p) => p.enabled).length;
+        if (packs.length) notes.push(`${packs.length} addon pack${packs.length === 1 ? '' : 's'} came along (${on} switched on in "${level}"), in the same load order.`);
+      } catch {}
+    }
+    if (r.endstone) notes.unshift('This is an Endstone server: it keeps running on Endstone, with its plugins in the Plugins tab.');
+    return { installDir: r.installDir, notes };
+  },
+
   launch(record) {
+    if (isEndstone(record)) return endstoneLaunch(record);
     return { exe: path.join(record.installDir, EXE), args: [], cwd: record.installDir };
+  },
+
+  // Endstone servers: set Endstone up the first time (also after switching an existing server to Endstone).
+  async prepare(record, note) {
+    if (!isEndstone(record) || (existsSync(envPython(record.installDir)) && installedEndstone(record.installDir))) return;
+    note('Setting up Endstone (first start only): Python, Endstone and the Bedrock version it supports…');
+    const r = await setupEndstone(record.installDir, { update: () => {}, line: note }, { vanillaVersion: installedVersion(record.installDir) });
+    recordBedrockVersion(record.installDir, r.bedrock);
   },
 
   createParser: createBedrockParser,
 
   async install(record, job, opts) {
+    if (isEndstone(record)) {
+      const firstInstall = !existsSync(propertiesFile(record));
+      const r = await setupEndstone(record.installDir, job, { upgrade: true, vanillaVersion: installedVersion(record.installDir), allowDowngrade: !!opts?.force });
+      if (firstInstall) applyInitialProperties(record);
+      recordBedrockVersion(record.installDir, r.bedrock);
+      job.line(`Endstone ${r.endstone} with Bedrock ${r.bedrock ?? '(version unknown)'} is installed.`);
+      return;
+    }
     job.update("Checking Mojang's latest Bedrock server…", null);
     const { url, version } = await latestDownload();
     const current = installedVersion(record.installDir);
@@ -243,8 +315,10 @@ export const bedrock: GameModule = {
 
   async details(record) {
     const { values } = readProperties(propertiesFile(record));
+    const endstone = isEndstone(record) ? installedEndstone(record.installDir) : null;
     const facts: [string, string | null][] = [
-      ['Installed version', installedVersion(record.installDir)],
+      ['Installed version', (isEndstone(record) && endstoneBedrockVersion(record.installDir)) || installedVersion(record.installDir)],
+      ['Server software', isEndstone(record) ? (endstone ? `Endstone ${endstone}` : 'Endstone (set up at the next start)') : null],
       ['Server name', values.get('server-name') ?? values.get('motd') ?? null],
       ['World', values.get('level-name') ?? null],
       ['Port', values.get('server-port') ?? null],
@@ -369,8 +443,8 @@ export const bedrock: GameModule = {
             continue;
           }
           if (lines && /Data saved/.test(lines[0]) && lines[1]) {
-            // "Bedrock level/db/000005.ldb:1234, Bedrock level/db/CURRENT:16, ..."
-            const files = [...lines[1].matchAll(/\s*(.+?):(\d+)(?:,|$)/g)].map((m) => ({ rel: path.join('worlds', m[1].trim()), length: Number(m[2]) }));
+            // "Bedrock level/db/000005.ldb:1234, Bedrock level/db/CURRENT:16, ..." (Endstone puts "[12:00:00 INFO]: " first)
+            const files = [...lines[1].replace(ANSI, '').replace(/^\[[\d:]+ \w+\]:\s*/, '').matchAll(/\s*(.+?):(\d+)(?:,|$)/g)].map((m) => ({ rel: path.join('worlds', m[1].trim()), length: Number(m[2]) }));
             if (!files.length) throw new Error("Couldn't read the file list Bedrock sent back.");
             return { files, finish };
           }
@@ -415,6 +489,9 @@ export const bedrock: GameModule = {
       describe: (record) => ({ server: record.installDir, world: path.join(record.installDir, 'worlds', levelName(record)) }),
     },
   },
+
+  // Endstone servers also take plugins (see endstone.ts).
+  plugins: endstonePlugins,
 
   connection(record) {
     const { values } = readProperties(path.join(record.installDir, 'server.properties'));

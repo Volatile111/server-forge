@@ -19,6 +19,7 @@ import { SPACE_ENGINEERS_APP } from './games/spaceengineers.ts';
 import { readProperties } from './properties.ts';
 import { latestFactorio, installedFactorio } from './games/factorio.ts';
 import { STEAM_APPS } from './games/steam-games.ts';
+import { isEndstone, latestEndstone, installedEndstone, endstoneBedrockVersion, compareVersions } from './games/endstone.ts';
 
 type Instance = ReturnType<typeof getInstance>;
 
@@ -104,6 +105,19 @@ const SOURCES: Record<string, Source> = {
     newer: newerDotted,
     guard: packLists,
   },
+  // Bedrock servers running on Endstone: Endstone releases on PyPI (each brings the Bedrock version it supports).
+  // Mojang's updates aren't offered to them: Endstone won't start a Bedrock version newer than it supports.
+  endstone: {
+    name: 'Endstone',
+    latest: async () => ({ version: await latestEndstone(), updated: null }),
+    current: (inst) => installedEndstone(inst.record.installDir),
+    currentLabel: (inst) => {
+      const mc = endstoneBedrockVersion(inst.record.installDir);
+      return `Endstone${mc ? `, running Bedrock ${mc}` : ''}`;
+    },
+    newer: (a, b) => compareVersions(a, b) > 0,
+    guard: packLists,
+  },
   valheim: {
     name: 'Valheim',
     latest: async () => {
@@ -163,14 +177,17 @@ const SOURCES: Record<string, Source> = {
 
 export const updatesSupported = (game: string) => game in SOURCES;
 
+/** Which update source a server follows: its game, except Bedrock servers on Endstone. */
+export const updateKey = (inst: Instance) => (inst.record.game === 'bedrock' && isEndstone(inst.record) ? 'endstone' : inst.record.game);
+
 const latest = new Map<string, { version: string; updated: number | null; checkedAt: number }>();
 const updating = new Set<string>();
 
 export function updateInfo(inst: Instance): UpdateInfo {
-  const src = SOURCES[inst.record.game];
+  const src = SOURCES[updateKey(inst)];
   if (!src) throw new Error(`${inst.module.name} servers don't have update checks.`);
   const current = src.current(inst);
-  const l = latest.get(inst.record.game) ?? null;
+  const l = latest.get(updateKey(inst)) ?? null;
   return {
     game: inst.record.game,
     current,
@@ -187,7 +204,7 @@ export function updateInfo(inst: Instance): UpdateInfo {
 
 /** Asks for the latest version of every game with servers here (at most every 10 minutes unless forced) and acts on it. */
 export async function checkUpdates(force = false, only?: string) {
-  const games = [...new Set(listInstances().map((i) => i.record.game))].filter((g) => SOURCES[g] && (!only || g === only));
+  const games = [...new Set(listInstances().map(updateKey))].filter((g) => SOURCES[g] && (!only || g === only));
   const errors: string[] = [];
   for (const game of games) {
     const have = latest.get(game);
@@ -200,7 +217,7 @@ export async function checkUpdates(force = false, only?: string) {
       continue;
     }
     for (const inst of listInstances()) {
-      if (inst.record.game !== game) continue;
+      if (updateKey(inst) !== game) continue;
       const info = updateInfo(inst);
       events.emit('game-update', { serverId: inst.id, ...info });
       if (info.available && inst.record.autoUpdate && !updating.has(inst.id)) {
@@ -227,12 +244,12 @@ async function waitForJob(serverId: string, jobId: string) {
  */
 export async function updateGame(serverId: string, opts: { countdownMinutes?: number; auto?: boolean; force?: boolean } = {}) {
   const inst = getInstance(serverId);
-  const src = SOURCES[inst.record.game];
+  const src = SOURCES[updateKey(inst)];
   if (!src) throw new Error(`${inst.module.name} servers can't be updated this way.`);
   if (updating.has(serverId)) throw new Error('This server is already updating.');
   updating.add(serverId);
   events.emit('state', serverId);
-  const target = latest.get(inst.record.game)?.version;
+  const target = latest.get(updateKey(inst))?.version;
   const targetLabel = target ? `${src.name} ${inst.record.game === 'valheim' ? `build ${target}` : target}` : `the latest ${src.name} version`;
   try {
     const wasRunning = inst.isRunning;

@@ -723,6 +723,9 @@ class ServerInstance {
       canBackup: !!this.module.backup,
       hasAddons: !!this.module.addons && (this.module.addons.available?.(this.record) ?? true),
       addonsTab: this.module.addons?.labels?.(this.record).tab ?? 'Addons',
+      // A second manager with its own tab (Bedrock on Endstone: Plugins).
+      hasPlugins: !!this.module.plugins && (this.module.plugins.available?.(this.record) ?? true),
+      software: this.record.game === 'bedrock' ? (this.record.settings.software ?? 'vanilla') : null,
       // Valheim: modding switched on (permanent), shown as a "Modded" badge.
       modded: this.module.addons?.isOn?.(this.record) ?? false,
       canDiagnose: !!this.module.diagnose,
@@ -980,6 +983,20 @@ export function addServer(record: ServerRecord) {
   saveServers();
   events.emit('state', record.id);
   return inst;
+}
+
+/** Import: lets the game find the real server folder and bring its extras along first (see GameModule.prepareImport). */
+export async function importServer(input: { game: string; name: string; installDir: string; settings?: Settings }) {
+  const module = GAMES[input.game];
+  if (!module) throw new Error('Unknown game.');
+  let installDir = String(input.installDir ?? '').trim();
+  let notes: string[] = [];
+  if (module.prepareImport && path.isAbsolute(installDir)) {
+    // Nothing is changed in a folder another server already uses.
+    assertFolderFree(installDir);
+    ({ installDir, notes } = await module.prepareImport(installDir));
+  }
+  return { inst: createServer({ ...input, installDir }), notes };
 }
 
 export function createServer(input: { game: string; name: string; installDir: string; settings?: Settings }) {

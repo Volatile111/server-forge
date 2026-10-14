@@ -243,11 +243,11 @@ ipcMain.handle('open-folder', async (_e, folder) => {
 // addon is uploaded to the server's addon manager, exactly as if it had been dropped on the Addons tab.
 
 let browser = null;
-let browseTarget = null; // { serverId, accept: ['.mcaddon', ...] }
+let browseTarget = null; // { serverId, accept: ['.mcaddon', ...], kind: 'addons' | 'plugins' }
 
-async function uploadToPanel(serverId, file, filename) {
+async function uploadToPanel(serverId, file, filename, kind = 'addons') {
   const [cookie] = await win.webContents.session.cookies.get({ url: PANEL_URL, name: 'panel_session' });
-  const res = await fetch(`${PANEL_URL}/api/servers/${encodeURIComponent(serverId)}/addons/upload`, {
+  const res = await fetch(`${PANEL_URL}/api/servers/${encodeURIComponent(serverId)}/${kind === 'plugins' ? 'plugins' : 'addons'}/upload`, {
     method: 'POST',
     headers: {
       'X-Panel': '1',
@@ -292,7 +292,7 @@ async function installHexium(pkg) {
     if (!res.ok) throw new Error(data.error || `Install failed (HTTP ${res.status})`);
     win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'installed', result: data });
   } catch (err) {
-    win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'failed', error: err.message });
+    win?.webContents.send('addon-download', { serverId: target.serverId, kind: target.kind, filename, status: 'failed', error: err.message });
   }
 }
 
@@ -329,7 +329,7 @@ async function installNexusLink(link) {
     if (!res.ok) throw new Error(data.error || `Install failed (HTTP ${res.status})`);
     win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'installed', result: data });
   } catch (err) {
-    win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'failed', error: err.message });
+    win?.webContents.send('addon-download', { serverId: target.serverId, kind: target.kind, filename, status: 'failed', error: err.message });
   }
 }
 
@@ -344,8 +344,8 @@ function browserMenu(home) {
   ]);
 }
 
-function openAddonBrowser({ url, serverId, serverName, accept }) {
-  browseTarget = { serverId, serverName, accept };
+function openAddonBrowser({ url, serverId, serverName, accept, kind = 'addons' }) {
+  browseTarget = { serverId, serverName, accept, kind };
   if (browser && !browser.isDestroyed()) {
     browser.setMenu(browserMenu(url));
     browser.loadURL(url);
@@ -423,7 +423,7 @@ function handleAddonDownload(_e, item) {
     const file = item.getSavePath();
     if (state !== 'completed') {
       rmSync(file, { force: true });
-      win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'failed', error: `Download ${state}.` });
+      win?.webContents.send('addon-download', { serverId: target.serverId, kind: target.kind, filename, status: 'failed', error: `Download ${state}.` });
       return;
     }
     // Websites can start downloads on their own: always ask before installing one on a server.
@@ -438,14 +438,14 @@ function handleAddonDownload(_e, item) {
     });
     if (response !== 1) {
       rmSync(file, { force: true });
-      win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'failed', error: 'Not installed (cancelled).' });
+      win?.webContents.send('addon-download', { serverId: target.serverId, kind: target.kind, filename, status: 'failed', error: 'Not installed (cancelled).' });
       return;
     }
     try {
-      const result = await uploadToPanel(target.serverId, file, filename);
-      win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'installed', result });
+      const result = await uploadToPanel(target.serverId, file, filename, target.kind);
+      win?.webContents.send('addon-download', { serverId: target.serverId, kind: target.kind, filename, status: 'installed', result });
     } catch (err) {
-      win?.webContents.send('addon-download', { serverId: target.serverId, filename, status: 'failed', error: err.message });
+      win?.webContents.send('addon-download', { serverId: target.serverId, kind: target.kind, filename, status: 'failed', error: err.message });
     } finally {
       rmSync(file, { force: true });
     }
@@ -686,7 +686,9 @@ ipcMain.handle('browse-addons', async (_e, opts) => {
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter((s) => /^\.\w+$/.test(s));
-  openAddonBrowser({ url, serverId: String(opts?.serverId ?? ''), serverName: String(opts?.serverName ?? ''), accept });
+  // Which manager downloads go to: addons, or plugins (Endstone servers have both).
+  const kind = opts?.kind === 'plugins' ? 'plugins' : 'addons';
+  openAddonBrowser({ url, serverId: String(opts?.serverId ?? ''), serverName: String(opts?.serverName ?? ''), accept, kind });
 });
 
 app.whenReady().then(async () => {

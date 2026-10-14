@@ -110,8 +110,8 @@ export function nodeRequest(
   });
 }
 
-export async function nodeJson<T = unknown>(node: NodeRecord, method: string, path: string, body?: unknown): Promise<T> {
-  const res = await nodeRequest(node, method, path, body !== undefined ? { headers: { 'Content-Type': 'application/json' }, body: Buffer.from(JSON.stringify(body)) } : {});
+export async function nodeJson<T = unknown>(node: NodeRecord, method: string, path: string, body?: unknown, timeoutMs?: number): Promise<T> {
+  const res = await nodeRequest(node, method, path, { ...(body !== undefined ? { headers: { 'Content-Type': 'application/json' }, body: Buffer.from(JSON.stringify(body)) } : {}), timeoutMs });
   const chunks: Buffer[] = [];
   for await (const c of res) chunks.push(c as Buffer);
   const text = Buffer.concat(chunks).toString('utf-8');
