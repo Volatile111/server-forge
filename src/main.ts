@@ -4,6 +4,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { installVcRedist } from './vcredist.ts';
 import { curseforgeKey, setCurseforgeKey, searchProjects, latestFile, newestFile } from './curseforge.ts';
 import { linkPacks, unlinkPack, getUpdateSettings, setUpdateSettings } from './games/bedrock-addons.ts';
 import { listProxyServers, addProxyServer, removeProxyServer, setDefaultProxyServer, proxyName, prepareBackend } from './games/bungee-network.ts';
@@ -2090,6 +2091,25 @@ route('DELETE', '/api/servers/:id/diagnose', async (ctx) => {
   return {};
 });
 
+// One-click fix from the crash checker (Bedrock): install the Microsoft Visual C++ runtime on the server's system.
+// Windows asks for admin rights there; waits until the installer is done (a minute or two).
+route('POST', '/api/servers/:id/vcredist', async (ctx) => {
+  const p = needServer(ctx, 'settings.edit', ctx.params[0]);
+  const inst = getInstance(ctx.params[0]);
+  let message: string;
+  try {
+    message = await installVcRedist(inst.record.installDir);
+  } catch (err) {
+    throw new HttpError(400, (err as Error).message);
+  }
+  audit(p, `installed the Visual C++ runtime for "${inst.record.name}"`);
+  // The finding is fixed: check again so the Overview card shows what's left (if anything).
+  try {
+    inst.diagnoseNow();
+  } catch {}
+  return { message };
+});
+
 // One-click fix from the crash checker: accept the Minecraft EULA.
 route('POST', '/api/servers/:id/eula', async (ctx) => {
   const p = needServer(ctx, 'settings.edit', ctx.params[0]);
@@ -2781,6 +2801,7 @@ function permFor(method: string, sub: string): { server?: ServerPerm; also?: Ser
     [/^\/network(\/[^/]+)?$/, 'view', 'properties.edit'],
     [/^\/profiles(\/[^/]+(\/activate)?)?$/, 'view', 'settings.edit'],
     [/^\/eula$/, null, 'settings.edit'],
+    [/^\/vcredist$/, null, 'settings.edit'],
   ];
   if (s === '' && method === 'PUT') return { server: 'settings.edit' };
   if (s === '' && method === 'DELETE') return { server: 'server.delete' };

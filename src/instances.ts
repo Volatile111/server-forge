@@ -24,6 +24,7 @@ import { enshrouded } from './games/enshrouded.ts';
 import { vrising } from './games/vrising.ts';
 import { zomboid } from './games/zomboid.ts';
 import { sevenDays } from './games/sevendays.ts';
+import { listProxyServers } from './games/bungee-network.ts';
 import { setStatsSource, forgetStats } from './stats.ts';
 import { parseChatLine, recordChat } from './chat.ts';
 import { syncPlayers, forgetPlayers, mutedPlayers } from './players.ts';
@@ -442,8 +443,14 @@ class ServerInstance {
       this.startWatching();
     } catch (err) {
       this.pid = null;
-      this.setStatus('stopped', (err as Error).message);
       this.note(`Start failed: ${(err as Error).message}`);
+      // Games with a crash checker explain it (with a fix where there is one), like after a crash.
+      if (this.module.diagnose) {
+        try {
+          this.diagnosis = this.module.diagnose(this.record, this.logFile, Date.now() - 60_000) as typeof this.diagnosis;
+        } catch {}
+      }
+      this.setStatus('stopped', (err as Error).message);
       throw err;
     } finally {
       this.busy = false;
@@ -726,6 +733,8 @@ class ServerInstance {
       // A second manager with its own tab (Bedrock on Endstone: Plugins).
       hasPlugins: !!this.module.plugins && (this.module.plugins.available?.(this.record) ?? true),
       software: this.record.game === 'bedrock' ? (this.record.settings.software ?? 'vanilla') : null,
+      // BungeeCord: the servers in its config.yml (the panel shows those it can match under the proxy).
+      proxyBackends: this.proxyBackends(),
       // Valheim: modding switched on (permanent), shown as a "Modded" badge.
       modded: this.module.addons?.isOn?.(this.record) ?? false,
       canDiagnose: !!this.module.diagnose,
@@ -737,6 +746,20 @@ class ServerInstance {
       backupSchedule: this.record.backupSchedule ?? { everyHours: 0, keep: 10 },
       ...details,
     };
+  }
+
+  private proxyCache: { mtime: number; list: { name: string; address: string }[] } | null = null;
+
+  /** A BungeeCord proxy's servers ({name, address} from config.yml), read again only when the file changes; else null. */
+  proxyBackends(): { name: string; address: string }[] | null {
+    if (this.record.game !== 'java' || this.record.settings.flavor !== 'bungeecord') return null;
+    try {
+      const mtime = statSync(path.join(this.record.installDir, 'config.yml')).mtimeMs;
+      if (this.proxyCache?.mtime !== mtime) this.proxyCache = { mtime, list: listProxyServers(this.record).servers.map((s) => ({ name: s.name, address: s.address })) };
+      return this.proxyCache.list;
+    } catch {
+      return [];
+    }
   }
 
   /** What backups (and clones) need: the record, game module, running state and console access. */

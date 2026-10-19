@@ -16,7 +16,7 @@ export interface Finding {
   /** Log lines that show it. */
   evidence: string[];
   /** One-click fixes the UI can offer. */
-  actions: ({ type: 'disable-content'; id: string; label: string } | { type: 'set-java'; version: number; label: string } | { type: 'open-tab'; tab: string; label: string } | { type: 'accept-eula'; label: string })[];
+  actions: ({ type: 'disable-content'; id: string; label: string } | { type: 'set-java'; version: number; label: string } | { type: 'open-tab'; tab: string; label: string } | { type: 'accept-eula'; label: string } | { type: 'install-vcredist'; label: string })[];
 }
 
 export interface Diagnosis {

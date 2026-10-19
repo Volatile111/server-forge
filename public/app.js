@@ -374,10 +374,44 @@ setInterval(updateSidebarStats, 3000);
 
 // Servers grouped by game (one section each), in the saved order inside a section (drag to change it). Sections are
 // ordered by where their first server sits in the saved list, so dragging a section moves its servers as a block.
+// BungeeCord networks: which Tavern Host servers each proxy's config.yml points at (matched by address), worked out on
+// every sidebar redraw. proxyLinks: server id -> { proxy, name, address }; proxyChildren: proxy id -> [{ server, name }].
+let proxyLinks = new Map();
+let proxyChildren = new Map();
+const LOOPBACK = /^(127\.\d+\.\d+\.\d+|localhost|0\.0\.0\.0|::1|\[::1\])$/i;
+
+function linkProxies() {
+  proxyLinks = new Map();
+  proxyChildren = new Map();
+  const all = [...state.servers.values()];
+  for (const p of all) {
+    if (!p.proxyBackends?.length) continue;
+    for (const b of p.proxyBackends) {
+      const m = /^(.*):(\d+)$/.exec(b.address);
+      if (!m) continue;
+      const [, host, port] = m;
+      // 127.0.0.1 / localhost: a server on the proxy's own system. Otherwise a server whose system has that address.
+      const hit = all.find(
+        (s) =>
+          s.id !== p.id &&
+          !s.proxyBackends &&
+          !proxyLinks.has(s.id) &&
+          String(s.connection?.port) === port &&
+          (LOOPBACK.test(host) || host === p.connection?.ip ? nodeKey(s) === nodeKey(p) : s.connection?.ip === host),
+      );
+      if (!hit) continue;
+      proxyLinks.set(hit.id, { proxy: p, name: b.name, address: b.address });
+      if (!proxyChildren.has(p.id)) proxyChildren.set(p.id, []);
+      proxyChildren.get(p.id).push({ server: hit, name: b.name });
+    }
+  }
+}
+
 function renderSidebar() {
   // Redrawing mid-drag would cancel the drag; catch up when it ends.
   if (dragging) return void (sidebarPending = true);
   sidebarPending = false;
+  linkProxies();
   const nav = $('serverList');
   nav.innerHTML = '';
   if (!state.servers.size) nav.appendChild(el('p', 'muted small-text', 'No servers yet.'));
@@ -603,7 +637,18 @@ function renderGameGroups(nav, servers, nk) {
     section.appendChild(head);
     if (!collapsed) {
       const inOrder = group.servers.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-      for (const s of inOrder) section.appendChild(serverLink(s, game));
+      // Servers behind a BungeeCord proxy in this section are listed under it instead of on their own.
+      const here = new Set(group.servers.map((s) => s.id));
+      const nested = (s) => here.has(proxyLinks.get(s.id)?.proxy.id);
+      for (const s of inOrder) {
+        if (nested(s)) continue;
+        section.appendChild(serverLink(s, game));
+        const kids = (proxyChildren.get(s.id) ?? []).filter((k) => here.has(k.server.id));
+        if (!kids.length) continue;
+        const box = el('div', 'proxy-children');
+        for (const k of kids) box.appendChild(serverLink(k.server, game, { proxy: s, name: k.name }));
+        section.appendChild(box);
+      }
     }
     nav.appendChild(section);
   }
@@ -718,11 +763,13 @@ function enableDrag(a, s, game) {
   });
 }
 
-function serverLink(s, game) {
+/** `child`: shown under its BungeeCord proxy ({ proxy, name } = the proxy and its name for this server there). */
+function serverLink(s, game, child = null) {
   const a = el('a');
   a.href = `#${s.id}`;
-  a.className = `s-${s.status}${s.id === state.selected ? ' active' : ''}`;
-  if (s.permissions?.includes('settings.edit')) enableDrag(a, s, game);
+  a.className = `s-${s.status}${s.id === state.selected ? ' active' : ''}${child ? ' proxy-child' : ''}`;
+  // Servers under a proxy follow it; the order is changed by dragging the proxy.
+  if (!child && s.permissions?.includes('settings.edit')) enableDrag(a, s, game);
   // Type icon with the status dot on its corner.
   const icon = serverIcon(s, 'srv-icon side');
   icon.appendChild(el('span', 'dot'));
@@ -735,7 +782,13 @@ function serverLink(s, game) {
     s.game === 'java'
       ? `Java · ${JAVA_FLAVOR_NAMES[s.settings?.flavor] ?? 'Custom jar'}`
       : `${s.gameName.replace(/^Minecraft /, '')}${s.modded ? ' · Modded' : ''}${s.game === 'bedrock' && s.settings?.software === 'endstone' ? ' · Endstone' : ''}`;
-  text.appendChild(el('div', 'sub', `${kind} · ${STATUS_LABEL[s.status]}${players}`));
+  // Behind a proxy: its name in the proxy, or (when shown elsewhere, e.g. on another system) which proxy.
+  const linked = proxyLinks.get(s.id);
+  const via = child ? ` · "${child.name}"` : linked ? ` · via ${linked.proxy.name}` : '';
+  const backends = proxyChildren.get(s.id)?.length;
+  const count = backends ? ` · ${backends} server${backends === 1 ? '' : 's'}` : '';
+  text.appendChild(el('div', 'sub', `${kind}${count}${via} · ${STATUS_LABEL[s.status]}${players}`));
+  if (linked) a.title = `Behind BungeeCord "${linked.proxy.name}" as "${linked.name}" (${linked.address})`;
   // Mini CPU/RAM view (filled in by updateSidebarStats) for servers that are running.
   if (['running', 'starting', 'stopping'].includes(s.status)) {
     const mini = el('div', 'mini-res');
@@ -1399,7 +1452,7 @@ async function renderResources() {
 }
 setInterval(renderResources, 3000);
 
-// ---------- crash checker (Java) ----------
+// ---------- crash checker (Java, Bedrock) ----------
 
 let diagShownAt = null;
 function renderDiagnosis() {
@@ -1451,6 +1504,15 @@ async function runDiagAction(a, btn) {
     } else if (a.type === 'accept-eula') {
       await api('POST', `/api/servers/${id}/eula`);
       toast('EULA accepted. Start the server again.');
+    } else if (a.type === 'install-vcredist') {
+      const where = state.detail.node?.name ?? 'this PC';
+      if (!(await confirmBox(`Install the Microsoft Visual C++ Redistributable (x64) on ${where}?\n\nTavern Host downloads Microsoft's installer and runs it quietly. Windows will ask for admin rights on ${where}, so someone needs to be there to click Yes. It takes a minute or two.`, 'Install'))) {
+        btn.disabled = false;
+        return;
+      }
+      btn.textContent = 'Installing… (answer the Windows prompt)';
+      const r = await api('POST', `/api/servers/${id}/vcredist`);
+      toast(r.message);
     } else if (a.type === 'open-tab') {
       setTab(a.tab);
     }

@@ -1,5 +1,17 @@
 # Changelog
 
+## Tavern Host 0.8.1
+
+Crash reports for Bedrock servers, and BungeeCord networks shown together.
+
+**New**
+- **Crash check for Bedrock servers.** When a Bedrock server (vanilla or Endstone) crashes or won't start, the Overview tab explains why in plain words, with a fix:
+  - **Windows error codes** are translated. For example, exit code 3221225781 now says the server is missing the **Microsoft Visual C++ runtime**, which Windows doesn't include, with an **Install Visual C++ runtime** button. It downloads Microsoft's installer and runs it on the server's PC (Windows asks for admin rights there once). Crashes like access violations, stack overflows and running out of memory are explained too.
+  - **Checked before starting:** if the Visual C++ runtime is missing, Tavern Host says so straight away instead of the server failing with a bare number.
+  - **From the log:** the port already in use, a world that can't be opened, addons reporting errors (with a tip to turn on addon error logging when a crash leaves no clues).
+  - **Endstone:** a Bedrock version newer than Endstone supports, a broken Python setup, and plugins that failed, named, including when one bad plugin file stops all plugins loading.
+- **BungeeCord networks in the server list.** Servers listed in a BungeeCord proxy's config.yml now appear under the proxy in the list on the left, with the name the proxy knows them by, and the proxy shows how many servers it has. Servers on another system stay with that system and are marked "via" the proxy.
+
 ## Tavern Host 0.8.0
 
 Endstone servers with plugins, a Plugins tab, and importing existing Endstone servers.

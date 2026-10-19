@@ -10,6 +10,7 @@ import { readWorldSettings, writeWorldSettings } from './bedrock-world.ts';
 import { chatStatus, setChatRelay, chatSayCommand } from './bedrock-chat.ts';
 import { listPacks, installAddonFile, removePack, setPackEnabled, reorderPacks, packIcon, movePack, getInstallLocation, setInstallLocation, type PackLocation, type PackType } from './bedrock-addons.ts';
 import { checkPackUpdates, installPackUpdate } from './bedrock-updates.ts';
+import { diagnoseBedrock, missingVcDlls } from './bedrock-diagnose.ts';
 import { isEndstone, setupEndstone, endstoneLaunch, endstonePlugins, installedEndstone, endstoneBedrockVersion, envPython, recordBedrockVersion, importEndstone } from './endstone.ts';
 
 const EXE = 'bedrock_server.exe';
@@ -258,6 +259,11 @@ export const bedrock: GameModule = {
 
   // Endstone servers: set Endstone up the first time (also after switching an existing server to Endstone).
   async prepare(record, note) {
+    // Without the Visual C++ runtime Windows refuses to start bedrock_server.exe (exit code 3221225781): say so now.
+    const missing = missingVcDlls(record.installDir);
+    if (missing.length) {
+      throw new Error(`This system is missing the Microsoft Visual C++ runtime the Bedrock server needs (${missing.join(', ')}). Use "Install Visual C++ runtime" on the Overview tab, then start again.`);
+    }
     if (!isEndstone(record) || (existsSync(envPython(record.installDir)) && installedEndstone(record.installDir))) return;
     note('Setting up Endstone (first start only): Python, Endstone and the Bedrock version it supports…');
     const r = await setupEndstone(record.installDir, { update: () => {}, line: note }, { vanillaVersion: installedVersion(record.installDir) });
@@ -492,6 +498,9 @@ export const bedrock: GameModule = {
 
   // Endstone servers also take plugins (see endstone.ts).
   plugins: endstonePlugins,
+
+  // Crash checker: Windows exit codes (e.g. missing Visual C++ runtime), port clashes, world/addon/plugin errors.
+  diagnose: (record, logFile, since) => diagnoseBedrock(record, logFile, since),
 
   connection(record) {
     const { values } = readProperties(path.join(record.installDir, 'server.properties'));

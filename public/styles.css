@@ -122,6 +122,10 @@ body.dev-build { box-sizing: border-box; padding-top: 24px; }
 #serverList a.active { background: var(--panel-2); border-left-color: var(--accent); }
 /* Drag to reorder: the row being moved fades, and a line shows where it will land. */
 #serverList a.dragging { opacity: .4; }
+/* Servers behind a BungeeCord proxy, listed under it with a guide line from the proxy's icon. */
+#serverList .proxy-children { margin-left: 30px; border-left: 2px solid var(--border); }
+#serverList a.proxy-child { padding-left: 12px; padding-top: 7px; padding-bottom: 7px; }
+#serverList a.proxy-child .srv-icon { transform: scale(.85); }
 #serverList a.drop-before { box-shadow: inset 0 3px 0 var(--accent); }
 #serverList a.drop-after { box-shadow: inset 0 -3px 0 var(--accent); }
 #serverList .group-head.dragging { opacity: .4; }
