@@ -1,7 +1,7 @@
 // Publishes a built installer as a GitHub release: creates the release (tag v<version>) if needed, uploads the
 // installer (replacing one with the same name) and sets the notes from CHANGELOG.md.
 //   node tools/publish-release.mjs host     Tavern Host → github.com/Volatile111/server-forge
-//   node tools/publish-release.mjs client   Tavern Client Mod Manager → github.com/Volatile111/mod-forge-releases
+//   node tools/publish-release.mjs client   Tavern Client Mod Manager → github.com/Volatile111/sf-mod-manager-releases
 // Needs a GitHub token with write access in the GH_TOKEN environment variable (it's never printed).
 // Run by `npm run release` / `npm run release:client` after building.
 import { readFileSync, statSync, existsSync } from 'node:fs';
@@ -18,10 +18,10 @@ const APPS = {
     file: (v) => `Server-Forge-Setup-${v}.exe`,
   },
   client: {
-    repo: 'Volatile111/mod-forge-releases',
-    title: 'Mod Forge',
+    repo: 'Volatile111/sf-mod-manager-releases',
+    title: 'SF Mod Manager',
     version: () => JSON.parse(readFileSync(path.join(root, 'companion', 'builder.json'), 'utf8')).extraMetadata.version,
-    file: (v) => `Mod-Forge-Setup-${v}.exe`,
+    file: (v) => `SF-Mod-Manager-Setup-${v}.exe`,
   },
 };
 const app = APPS[which];

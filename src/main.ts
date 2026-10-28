@@ -270,14 +270,14 @@ const updatedFrom: { from: string | null; at: number } | null = (() => {
 
 /**
  * What this panel is, for its name:
- * - manages nodes, nothing of its own (no game servers, no Tavern Vault connected here): "Forge Master"
- * - manages nodes and has its own servers or storage too: "Super Forge"
- * - is a node of another panel (its node link has been used): "Forge Node", or "Super Forge Node" with Tavern Vault here
+ * - manages nodes, nothing of its own (no game servers, no Tavern Vault connected here): "Server Forge Master"
+ * - manages nodes and has its own servers or storage too: "Super Server Forge"
+ * - is a node of another panel (its node link has been used): "Server Forge Node", or "Super Server Forge Node" with Tavern Vault here
  * - otherwise: "Server Forge"
  * Managing nodes wins if a panel is both. Whether Tavern Vault is connected here is checked at most once a minute.
  */
 type PanelRole = 'host' | 'master' | 'super' | 'node' | 'supernode';
-const PANEL_NAMES: Record<PanelRole, string> = { host: 'Server Forge', master: 'Forge Master', super: 'Super Forge', node: 'Forge Node', supernode: 'Super Forge Node' };
+const PANEL_NAMES: Record<PanelRole, string> = { host: 'Server Forge', master: 'Server Forge Master', super: 'Super Server Forge', node: 'Server Forge Node', supernode: 'Super Server Forge Node' };
 let ownVault = { at: 0, ok: false };
 async function panelIdentity(): Promise<{ role: PanelRole; name: string }> {
   if (Date.now() - ownVault.at > 60_000) ownVault = { at: Date.now(), ok: (await vaultState().catch(() => ({ state: 'down' }))).state === 'ok' };

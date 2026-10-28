@@ -1,13 +1,13 @@
 {
   "appId": "com.tavernhost.clientmodmanager",
-  "productName": "Mod Forge",
+  "productName": "SF Mod Manager",
   "directories": {
     "output": "release"
   },
   "extraMetadata": {
     "name": "tavern-client-mod-manager",
-    "productName": "Mod Forge",
-    "version": "0.5.5",
+    "productName": "SF Mod Manager",
+    "version": "0.6.0",
     "main": "companion/main.js"
   },
   "files": [
@@ -31,12 +31,12 @@
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Mod Forge",
+    "shortcutName": "SF Mod Manager",
     "runAfterFinish": true,
     "installerIcon": "companion/icon.ico",
     "uninstallerIcon": "companion/icon.ico",
     "license": "LICENSE",
-    "artifactName": "Mod-Forge-Setup-${version}.exe"
+    "artifactName": "SF-Mod-Manager-Setup-${version}.exe"
   },
   "publish": null
 }

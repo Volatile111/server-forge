@@ -139,7 +139,7 @@ function show(view) {
 }
 
 /**
- * The panel's name follows what it does: "Server Forge", "Forge Master" (only manages other systems) or "Super Forge"
+ * The panel's name follows what it does: "Server Forge", "Server Forge Master" (only manages other systems) or "Super Server Forge"
  * (manages other systems and has its own servers or storage). Sent by the service with /api/me and the storage summary.
  */
 function applyPanelName(panel) {
@@ -152,10 +152,10 @@ function applyPanelName(panel) {
   if (brand)
     brand.title =
       {
-        master: 'Forge Master: this panel manages other systems (nodes) and has no game servers or storage of its own.',
-        super: 'Super Forge: this panel manages other systems (nodes) and has its own game servers or storage too.',
-        node: 'Forge Node: a main panel on another system manages this one.',
-        supernode: 'Super Forge Node: a main panel on another system manages this one, and Tavern Vault is here too.',
+        master: 'Server Forge Master: this panel manages other systems (nodes) and has no game servers or storage of its own.',
+        super: 'Super Server Forge: this panel manages other systems (nodes) and has its own game servers or storage too.',
+        node: 'Server Forge Node: a main panel on another system manages this one.',
+        supernode: 'Super Server Forge Node: a main panel on another system manages this one, and Tavern Vault is here too.',
       }[state.panel?.role] ?? '';
 }
 
@@ -4987,7 +4987,7 @@ const API_DOCS = [
     ['POST', '/api/servers/{id}/plugins/found', 'Endstone: install the newest file of a search result: {"id":"pypi:endstone-essentials"} or {"id":"github:owner/repo"}', 'Manage mods / plugins / addons'],
     ['GET', '/api/servers/{id}/share', "Players' share link (Valheim, Minecraft Java, Satisfactory, Bedrock, Terraria tModLoader, Space Engineers): links, public link, what's shared (summary, with mode sync|links|info), Remote access status", 'Share mods with players'],
     ['POST', '/api/servers/{id}/share', 'Sharing on/off or a new link: {"enabled":true,"newLink":false}', 'Share mods with players'],
-    ['GET', '/api/share/{token}', "What the players' Mod Forge reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion", 'The share link token (no login)'],
+    ['GET', '/api/share/{token}', "What the players' SF Mod Manager reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion", 'The share link token (no login)'],
     ['GET', '/api/share/{token}/file/{name}', 'Download a shared mod file (Valheim uploads, Nexus and Hexium copies; Minecraft Java mod jars players need)', 'The share link token (no login)'],
   ]],
   ['Tasks', [
@@ -5733,7 +5733,7 @@ $('addonCheckUpdates').addEventListener('click', async () => {
   }
 });
 
-// Sharing with players' Mod Forge (Valheim).
+// Sharing with players' SF Mod Manager (Valheim).
 async function loadShare() {
   let info;
   try {
@@ -5746,10 +5746,10 @@ async function loadShare() {
 
 /** How many mods players get, and which ones they don't (with the reason and, where there is one, the fix). */
 const SHARE_INTRO = {
-  sync: 'Players install <b>Mod Forge</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren\'t shared.',
-  java: 'Players install <b>Mod Forge</b> and paste this link once. It sets up the same mod loader in their Minecraft launcher (a separate profile, so their other worlds and mods are untouched) and keeps its mods the same as this server\'s. "Server only" mods aren\'t shared.',
-  links: 'Players install <b>Mod Forge</b> and paste this link once. It shows this server\'s mods with versions, and each one opens in <b>Satisfactory Mod Manager</b> to install, so players don\'t have to hunt for them.',
-  info: "This game downloads what it needs by itself when a player joins. The link gives players this server's join details in <b>Mod Forge</b>, next to their other servers.",
+  sync: 'Players install <b>SF Mod Manager</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren\'t shared.',
+  java: 'Players install <b>SF Mod Manager</b> and paste this link once. It sets up the same mod loader in their Minecraft launcher (a separate profile, so their other worlds and mods are untouched) and keeps its mods the same as this server\'s. "Server only" mods aren\'t shared.',
+  links: 'Players install <b>SF Mod Manager</b> and paste this link once. It shows this server\'s mods with versions, and each one opens in <b>Satisfactory Mod Manager</b> to install, so players don\'t have to hunt for them.',
+  info: "This game downloads what it needs by itself when a player joins. The link gives players this server's join details in <b>SF Mod Manager</b>, next to their other servers.",
 };
 
 function renderShareSummary(body, s) {
@@ -5762,7 +5762,7 @@ function renderShareSummary(body, s) {
     return;
   }
   body.appendChild(el('p', s.shared ? 'ok-text' : 'warn-text', s.vanilla ? 'A vanilla profile is active: players get no mods (their app removes the ones it added).' : s.shared ? `Players get ${s.shared} mod${s.shared === 1 ? '' : 's'}.` : 'Players get no mods yet: nothing on this server can be shared.'));
-  if (s.settings) body.appendChild(el('p', 'muted small-text', `Players also get ${s.settings} mod setting${s.settings === 1 ? '' : 's'} (chosen with "To players" in a mod's Settings). Needs Mod Forge 0.5.1 or newer.`));
+  if (s.settings) body.appendChild(el('p', 'muted small-text', `Players also get ${s.settings} mod setting${s.settings === 1 ? '' : 's'} (chosen with "To players" in a mod's Settings). Needs SF Mod Manager 0.5.1 or newer.`));
   if (s.loader && !s.loaderVersion) body.appendChild(el('p', 'warn-banner', "Server Forge doesn't know which loader version this server runs (it wasn't installed by Server Forge). Players' app syncs the mods but can't set the loader up, so players install it themselves."));
   if (s.manual?.length) {
     const box = el('div', 'warn-banner');
@@ -5809,7 +5809,7 @@ function renderShare(info) {
         'p',
         null,
         !info.remote.enabled
-          ? `Players' Mod Forge connects to this system through Remote access (HTTPS, port ${info.remote.port}), which is off. Turn it on to get the link.`
+          ? `Players' SF Mod Manager connects to this system through Remote access (HTTPS, port ${info.remote.port}), which is off. Turn it on to get the link.`
           : `Remote access is switched on but isn't running on port ${info.remote.port} (another program may be using the port). Check Settings → Remote access.`,
       ),
     );
@@ -5964,7 +5964,7 @@ function renderOtherSettingsFiles(list) {
 }
 
 // ---------- mod settings (Valheim: BepInEx config files) ----------
-// Each setting can be sent to players: their Mod Forge writes the server's value into their own copy of
+// Each setting can be sent to players: their SF Mod Manager writes the server's value into their own copy of
 // the file when it syncs. Needed for player-side settings, such as Server devcommands' automatic god mode for admins.
 
 let msState = null; // { server, data, edits: Map(id -> value), shared: Set(id) }
@@ -6091,7 +6091,7 @@ function renderModSettings() {
       }),
     );
     const share = el('label', 'toggle ms-share');
-    share.title = "Players' Mod Forge sets this to the server's value in their own game every time it syncs.";
+    share.title = "Players' SF Mod Manager sets this to the server's value in their own game every time it syncs.";
     const cb = el('input');
     cb.type = 'checkbox';
     cb.checked = msState.shared.has(id);

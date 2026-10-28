@@ -45,7 +45,7 @@
   <header class="topbar">
     <div class="top-left">
       <span class="version" id="appVersion"></span>
-      <span class="credit">Created by CorruptedVariant · <a href="https://github.com/Volatile111/mod-forge-releases/releases/latest" target="_blank" rel="noopener" title="Mod Forge: keeps players' Valheim mods matched to your server">Get the player mod manager</a></span>
+      <span class="credit">Created by CorruptedVariant · <a href="https://github.com/Volatile111/sf-mod-manager-releases/releases/latest" target="_blank" rel="noopener" title="SF Mod Manager: keeps players' Valheim mods matched to your server">Get the player mod manager</a></span>
     </div>
     <div class="brand"><img src="/logo.svg" alt="" width="40" height="40" id="brandLogo"><span>Server Forge</span></div>
     <div class="top-right">
@@ -287,7 +287,7 @@
               <div class="backup-head">
                 <div>
                   <h3>Profiles</h3>
-                  <p class="muted small-text">Several setups on one server: each profile is a world plus which mods are on (or vanilla, with the mod loader off). Switching sets both; players' Mod Forge follows the active profile's mods by itself. The active profile remembers changes you make.</p>
+                  <p class="muted small-text">Several setups on one server: each profile is a world plus which mods are on (or vanilla, with the mod loader off). Switching sets both; players' SF Mod Manager follows the active profile's mods by itself. The active profile remembers changes you make.</p>
                 </div>
                 <div class="spacer"></div>
                 <button type="button" data-perm="settings.edit" id="btnNewProfile">New profile…</button>
@@ -458,12 +458,12 @@
               <h3>Share mods with players</h3>
               <label class="toggle"><input type="checkbox" id="shareEnabled"> Sharing on</label>
             </div>
-            <p class="muted" id="shareIntro">Players install <b>Mod Forge</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren't shared.</p>
+            <p class="muted" id="shareIntro">Players install <b>SF Mod Manager</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren't shared.</p>
             <div class="share-link">
               <span class="muted small">Player download:</span>
-              <code id="clientDownloadUrl">https://github.com/Volatile111/mod-forge-releases/releases/latest</code>
+              <code id="clientDownloadUrl">https://github.com/Volatile111/sf-mod-manager-releases/releases/latest</code>
               <button type="button" class="small" id="btnCopyClientUrl">Copy</button>
-              <a class="small button-like" href="https://github.com/Volatile111/mod-forge-releases/releases/latest" target="_blank" rel="noopener">Open</a>
+              <a class="small button-like" href="https://github.com/Volatile111/sf-mod-manager-releases/releases/latest" target="_blank" rel="noopener">Open</a>
             </div>
             <div id="shareBody"></div>
           </section>
@@ -892,7 +892,7 @@
       <p>Server Forge better describes what the app does: create, host and manage game servers across your own PCs. It continues Tavern Host's development under a name that fits its growing range of games and tools.</p>
       <h3>Your setup stays with you</h3>
       <ul><li>Your servers, worlds, accounts and settings are kept.</li><li>Your mods, backups and connected PCs stay in place.</li><li>You continue using the same app, from the same developer.</li></ul>
-      <p>The player companion has a new name too: <strong>Tavern Client Mod Manager is now Mod Forge</strong>.</p>
+      <p>The player companion has a new name too: <strong>Tavern Client Mod Manager is now SF Mod Manager</strong>.</p>
     </div>
     <section class="rebrand-release" aria-labelledby="rebrandReleaseTitle">
       <h3 id="rebrandReleaseTitle">What's new in Server Forge <span id="rebrandReleaseVersion">0.9.0</span></h3>
@@ -952,7 +952,7 @@
   <div class="dialog-body">
     <h2 id="msTitle"></h2>
     <p class="muted small-text" id="msSub"></p>
-    <p class="muted small-text">Changes are used when the server (re)starts. <span id="msShareHelp"><b>To players</b>: players' Mod Forge sets that setting to the server's value in their own game every time it syncs, for settings that work on the player's side (for example Server devcommands' automatic god mode for admins). Anyone with the share link can see those values, so don't send passwords or keys.</span><span id="msReadOnlyHelp"> Greyed-out settings (lists, multi-line values) can't be changed here: edit the file in the Files tab.</span></p>
+    <p class="muted small-text">Changes are used when the server (re)starts. <span id="msShareHelp"><b>To players</b>: players' SF Mod Manager sets that setting to the server's value in their own game every time it syncs, for settings that work on the player's side (for example Server devcommands' automatic god mode for admins). Anyone with the share link can see those values, so don't send passwords or keys.</span><span id="msReadOnlyHelp"> Greyed-out settings (lists, multi-line values) can't be changed here: edit the file in the Files tab.</span></p>
     <div class="ms-tools">
       <input id="msFilter" type="search" placeholder="Filter settings…" autocomplete="off" spellcheck="false">
       <label class="toggle" id="msOnlySharedRow"><input type="checkbox" id="msOnlyShared"> Only the ones sent to players</label>
@@ -970,7 +970,7 @@
       <a class="button-like" id="aboutReport" href="https://github.com/Volatile111/server-forge/issues/new/choose" target="_blank" rel="noopener">Report a problem</a>
       <a class="button-like" href="https://github.com/Volatile111/server-forge/issues" target="_blank" rel="noopener">Known problems</a>
       <a class="button-like" href="https://github.com/Volatile111/server-forge/releases" target="_blank" rel="noopener">What's new</a>
-      <a class="button-like" href="https://github.com/Volatile111/mod-forge-releases/releases/latest" target="_blank" rel="noopener">Player mod manager</a>
+      <a class="button-like" href="https://github.com/Volatile111/sf-mod-manager-releases/releases/latest" target="_blank" rel="noopener">Player mod manager</a>
       <a class="button-like" href="https://github.com/Volatile111/server-forge/blob/main/API.md" target="_blank" rel="noopener">API reference</a>
     </div>
     <p class="muted small-text">Created by CorruptedVariant. Free software under the <a href="https://github.com/Volatile111/server-forge/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL v3</a>:

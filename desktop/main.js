@@ -194,11 +194,11 @@ function createWindow() {
     win.show();
     if (dev) win.setOverlayIcon(devBadge(), 'Development panel');
   });
-  // Keep our title, except for the panel's own names (Server Forge / Forge Master / Super Forge, set by the page from
+  // Keep our title, except for the panel's own names (Server Forge / Server Forge Master / Super Server Forge, set by the page from
   // what this panel manages).
   win.on('page-title-updated', (e, title) => {
     e.preventDefault();
-    if (/^(Server Forge|Forge Master|Super Forge|Forge Node|Super Forge Node)( – Development Panel)?$/.test(title)) win.setTitle(title);
+    if (/^(Server Forge|Server Forge Master|Super Server Forge|Server Forge Node|Super Server Forge Node)( – Development Panel)?$/.test(title)) win.setTitle(title);
   });
   // The addon browser is a separate window; close it together with the panel.
   win.on('closed', () => {

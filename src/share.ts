@@ -1,4 +1,4 @@
-// What a share link (thmods://…) gives the Mod Forge, per game. Valheim and modded Minecraft Java are
+// What a share link (thmods://…) gives the SF Mod Manager, per game. Valheim and modded Minecraft Java are
 // synced by the app; Satisfactory mods are installed with Satisfactory Mod Manager (the app links each one); the other
 // games download what they need by themselves when a player joins, so the link only carries how to join.
 

@@ -76,7 +76,7 @@ function render() {
   const beta = document.createElement('span');
   beta.className = 'beta-badge';
   beta.textContent = 'Beta';
-  beta.title = 'Mod Forge is in beta: it is actively being worked on and updates are frequent.';
+  beta.title = 'SF Mod Manager is in beta: it is actively being worked on and updates are frequent.';
   $('appVersion').appendChild(beta);
   $('devBanner').hidden = !st.dev;
   if (st.dev && !document.title.endsWith('(DEV)')) document.title += ' (DEV)'; // the window title follows the page's
@@ -570,7 +570,7 @@ $('btnUpdateApp').addEventListener('click', async (e) => {
     if (!picked) return;
     const cmp = picked.version.split('.').map(Number).reduce((r, n, i) => r || n - (picked.current.split('.').map(Number)[i] ?? 0), 0);
     const note = cmp > 0 ? '' : cmp === 0 ? '\n\nThat is the version you already have (it will be reinstalled).' : '\n\nThat is an OLDER version than the one you have.';
-    if (!await confirmBox(`Update Mod Forge from ${picked.current} to ${picked.version || 'the version in that file'}?${note}\n\nThe app closes, an "Updating" window shows the progress, and the new version opens by itself. Your mods and settings are kept.`)) return;
+    if (!await confirmBox(`Update SF Mod Manager from ${picked.current} to ${picked.version || 'the version in that file'}?${note}\n\nThe app closes, an "Updating" window shows the progress, and the new version opens by itself. Your mods and settings are kept.`)) return;
     await api.runUpdate();
     toast('Updating… watch the "Updating" window');
   } catch (err) {
@@ -589,7 +589,7 @@ async function checkAppUpdate(force = false) {
   }
   const u = appUpdate;
   $('updateBanner').hidden = !u.available;
-  $('updateText').textContent = u.available ? `Mod Forge ${u.latest} is available (you have ${u.current}).` : '';
+  $('updateText').textContent = u.available ? `SF Mod Manager ${u.latest} is available (you have ${u.current}).` : '';
   $('btnInstallAppUpdate').hidden = !u.canInstall;
   $('aboutUpdate').textContent = u.available
     ? `Version ${u.latest} is available.`
@@ -606,7 +606,7 @@ setInterval(() => checkAppUpdate(), 6 * 3600_000);
 $('updateNotes').addEventListener('click', (e) => {
   e.preventDefault();
   if (appUpdate?.notes) alert(`What's new in ${appUpdate.latest}:\n\n${appUpdate.notes}`);
-  else window.open(appUpdate?.url ?? 'https://github.com/Volatile111/mod-forge-releases/releases');
+  else window.open(appUpdate?.url ?? 'https://github.com/Volatile111/sf-mod-manager-releases/releases');
 });
 
 api.on('update-progress', (p) => {
@@ -634,7 +634,7 @@ $('btnAbout').addEventListener('click', (e) => {
   const v = st?.version ?? '';
   $('aboutVersion').textContent = v ? `v${v}` : '';
   // The bug report form fills in which app and version by itself.
-  $('aboutReport').href = `https://github.com/Volatile111/server-forge/issues/new?template=bug_report.yml&app=${encodeURIComponent('Mod Forge')}&version=${encodeURIComponent(v)}`;
+  $('aboutReport').href = `https://github.com/Volatile111/server-forge/issues/new?template=bug_report.yml&app=${encodeURIComponent('SF Mod Manager')}&version=${encodeURIComponent(v)}`;
   $('aboutDialog').showModal();
 });
 $('aboutClose').addEventListener('click', () => $('aboutDialog').close());

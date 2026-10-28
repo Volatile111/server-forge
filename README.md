@@ -1,6 +1,6 @@
 # Server Forge
 
-> **Beta:** Server Forge and Mod Forge are both in beta. They're actively being worked on and updates are frequent, so expect changes and the odd rough edge. Please report problems on the [Issues](https://github.com/Volatile111/server-forge/issues) page (or **Help → Report a problem** in either app).
+> **Beta:** Server Forge and SF Mod Manager are both in beta. They're actively being worked on and updates are frequent, so expect changes and the odd rough edge. Please report problems on the [Issues](https://github.com/Volatile111/server-forge/issues) page (or **Help → Report a problem** in either app).
 
 Server Forge is a Windows app for running your own game servers from one panel. It supports Minecraft Bedrock, Minecraft Java (including BungeeCord networks), Valheim, Terraria (vanilla and tModLoader), Satisfactory, Space Engineers, Factorio, Palworld, Enshrouded, V Rising, Project Zomboid and 7 Days to Die.
 
@@ -17,7 +17,7 @@ Server Forge is a Windows app for running your own game servers from one panel. 
 
 ## New names, same servers and mods
 
-Tavern Host is now **Server Forge**, and Tavern Client Mod Manager is now **Mod Forge**. Existing server records, accounts, mods, profiles, share links and saved colours are kept. The internal application IDs and data folders stay the same so upgrading does not create a second setup.
+Tavern Host is now **Server Forge**, and Tavern Client Mod Manager is now **SF Mod Manager**. Existing server records, accounts, mods, profiles, share links and saved colours are kept. The internal application IDs and data folders stay the same so upgrading does not create a second setup.
 
 New releases include the new installer names and identical legacy-named copies for older automatic updaters. The existing GitHub repository URLs continue to be used during this transition.
 
@@ -28,7 +28,7 @@ New releases include the new installer names and identical legacy-named copies f
 | App | Who it's for | Download |
 |---|---|---|
 | **Server Forge** | Server owners | [Latest release](https://github.com/Volatile111/server-forge/releases/latest) |
-| **Mod Forge** | Players (Valheim, Minecraft Java, Satisfactory, Star Valor and more) | [Latest release](https://github.com/Volatile111/mod-forge-releases/releases/latest) |
+| **SF Mod Manager** | Players (Valheim, Minecraft Java, Satisfactory, Star Valor and more) | [Latest release](https://github.com/Volatile111/sf-mod-manager-releases/releases/latest) |
 
 Both apps tell you when a new version is out and can install it for you.
 
@@ -38,13 +38,13 @@ Both apps tell you when a new version is out and can install it for you.
 2. **Create a server.** Click **+ New**, pick the game, give it a name and a folder, and Server Forge downloads the official server software. Already have a server? Use **Import** and point it at the folder.
 3. **Start it.** Players on your own network can join straight away with the IP and port shown under the server's name.
 4. **Let friends outside your network join.** Click **🌐 Port forwarding** under the server's name. It lists exactly which ports to forward on your router, and your public IP for players to use.
-5. **Mods for players (optional).** On the server's **Mods** tab, add mods, then turn on **Share mods with players**. Players install Mod Forge and paste the link once. Valheim and modded Minecraft Java mods then stay matched to the server; Satisfactory players get the mod list for Satisfactory Mod Manager; other games get the join details.
+5. **Mods for players (optional).** On the server's **Mods** tab, add mods, then turn on **Share mods with players**. Players install SF Mod Manager and paste the link once. Valheim and modded Minecraft Java mods then stay matched to the server; Satisfactory players get the mod list for Satisfactory Mod Manager; other games get the join details.
 
 Your game servers keep running when you close the Server Forge window, and while it updates.
 
 ## Quick start (players)
 
-1. Download `Tavern-Client-Mod-Manager-Setup-<version>.exe` from the [mod manager releases](https://github.com/Volatile111/mod-forge-releases/releases/latest) and run it.
+1. Download `Tavern-Client-Mod-Manager-Setup-<version>.exe` from the [mod manager releases](https://github.com/Volatile111/sf-mod-manager-releases/releases/latest) and run it.
 2. Paste the link the server owner gives you (it starts with `thmods://`) and click **Add server**. The server shows on its game's tab.
 3. **Valheim:** click **▶ Play Valheim**. Your mods are matched to the server first. A **Vanilla** profile switches mods off for playing other servers.
 4. **Minecraft Java:** click **Sync now**, then pick the server's profile in the Minecraft Launcher. It has its own folder, so your other worlds and mods aren't touched. (Forge and NeoForge: run the installer the app gives you once.)

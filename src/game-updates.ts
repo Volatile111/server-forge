@@ -25,6 +25,10 @@ type Instance = ReturnType<typeof getInstance>;
 
 export interface UpdateInfo {
   game: string;
+  /** What updates come from, for messages: "Bedrock", "Endstone", "7 Days to Die"... */
+  source: string;
+  /** Versions are Steam build numbers ("build 26266951"), not release versions. */
+  steamBuild: boolean;
   /** What's installed (Bedrock version, or Valheim's Steam build). null: not known yet. */
   current: string | null;
   latest: string | null;
@@ -39,6 +43,8 @@ export interface UpdateInfo {
 
 interface Source {
   name: string;
+  /** Versions are Steam build numbers. */
+  steam?: boolean;
   /** Asks the internet for the latest version; `updated` = release time if known. */
   latest(): Promise<{ version: string; updated: number | null }>;
   current(inst: Instance): string | null;
@@ -74,6 +80,7 @@ const buildNote = (inst: Instance) => path.join(inst.record.installDir, '.tavern
 function steamSource(name: string, appId: number): Source {
   return {
     name,
+    steam: true,
     latest: async () => {
       const b = await latestBuild(appId);
       return { version: b.build, updated: b.updated };
@@ -120,6 +127,7 @@ const SOURCES: Record<string, Source> = {
   },
   valheim: {
     name: 'Valheim',
+    steam: true,
     latest: async () => {
       const b = await latestBuild(VALHEIM_APP);
       return { version: b.build, updated: b.updated };
@@ -190,6 +198,8 @@ export function updateInfo(inst: Instance): UpdateInfo {
   const l = latest.get(updateKey(inst)) ?? null;
   return {
     game: inst.record.game,
+    source: src.name,
+    steamBuild: !!src.steam,
     current,
     latest: l?.version ?? null,
     currentLabel: src.currentLabel?.(inst) ?? null,

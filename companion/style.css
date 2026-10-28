@@ -26,9 +26,12 @@ header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr
 /* Centre the name itself: shift the group left by half the logo + gap, so the logo sits outside the middle. */
 .top-center { display: flex; align-items: center; gap: 4px; transform: translateX(-20px); }
 .top-right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
-@media (max-width: 860px) {
+.top-right button { white-space: nowrap; }
+/* Too narrow for all three: the version/credit column goes (it's also in About & help) and the name moves left. */
+@media (max-width: 1080px) {
   header { grid-template-columns: auto minmax(0, 1fr); }
   .top-left { display: none; }
+  .top-center { transform: none; }
 }
 .brand { display: flex; align-items: center; gap: 10px; font: 700 21px "Segoe UI", system-ui, sans-serif; color: var(--accent); }
 .brand img { width: 30px; height: 30px; }
@@ -91,7 +94,13 @@ details.nexus summary { cursor: pointer; font-weight: 600; }
 details.nexus form { margin-top: 8px; }
 /* Colour wheel (bottom-left), like Tavern Host */
 .brand img { filter: hue-rotate(calc((var(--hue) - 214) * 1deg)); }
-.theme-corner { position: relative; z-index: 20; display: flex; }
+.theme-corner { position: relative; z-index: 20; display: flex; align-items: center; gap: 8px; }
+/* Basic / Fancy UI switch, beside the colour wheel */
+.appearance-button { display: inline-flex; align-items: center; gap: 5px; flex: none; min-height: 28px; padding: 4px 9px; font-size: 11px; }
+.appearance-button svg { flex: none; }
+.appearance-button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.appearance-motion { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; }
+.appearance-motion p { margin: 4px 0 0; }
 .theme-btn {
   width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--border);
   background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); box-shadow: 0 2px 8px rgba(0, 0, 0, .4);

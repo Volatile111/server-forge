@@ -203,7 +203,7 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `POST /api/servers/{id}/plugins/found` | Endstone: install the newest file of a search result: {"id":"pypi:endstone-essentials"} or {"id":"github:owner/repo"} | Manage mods / plugins / addons |
 | `GET /api/servers/{id}/share` | Players' share link (Valheim, Minecraft Java, Satisfactory, Bedrock, Terraria tModLoader, Space Engineers): links, public link, what's shared (summary, with mode sync\|links\|info), Remote access status | Share mods with players |
 | `POST /api/servers/{id}/share` | Sharing on/off or a new link: {"enabled":true,"newLink":false} | Share mods with players |
-| `GET /api/share/{token}` | What the players' Mod Forge reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion | The share link token (no login) |
+| `GET /api/share/{token}` | What the players' SF Mod Manager reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion | The share link token (no login) |
 | `GET /api/share/{token}/file/{name}` | Download a shared mod file (Valheim uploads, Nexus and Hexium copies; Minecraft Java mod jars players need) | The share link token (no login) |
 
 ## Tasks

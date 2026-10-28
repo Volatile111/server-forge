@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; frame-src http://127.0.0.1:*">
-<title>Mod Forge</title>
+<title>SF Mod Manager</title>
 <link rel="stylesheet" href="style.css">
 <script type="module" src="app.js"></script>
+<script type="module" src="appearance.js"></script>
 </head>
 <body>
 <div class="dev-banner" id="devBanner" hidden>DEVELOPMENT · running from source · its own settings and links (the game folders are the real ones)</div>
@@ -15,16 +16,24 @@
     <span class="credit">Created by CorruptedVariant · <a href="#" id="btnAbout">About &amp; help</a></span>
   </div>
   <div class="top-center">
-    <div class="brand"><img src="icon.png" alt=""> Mod <span>Forge</span></div>
+    <div class="brand"><img src="icon.png" alt=""> SF <span>Mod Manager</span></div>
   </div>
   <div class="top-right">
     <div class="theme-corner">
+      <button type="button" class="small appearance-button" id="appAppearance" aria-pressed="false" title="Switch to Fancy UI">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3ZM20 2v4M18 4h4"/></svg>
+        <span id="appAppearanceLabel">Basic UI</span>
+      </button>
       <button type="button" class="theme-btn" id="btnTheme" title="Change colours" aria-label="Change colours" aria-expanded="false"></button>
       <div class="theme-pop" id="themePop" hidden>
         <div class="theme-label">Colour</div>
         <input type="range" id="themeHue" min="0" max="359" step="1" class="hue-slider">
         <div class="theme-swatches" id="themeSwatches"></div>
         <button type="button" class="small ghost" id="themeReset">Reset to default blue</button>
+        <div class="appearance-motion">
+          <label class="toggle small"><input type="checkbox" id="appMotion"> Animate Fancy UI</label>
+          <p class="muted small" id="appearanceStatus" role="status">Basic UI uses fewer resources.</p>
+        </div>
       </div>
     </div>
     <button id="btnSync" class="ghost">⟳ Sync now</button>
@@ -51,7 +60,7 @@
   </section>
 
   <nav class="game-tabs" id="gameTabs">
-    <span class="sv-bar-brand" title="Mod Forge"><img src="icon.png" alt=""> Mod Forge</span>
+    <span class="sv-bar-brand" title="SF Mod Manager"><img src="icon.png" alt=""> SF Mod Manager</span>
     <button type="button" data-game="valheim">Valheim</button>
     <button type="button" data-game="java">Minecraft Java</button>
     <button type="button" data-game="starvalor" title="Star Valor mods, managed by Achilles"><img class="tab-icon" src="achilles/public/img/favicon.png" alt="">Star Valor</button>
@@ -156,14 +165,14 @@
   </div>
 </dialog>
 <dialog id="aboutDialog" class="about">
-  <h2><img src="icon.png" alt=""> Mod Forge <span class="muted" id="aboutVersion"></span></h2>
+  <h2><img src="icon.png" alt=""> SF Mod Manager <span class="muted" id="aboutVersion"></span></h2>
   <p><span class="beta-badge">Beta</span> This app is actively being worked on and updates are frequent. If something goes wrong, please report it.</p>
   <p class="muted small" id="aboutUpdate"></p>
   <div class="row tight wrap">
     <button class="small" id="btnCheckAppUpdate">Check for updates</button>
     <button class="small ghost" id="btnUpdateApp">Update from a file…</button>
     <a class="small button-like" id="aboutReport" href="https://github.com/Volatile111/server-forge/issues/new/choose" target="_blank" rel="noopener">Report a problem</a>
-    <a class="small button-like" href="https://github.com/Volatile111/mod-forge-releases/releases" target="_blank" rel="noopener">What's new</a>
+    <a class="small button-like" href="https://github.com/Volatile111/sf-mod-manager-releases/releases" target="_blank" rel="noopener">What's new</a>
     <a class="small button-like" href="https://github.com/Volatile111/server-forge/releases/latest" target="_blank" rel="noopener">Get Server Forge</a>
   </div>
   <p class="muted small">Created by CorruptedVariant. Free software under the <a href="https://github.com/Volatile111/server-forge/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL v3</a>:

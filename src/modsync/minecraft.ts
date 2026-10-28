@@ -148,7 +148,7 @@ function writeProfile(folder: string, server: string, id: string) {
   data.profiles[key] = {
     created: now,
     icon: 'Furnace',
-    name: `${server} (Mod Forge)`,
+    name: `${server} (SF Mod Manager)`,
     javaArgs: LAUNCHER_JVM_ARGS,
     ...old,
     type: 'custom',

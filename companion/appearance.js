@@ -1,0 +1,55 @@
+// Basic / Fancy UI, like Server Forge's: the effects and their stylesheet load only after an explicit opt-in.
+const KEY = 'th-appearance';
+const MOTION = 'th-appearance-motion';
+let style = 'classic';
+let motion = true;
+try {
+  style = localStorage.getItem(KEY) === 'neon' ? 'neon' : 'classic';
+  motion = localStorage.getItem(MOTION) !== 'off';
+} catch {}
+const button = document.getElementById('appAppearance');
+const buttonLabel = document.getElementById('appAppearanceLabel');
+const toggle = document.getElementById('appMotion');
+const status = document.getElementById('appearanceStatus');
+function apply(save = false) {
+  const enabled = style === 'neon';
+  if (enabled && !document.getElementById('neonStyles')) {
+    const link = document.createElement('link');
+    link.id = 'neonStyles';
+    link.rel = 'stylesheet';
+    link.href = 'neon.css';
+    document.head.append(link);
+    const fx = document.createElement('div');
+    fx.id = 'neonBackdrop';
+    fx.setAttribute('aria-hidden', 'true');
+    fx.innerHTML = '<i class="neon-stars"></i>';
+    document.body.prepend(fx);
+  }
+  document.documentElement.classList.toggle('neon', enabled);
+  document.documentElement.classList.toggle('neon-still', !motion);
+  if (!enabled) {
+    document.getElementById('neonStyles')?.remove();
+    document.getElementById('neonBackdrop')?.remove();
+  }
+  button.setAttribute('aria-pressed', String(enabled));
+  button.setAttribute('aria-label', enabled ? 'Fancy UI is on. Switch to Basic UI' : 'Basic UI is on. Switch to Fancy UI');
+  button.title = enabled ? 'Switch to Basic UI (fewer visual effects)' : 'Switch to Fancy UI (more visual effects)';
+  buttonLabel.textContent = enabled ? 'Fancy UI' : 'Basic UI';
+  toggle.checked = motion;
+  toggle.disabled = !enabled;
+  status.textContent = enabled ? 'Fancy UI is on.' : 'Basic UI uses fewer resources.';
+  if (save) {
+    try {
+      localStorage.setItem(KEY, style);
+      localStorage.setItem(MOTION, motion ? 'on' : 'off');
+    } catch {
+      status.textContent += ' The preference could not be saved.';
+    }
+  }
+}
+button.addEventListener('click', () => { style = style === 'neon' ? 'classic' : 'neon'; apply(true); });
+toggle.addEventListener('change', () => { motion = toggle.checked; apply(true); });
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.classList.toggle('neon-paused', document.hidden);
+});
+apply();

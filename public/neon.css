@@ -42,6 +42,8 @@
   box-shadow: 0 0 0 1px #ffffff06, 0 24px 70px #0007;
 }
 .neon main { background: #0e0f16b0; min-width: 0; }
+/* The glass blur makes the top bar its own layer; lift it so its pop-ups (health warnings) draw over the panels below. */
+.neon .topbar { position: relative; z-index: 5; }
 .neon .api-ref { overflow-x: auto; }
 .neon .sidebar { overflow-x: hidden; }
 

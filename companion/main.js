@@ -1,4 +1,4 @@
-// Mod Forge: the players' app. Keeps a player's Valheim mods matched to a Server Forge server's mods
+// SF Mod Manager: the players' app. Keeps a player's Valheim mods matched to a Server Forge server's mods
 // (from a thmods:// link), installs BepInEx, and has a Play button that syncs first and then starts Valheim.
 // Uses the same install code as Server Forge (compiled to dist/), so both sides lay out mods identically.
 import { app, BrowserWindow, dialog, ipcMain, shell, Menu, nativeImage, safeStorage } from 'electron';
@@ -26,7 +26,7 @@ app.setAppUserModelId(DEV ? 'TavernClientModManager.Dev' : 'TavernClientModManag
 // Pin the pre-rebrand profile before changing the display name, including installed copies.
 // The explicit override is used for isolated smoke tests; never touch real settings in those runs.
 app.setPath('userData', process.env.MOD_FORGE_DATA_DIR || path.join(app.getPath('appData'), DEV ? 'Tavern Client Mod Manager (dev)' : 'Tavern Client Mod Manager'));
-app.setName('Mod Forge');
+app.setName('SF Mod Manager');
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 if (!app.requestSingleInstanceLock()) app.quit();
 
@@ -192,7 +192,7 @@ function createWindow() {
     height: 760,
     minWidth: 720,
     minHeight: 520,
-    title: `Mod Forge${DEV ? ' (DEV)' : ''}`,
+    title: `SF Mod Manager${DEV ? ' (DEV)' : ''}`,
     icon: path.join(here, 'icon.png'),
     backgroundColor: '#0d1219',
     autoHideMenuBar: true,
@@ -517,7 +517,7 @@ handle('browse-hexium', async () => openBrowser(vm.HEXIUM, 'Hexium'));
 let pickedInstaller = null;
 handle('pick-update', async () => {
   if (!app.isPackaged) throw new Error('Updating from a file only works in the installed app (this copy runs from the source files).');
-  const r = await dialog.showOpenDialog(win, { title: 'Choose a Mod Forge installer', filters: [{ name: 'Installer', extensions: ['exe'] }], properties: ['openFile'] });
+  const r = await dialog.showOpenDialog(win, { title: 'Choose a SF Mod Manager installer', filters: [{ name: 'Installer', extensions: ['exe'] }], properties: ['openFile'] });
   if (r.canceled || !r.filePaths[0]) return null;
   const file = r.filePaths[0];
   let info = {};
@@ -530,7 +530,7 @@ handle('pick-update', async () => {
     info = JSON.parse(out.trim() || '{}');
   } catch {}
   const version = String(info.version ?? /(\d+\.\d+\.\d+)/.exec(path.basename(file))?.[1] ?? '').replace(/\.0$/, '');
-  if (!/Mod Forge|Tavern Client Mod Manager/i.test(`${info.product ?? ''} ${path.basename(file)}`)) throw new Error("That isn't a Mod Forge installer.");
+  if (!/SF Mod Manager|Tavern Client Mod Manager/i.test(`${info.product ?? ''} ${path.basename(file)}`)) throw new Error("That isn't a SF Mod Manager installer.");
   pickedInstaller = { file, version };
   return { name: path.basename(file), version, current: app.getVersion() };
 });
@@ -540,16 +540,16 @@ handle('run-update', async () => {
   pickedInstaller = null;
   if (!picked || !existsSync(picked.file)) throw new Error('Choose the installer again.');
   if (valheimRunning()) throw new Error('Close Valheim first.');
-  runUpdateWithWindow(picked.file, { product: 'Mod Forge', version: picked.version, note: 'Your mods and settings are kept.' });
+  runUpdateWithWindow(picked.file, { product: 'SF Mod Manager', version: picked.version, note: 'Your mods and settings are kept.' });
   setTimeout(() => app.quit(), 800);
 });
 
 // ---------- updates from GitHub releases ----------
-// New versions are published at github.com/Volatile111/mod-forge-releases. Checked at start and every 6 hours;
+// New versions are published at github.com/Volatile111/sf-mod-manager-releases. Checked at start and every 6 hours;
 // installing downloads the installer here (never from a page-given address) and runs it like "Update from a file".
 
-const RELEASES = 'Volatile111/mod-forge-releases';
-const INSTALLER_ASSET = /^(?:Mod-Forge|Tavern-Client-Mod-Manager)-Setup-(\d+\.\d+\.\d+)\.exe$/;
+const RELEASES = 'Volatile111/sf-mod-manager-releases';
+const INSTALLER_ASSET = /^(?:SF-Mod-Manager|Tavern-Client-Mod-Manager)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 let latestRelease = { at: 0, info: null, error: null };
 
 function isNewer(a, b) {
@@ -620,7 +620,7 @@ handle('install-app-update', async () => {
       rmSync(dir, { recursive: true, force: true });
       throw new Error("The downloaded installer doesn't match the release's checksum, so it wasn't run.");
     }
-    runUpdateWithWindow(file, { product: 'Mod Forge', version: info.version, note: 'Your mods and settings are kept.', cleanup: dir });
+    runUpdateWithWindow(file, { product: 'SF Mod Manager', version: info.version, note: 'Your mods and settings are kept.', cleanup: dir });
     setTimeout(() => app.quit(), 800);
     return { version: info.version };
   } finally {
@@ -862,12 +862,12 @@ async function handleNxm(url) {
 
 function openBrowser(url, site) {
   if (browser && !browser.isDestroyed()) {
-    browser.setTitle(`${site} – Mod Forge`);
+    browser.setTitle(`${site} – SF Mod Manager`);
     browser.loadURL(url);
     browser.focus();
     return;
   }
-  browser = new BrowserWindow({ width: 1150, height: 820, title: `${site} – Mod Forge`, icon: path.join(here, 'icon.png'), webPreferences: { partition: 'persist:mods', sandbox: true, contextIsolation: true } });
+  browser = new BrowserWindow({ width: 1150, height: 820, title: `${site} – SF Mod Manager`, icon: path.join(here, 'icon.png'), webPreferences: { partition: 'persist:mods', sandbox: true, contextIsolation: true } });
   // Nexus "Mod Manager Download" (nxm://) and Hexium "Install with Gale" (gale://) links.
   const catchNxm = (e, next) => {
     if (/^nxm:\/\//i.test(next)) {

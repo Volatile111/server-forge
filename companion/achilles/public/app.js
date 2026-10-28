@@ -1,4 +1,4 @@
-// Mod Forge opens this page as ...#k=<session key>; the local server only answers requests that
+// SF Mod Manager opens this page as ...#k=<session key>; the local server only answers requests that
 // send it. Read once, then dropped from the address.
 const KEY = new URLSearchParams(location.hash.slice(1)).get('k') ?? '';
 history.replaceState(null, '', location.pathname);
@@ -83,7 +83,7 @@ let status = null;
 async function refreshStatus() {
   status = await api.get('/api/status');
   const pill = document.getElementById('statusPill');
-  document.getElementById('brandSub').textContent = `Star Valor${status.gameBuild ? ` build ${status.gameBuild}` : ''} · Achilles ${status.appVersion}${status.hostVersion ? `, in Mod Forge ${status.hostVersion}` : ''}`;
+  document.getElementById('brandSub').textContent = `Star Valor${status.gameBuild ? ` build ${status.gameBuild}` : ''} · Achilles ${status.appVersion}${status.hostVersion ? `, in SF Mod Manager ${status.hostVersion}` : ''}`;
   if (!status.installOk) {
     pill.textContent = 'Star Valor not found';
     pill.className = 'pill bad';

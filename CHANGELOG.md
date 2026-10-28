@@ -15,16 +15,18 @@
 - Installers use the Server Forge name. An identical Tavern-Host-named installer remains available for automatic updaters in older versions. New versions recognize both names.
 - The optional paid-hosting portal is a separate, paused project and is not included in this update. Server Forge remains usable on your own hardware without a hosting account or payment setup.
 
-## Mod Forge 0.6.0
+## SF Mod Manager 0.6.0
 
 **New name and look**
-- Tavern Client Mod Manager is now **Mod Forge**, with the matching blue puzzle-piece-and-hammer icon, blue default accent, updated help and download text, and new installer/shortcut labels.
-- Achilles keeps its own name, icon and UI inside Star Valor. Its version line now identifies Mod Forge as its host app.
-- New Minecraft Launcher installations use the Mod Forge name. Existing installation IDs, folders and player-customized profile names are preserved.
+- Tavern Client Mod Manager is now **SF Mod Manager**, with the matching blue puzzle-piece-and-hammer icon, blue default accent, updated help and download text, and new installer/shortcut labels.
+- Achilles keeps its own name, icon and UI inside Star Valor. Its version line now identifies SF Mod Manager as its host app.
+- New Minecraft Launcher installations use the SF Mod Manager name. Existing installation IDs, folders and player-customized profile names are preserved.
+- **Basic / Fancy UI switch** beside the colour wheel, like Server Forge's. Fancy UI adds frosted glass, drifting glows, stars and an animated edge on the selected game and profile. Basic remains the default and does not load the effects. Animation can be switched off in the colour pop-up; reduced-motion preferences are respected.
 
 **Upgrading**
-- Existing server links, settings, mod profiles, protected Nexus credentials, game folders and saved colours stay in their existing locations. The dev copy keeps its separate data folder; isolated smoke tests can specify a temporary profile explicitly.
-- Installers use the Mod Forge name, with an identical legacy-named copy for older automatic updaters. New versions accept both names.
+- Existing server links, settings, mod profiles, protected Nexus credentials, game folders and saved colours stay in their existing locations.
+- Releases now come from [sf-mod-manager-releases](https://github.com/Volatile111/sf-mod-manager-releases). The old repository addresses redirect there, so earlier versions still find this update.
+- Installers use the SF Mod Manager name, with an identical legacy-named copy for older automatic updaters. New versions accept both names.
 
 ## Tavern Host 0.8.1
 

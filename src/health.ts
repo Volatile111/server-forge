@@ -212,11 +212,11 @@ events.on('backup-copy', (r: { serverId: string; ok: boolean; error?: string; fo
   if (r.ok) clear(id);
   else raise({ id, serverId: r.serverId, level: 'warn', title: `Backup of "${name}" wasn't copied to ${r.folder}`, detail: `${r.error ?? 'Unknown error.'} The backup on this system is fine. Check the drive or network share is reachable.` });
 });
-events.on('game-update', (u: { serverId: string; game: string; current: string | null; latest: string | null; available: boolean; auto: boolean }) => {
+events.on('game-update', (u: { serverId: string; source: string; steamBuild: boolean; current: string | null; latest: string | null; available: boolean; auto: boolean }) => {
   const id = `bedrock-update:${u.serverId}`;
   const name = listInstances().find((i) => i.id === u.serverId)?.record.name ?? 'a server';
-  const what = u.game === 'valheim' ? `A Valheim server update (build ${u.latest})` : `Bedrock ${u.latest}`;
-  const now = u.current ? (u.game === 'valheim' ? `It runs build ${u.current}.` : `It runs ${u.current}.`) : "Its installed version isn't known yet (one update makes it known).";
+  const what = u.steamBuild ? `${u.source} server build ${u.latest}` : `${u.source} ${u.latest}`;
+  const now = u.current ? (u.steamBuild ? `It runs build ${u.current}.` : `It runs ${u.current}.`) :"Its installed version isn't known yet (one update makes it known).";
   // Servers with automatic updates handle it themselves; the others get a notice with "Update now".
   if (u.available && !u.auto) raise({ id, serverId: u.serverId, level: 'warn', title: `${what} is available for "${name}"`, detail: `${now} Open the server → Settings → Server software and press "Update now", or turn on automatic updates.` });
   else clear(id);
