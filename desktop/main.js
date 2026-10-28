@@ -1,7 +1,7 @@
 // Server Forge desktop app: a native window around the panel. It starts the panel service if it isn't running, logs in as the
 // owner automatically (using the key the service writes to its data folder), and shows the same UI as the web version.
 // Closing this window doesn't stop the panel service or any game servers.
-import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeImage } from 'electron';
+import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeImage, screen } from 'electron';
 import { spawn, execFileSync } from 'node:child_process';
 import { randomBytes, createHash } from 'node:crypto';
 import { readFileSync, existsSync, openSync, statSync, mkdirSync, rmSync, createWriteStream, writeFileSync, mkdtempSync, appendFileSync } from 'node:fs';
@@ -173,9 +173,11 @@ function devBadge() {
 }
 
 function createWindow() {
+  // Roomy enough that the server list and server page both fit, but never bigger than the screen it opens on.
+  const area = screen.getPrimaryDisplay().workAreaSize;
   win = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    width: Math.min(1500, area.width),
+    height: Math.min(950, area.height),
     minWidth: 900,
     minHeight: 600,
     title: WINDOW_TITLE,

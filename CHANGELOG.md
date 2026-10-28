@@ -1,5 +1,20 @@
 # Changelog
 
+## Server Forge 0.9.1
+
+**New**
+- **Resizable server list.** Drag the line between the server list and the server page to make the list wider or narrower (arrow keys work too when it's selected). Double-click the line to put it back. The width is remembered on each device, in both Basic and Fancy UI.
+- The desktop app opens in a larger window by default (1500 × 950, or smaller to fit your screen).
+
+**Changed**
+- Panel role names now include the full app name: **Server Forge Master**, **Super Server Forge**, **Server Forge Node** and **Super Server Forge Node**.
+- The player companion is now called **SF Mod Manager**. Share-link help, download links and the rebrand notice use the new name; its releases now come from [sf-mod-manager-releases](https://github.com/Volatile111/sf-mod-manager-releases).
+
+**Fixed**
+- In Fancy UI, the health warnings list opened behind the server page instead of on top of it.
+- Update warnings called every game "Bedrock". They now name the right game or server software, for example "7 Days to Die server build …" or "Endstone 0.11.14".
+- In Fancy UI, the server list could scroll sideways because its game headings were slightly too wide.
+
 ## Server Forge 0.9.0
 
 **New name and look**

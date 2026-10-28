@@ -93,7 +93,14 @@ body.dev-build { box-sizing: border-box; padding-top: 24px; }
 }
 .brand { display: flex; align-items: center; gap: 10px; font: 700 19px var(--display); color: var(--accent); letter-spacing: .01em; }
 .server-title, .empty-state h2 { font-family: var(--display); }
-.layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 260px 1fr; }
+.layout { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--sidebar-w, 260px) 1fr; position: relative; --split-gap: 0px; }
+/* Drag (or arrow keys) to resize the server list; double-click puts it back. Width is saved per device (layout.js). */
+.split-handle { position: absolute; top: 0; bottom: 0; left: calc(var(--sidebar-w, 260px) + var(--split-gap) / 2 - 4px); width: 8px; z-index: 4; cursor: col-resize; touch-action: none; }
+.split-handle::after { content: ''; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: transparent; transition: background .15s; }
+.split-handle:hover::after, .split-handle:focus-visible::after, .split-handle.dragging::after { background: var(--accent); }
+.split-handle:focus-visible { outline: none; }
+body.resizing-split { cursor: col-resize; user-select: none; }
+body.resizing-split iframe { pointer-events: none; }
 .sidebar { border-right: 1px solid var(--border); background: var(--panel); overflow-y: auto; }
 .side-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 #serverList a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--text); text-decoration: none; border-left: 3px solid transparent; }
@@ -785,6 +792,7 @@ dialog.wide-dialog { width: min(720px, calc(100vw - 32px)); }
 
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; }
+  .split-handle { display: none; }
   .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 200px; }
   .form-grid { grid-template-columns: 1fr; }
   main { padding: 16px; }
@@ -861,5 +869,5 @@ dialog.wide-dialog { width: min(720px, calc(100vw - 32px)); }
 
 /* Scroll the server list while keeping viewing controls available. */
 .sidebar { overflow: hidden; }
-#serverList { min-height: 0; overflow-y: auto; }
+#serverList { min-height: 0; overflow-y: auto; overflow-x: hidden; }
 .theme-corner { flex-shrink: 0; }

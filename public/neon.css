@@ -35,7 +35,10 @@
 /* ---------- the three panels float as glass ---------- */
 .neon .app, .neon .auth { position: relative; z-index: 1; }
 .neon .app { padding: 10px; gap: 10px; }
-.neon .layout { gap: 10px; }
+.neon .layout { gap: 10px; --split-gap: 10px; }
+/* The resize handle sits in the gap between the glass panels: a soft glowing line while it's used. */
+.neon .split-handle::after { border-radius: 999px; }
+.neon .split-handle:hover::after, .neon .split-handle.dragging::after, .neon .split-handle:focus-visible::after { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent); }
 .neon .topbar, .neon .sidebar, .neon main, .neon .auth-card {
   background: var(--panel); backdrop-filter: var(--glass);
   border: 1px solid var(--line); border-radius: 18px;
@@ -106,7 +109,7 @@
 .neon #serverList a:hover { background: #ffffff0a; transform: translateX(2px); }
 .neon #serverList a.active { background: color-mix(in srgb, var(--accent) 9%, transparent); border-color: transparent; }
 .neon #serverList a.active:hover { transform: none; }
-.neon #serverList .group-head { border-radius: 8px; margin: 0 8px; padding-left: 8px; padding-right: 8px; }
+.neon #serverList .group-head { border-radius: 8px; margin: 0 8px; width: calc(100% - 16px); padding-left: 8px; padding-right: 8px; }
 .neon #serverList .proxy-children { border-left-color: var(--line); }
 .neon .srv-icon.side .dot { border-color: #12131c; box-shadow: 0 0 6px var(--c); }
 
