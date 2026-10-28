@@ -1,8 +1,8 @@
-// Server Forge's own updates. New versions are published as GitHub releases (github.com/Volatile111/tavern-host); the
+// Server Forge's own updates. New versions are published as GitHub releases (github.com/Volatile111/server-forge); the
 // service looks every 6 hours so the panel can say when one is out. Installing is done by the desktop app, which
 // downloads the installer itself and runs it on this system (desktop/main.js).
 
-const REPO = 'Volatile111/tavern-host';
+const REPO = 'Volatile111/server-forge';
 const ASSET = /^(?:Server-Forge|Tavern-Host)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 const EVERY = 6 * 3600_000;
 

@@ -606,7 +606,7 @@ setInterval(() => checkAppUpdate(), 6 * 3600_000);
 $('updateNotes').addEventListener('click', (e) => {
   e.preventDefault();
   if (appUpdate?.notes) alert(`What's new in ${appUpdate.latest}:\n\n${appUpdate.notes}`);
-  else window.open(appUpdate?.url ?? 'https://github.com/Volatile111/tavern-client-releases/releases');
+  else window.open(appUpdate?.url ?? 'https://github.com/Volatile111/mod-forge-releases/releases');
 });
 
 api.on('update-progress', (p) => {
@@ -634,7 +634,7 @@ $('btnAbout').addEventListener('click', (e) => {
   const v = st?.version ?? '';
   $('aboutVersion').textContent = v ? `v${v}` : '';
   // The bug report form fills in which app and version by itself.
-  $('aboutReport').href = `https://github.com/Volatile111/tavern-host/issues/new?template=bug_report.yml&app=${encodeURIComponent('Mod Forge')}&version=${encodeURIComponent(v)}`;
+  $('aboutReport').href = `https://github.com/Volatile111/server-forge/issues/new?template=bug_report.yml&app=${encodeURIComponent('Mod Forge')}&version=${encodeURIComponent(v)}`;
   $('aboutDialog').showModal();
 });
 $('aboutClose').addEventListener('click', () => $('aboutDialog').close());

@@ -545,10 +545,10 @@ handle('run-update', async () => {
 });
 
 // ---------- updates from GitHub releases ----------
-// New versions are published at github.com/Volatile111/tavern-client-releases. Checked at start and every 6 hours;
+// New versions are published at github.com/Volatile111/mod-forge-releases. Checked at start and every 6 hours;
 // installing downloads the installer here (never from a page-given address) and runs it like "Update from a file".
 
-const RELEASES = 'Volatile111/tavern-client-releases';
+const RELEASES = 'Volatile111/mod-forge-releases';
 const INSTALLER_ASSET = /^(?:Mod-Forge|Tavern-Client-Mod-Manager)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 let latestRelease = { at: 0, info: null, error: null };
 

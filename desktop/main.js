@@ -520,7 +520,7 @@ ipcMain.handle('run-installer', async () => {
 // The panel shows "update available" (the service checks GitHub); this downloads the installer and runs it. The release
 // is looked up here, never taken from the page, and only a Tavern Host installer from that release is accepted.
 
-const RELEASES = 'Volatile111/tavern-host';
+const RELEASES = 'Volatile111/server-forge';
 const INSTALLER_ASSET = /^(?:Server-Forge|Tavern-Host)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 
 function isNewer(a, b) {

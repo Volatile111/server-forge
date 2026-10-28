@@ -4312,7 +4312,7 @@ $('btnHelp').addEventListener('click', () => {
   const v = state.appUpdate?.current ?? $('appVersion').firstChild?.textContent?.replace(/^v/, '') ?? '';
   $('aboutVersion').textContent = v ? `v${v}` : '';
   // The bug report form fills in the version by itself.
-  $('aboutReport').href = `https://github.com/Volatile111/tavern-host/issues/new?template=bug_report.yml&version=${encodeURIComponent(v)}`;
+  $('aboutReport').href = `https://github.com/Volatile111/server-forge/issues/new?template=bug_report.yml&version=${encodeURIComponent(v)}`;
   $('aboutDialog').showModal();
 });
 $('aboutClose').addEventListener('click', () => $('aboutDialog').close());

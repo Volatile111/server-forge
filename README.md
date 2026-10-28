@@ -1,6 +1,6 @@
 # Server Forge
 
-> **Beta:** Server Forge and Mod Forge are both in beta. They're actively being worked on and updates are frequent, so expect changes and the odd rough edge. Please report problems on the [Issues](https://github.com/Volatile111/tavern-host/issues) page (or **Help → Report a problem** in either app).
+> **Beta:** Server Forge and Mod Forge are both in beta. They're actively being worked on and updates are frequent, so expect changes and the odd rough edge. Please report problems on the [Issues](https://github.com/Volatile111/server-forge/issues) page (or **Help → Report a problem** in either app).
 
 Server Forge is a Windows app for running your own game servers from one panel. It supports Minecraft Bedrock, Minecraft Java (including BungeeCord networks), Valheim, Terraria (vanilla and tModLoader), Satisfactory, Space Engineers, Factorio, Palworld, Enshrouded, V Rising, Project Zomboid and 7 Days to Die.
 
@@ -27,8 +27,8 @@ New releases include the new installer names and identical legacy-named copies f
 
 | App | Who it's for | Download |
 |---|---|---|
-| **Server Forge** | Server owners | [Latest release](https://github.com/Volatile111/tavern-host/releases/latest) |
-| **Mod Forge** | Players (Valheim, Minecraft Java, Satisfactory, Star Valor and more) | [Latest release](https://github.com/Volatile111/tavern-client-releases/releases/latest) |
+| **Server Forge** | Server owners | [Latest release](https://github.com/Volatile111/server-forge/releases/latest) |
+| **Mod Forge** | Players (Valheim, Minecraft Java, Satisfactory, Star Valor and more) | [Latest release](https://github.com/Volatile111/mod-forge-releases/releases/latest) |
 
 Both apps tell you when a new version is out and can install it for you.
 
@@ -44,7 +44,7 @@ Your game servers keep running when you close the Server Forge window, and while
 
 ## Quick start (players)
 
-1. Download `Tavern-Client-Mod-Manager-Setup-<version>.exe` from the [mod manager releases](https://github.com/Volatile111/tavern-client-releases/releases/latest) and run it.
+1. Download `Tavern-Client-Mod-Manager-Setup-<version>.exe` from the [mod manager releases](https://github.com/Volatile111/mod-forge-releases/releases/latest) and run it.
 2. Paste the link the server owner gives you (it starts with `thmods://`) and click **Add server**. The server shows on its game's tab.
 3. **Valheim:** click **▶ Play Valheim**. Your mods are matched to the server first. A **Vanilla** profile switches mods off for playing other servers.
 4. **Minecraft Java:** click **Sync now**, then pick the server's profile in the Minecraft Launcher. It has its own folder, so your other worlds and mods aren't touched. (Forge and NeoForge: run the installer the app gives you once.)
