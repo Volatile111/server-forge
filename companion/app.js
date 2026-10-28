@@ -76,7 +76,7 @@ function render() {
   const beta = document.createElement('span');
   beta.className = 'beta-badge';
   beta.textContent = 'Beta';
-  beta.title = 'Tavern Client Mod Manager is in beta: it is actively being worked on and updates are frequent.';
+  beta.title = 'Mod Forge is in beta: it is actively being worked on and updates are frequent.';
   $('appVersion').appendChild(beta);
   $('devBanner').hidden = !st.dev;
   if (st.dev && !document.title.endsWith('(DEV)')) document.title += ' (DEV)'; // the window title follows the page's
@@ -170,7 +170,7 @@ function render() {
       for (const m of p?.remove ?? []) details.push(`− ${m.name}`);
       box.append(el('div', 'muted small', `${l.manifest.mods.length} mod${l.manifest.mods.length === 1 ? '' : 's'} for players${details.length ? ` · ${details.join(' · ')}` : ''}`));
       if (!l.manifest.mods.length) {
-        box.append(el('div', 'warn small', "This server isn't sharing any mods right now. If it should be, the owner can see why in Tavern Host → Mods → Share mods with players (for example mods added with another mod manager need taking over first)."));
+        box.append(el('div', 'warn small', "This server isn't sharing any mods right now. If it should be, the owner can see why in Server Forge → Mods → Share mods with players (for example mods added with another mod manager need taking over first)."));
       }
     }
     links.append(box);
@@ -395,7 +395,7 @@ function renderJava() {
         setup.append(make);
       }
     } else {
-      setup.append(el('div', 'ok small', `✔ In the Minecraft Launcher as "${l.server} (Tavern)". Open the launcher, pick that profile under Installations or next to Play, and the server is in Multiplayer. Restart the launcher if it was open when the profile was added.`));
+      setup.append(el('div', 'ok small', `✔ The Minecraft Launcher profile for "${l.server}" is ready. Open the launcher, pick that profile under Installations or next to Play, and the server is in Multiplayer. Restart the launcher if it was open when the profile was added.`));
     }
     b.append(setup);
     const own = l.installed.filter((x) => !x.fromServer);
@@ -413,7 +413,7 @@ async function mcSetup(l, btn) {
   await busy(btn, 'Checking…', async () => {
     try {
       const s = await api.mcSetup(l.raw);
-      toast(s.profile ? `"${l.server} (Tavern)" is in the Minecraft Launcher` : 'The loader still isn\'t in the launcher', !s.profile);
+      toast(s.profile ? `The Minecraft Launcher profile for "${l.server}" is ready` : 'The loader still isn\'t in the launcher', !s.profile);
     } catch (err) {
       toast(err.message, true);
     }
@@ -570,7 +570,7 @@ $('btnUpdateApp').addEventListener('click', async (e) => {
     if (!picked) return;
     const cmp = picked.version.split('.').map(Number).reduce((r, n, i) => r || n - (picked.current.split('.').map(Number)[i] ?? 0), 0);
     const note = cmp > 0 ? '' : cmp === 0 ? '\n\nThat is the version you already have (it will be reinstalled).' : '\n\nThat is an OLDER version than the one you have.';
-    if (!await confirmBox(`Update Tavern Client Mod Manager from ${picked.current} to ${picked.version || 'the version in that file'}?${note}\n\nThe app closes, an "Updating" window shows the progress, and the new version opens by itself. Your mods and settings are kept.`)) return;
+    if (!await confirmBox(`Update Mod Forge from ${picked.current} to ${picked.version || 'the version in that file'}?${note}\n\nThe app closes, an "Updating" window shows the progress, and the new version opens by itself. Your mods and settings are kept.`)) return;
     await api.runUpdate();
     toast('Updating… watch the "Updating" window');
   } catch (err) {
@@ -589,7 +589,7 @@ async function checkAppUpdate(force = false) {
   }
   const u = appUpdate;
   $('updateBanner').hidden = !u.available;
-  $('updateText').textContent = u.available ? `Tavern Client Mod Manager ${u.latest} is available (you have ${u.current}).` : '';
+  $('updateText').textContent = u.available ? `Mod Forge ${u.latest} is available (you have ${u.current}).` : '';
   $('btnInstallAppUpdate').hidden = !u.canInstall;
   $('aboutUpdate').textContent = u.available
     ? `Version ${u.latest} is available.`
@@ -634,7 +634,7 @@ $('btnAbout').addEventListener('click', (e) => {
   const v = st?.version ?? '';
   $('aboutVersion').textContent = v ? `v${v}` : '';
   // The bug report form fills in which app and version by itself.
-  $('aboutReport').href = `https://github.com/Volatile111/tavern-host/issues/new?template=bug_report.yml&app=${encodeURIComponent('Tavern Client Mod Manager')}&version=${encodeURIComponent(v)}`;
+  $('aboutReport').href = `https://github.com/Volatile111/tavern-host/issues/new?template=bug_report.yml&app=${encodeURIComponent('Mod Forge')}&version=${encodeURIComponent(v)}`;
   $('aboutDialog').showModal();
 });
 $('aboutClose').addEventListener('click', () => $('aboutDialog').close());
@@ -776,7 +776,7 @@ function showReview(review, game = 'valheim') {
       body.append(row);
     }
     for (const r of srv.removals) body.append(el('div', 'change', `− Remove ${r} (the server no longer uses it)`));
-    for (const u of srv.unavailable ?? []) body.append(el('div', 'change blocked', `⚠ Can't download ${u}. Ask the server owner to check it in Tavern Host (Mods → Share mods with players). The other mods still install.`));
+    for (const u of srv.unavailable ?? []) body.append(el('div', 'change blocked', `⚠ Can't download ${u}. Ask the server owner to check it in Server Forge (Mods → Share mods with players). The other mods still install.`));
     // Mod settings the server owner sends: only these values change in the player's config files.
     for (const s of srv.settings ?? []) {
       const row = el('div', 'change');
@@ -811,7 +811,7 @@ async function prepareAndReview(thenLaunch) {
         const empty = st.links.filter((l) => l.game === 'valheim' && l.ok && !l.manifest.mods.length).map((l) => l.server);
         log(empty.length ? `${empty.join(', ')} isn't sharing any mods right now.` : 'Your mods already match the server.');
         if (thenLaunch) await api.launch();
-        else toast(empty.length ? `${empty.join(', ')} isn't sharing any mods (the owner can check why in Tavern Host)` : 'Already up to date', !!empty.length);
+        else toast(empty.length ? `${empty.join(', ')} isn't sharing any mods (the owner can check why in Server Forge)` : 'Already up to date', !!empty.length);
         return;
       }
       afterReview = thenLaunch ? () => api.launch() : null;
@@ -918,10 +918,10 @@ api.on('auto-synced', (summary) => {
 });
 api.on('state-changed', refresh);
 
-// ---------- colour theme (hue picker, bottom-left; same as Tavern Host) ----------
+// ---------- colour theme (hue picker, bottom-left; same as Server Forge) ----------
 
-const DEFAULT_HUE = 32; // tavern amber
-const PRESET_HUES = [32, 0, 50, 95, 145, 185, 210, 265, 300, 330];
+const DEFAULT_HUE = 214; // Forge blue; existing saved choices are kept.
+const PRESET_HUES = [214, 32, 0, 50, 95, 145, 185, 265, 300, 330];
 let logoImage = null;
 
 function loadHue() {
@@ -968,7 +968,7 @@ function applyHue(hue, save = true) {
 for (const hue of PRESET_HUES) {
   const b = el('button');
   b.type = 'button';
-  b.title = hue === DEFAULT_HUE ? 'Tavern amber' : `Hue ${hue}`;
+  b.title = hue === DEFAULT_HUE ? 'Forge blue' : hue === 32 ? 'Amber' : `Hue ${hue}`;
   b.style.background = `hsl(${hue} 84% 55%)`;
   b.addEventListener('click', () => applyHue(hue));
   $('themeSwatches').appendChild(b);

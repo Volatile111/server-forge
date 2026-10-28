@@ -24,7 +24,7 @@ const NON_BOSS_KEYS = new Set(['defeated_serpent']);
 export interface WorldInfo {
   saveFile: string;
   savedAt: number;
-  /** `unsure`: Tavern Host can't tell (Kall, while its key isn't known and the world has unrecognised keys). */
+  /** `unsure`: Server Forge can't tell (Kall, while its key isn't known and the world has unrecognised keys). */
   bosses: { id: string; name: string; defeated: boolean; unsure?: boolean }[];
   unknownKeys: string[];
 }

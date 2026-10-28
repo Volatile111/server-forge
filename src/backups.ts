@@ -233,10 +233,10 @@ export async function stageWorld(t: BackupTarget, staging: string, job: Pick<Job
   return { world, live };
 }
 
-// A live backup pauses the server's saving (Bedrock "save hold", Java "save-off") until it's done. If Tavern Host
+// A live backup pauses the server's saving (Bedrock "save hold", Java "save-off") until it's done. If Server Forge
 // closes in the middle (an update, a crash), the server would stay paused: its world stops being saved, and the next
 // backup finds "A previous save has not been completed". Each live backup is noted here until it finishes, and on
-// re-attaching Tavern Host turns saving back on for any that were cut off (resumeCutOffBackup).
+// re-attaching Server Forge turns saving back on for any that were cut off (resumeCutOffBackup).
 const LIVE_BACKUPS = 'live-backups.json';
 function markLiveBackup(serverId: string, on: boolean) {
   const all = readJson<Record<string, number>>(LIVE_BACKUPS, {});
@@ -288,7 +288,7 @@ export function setCopySettings(input: Partial<CopySettings>): CopySettings {
   const next = { ...getCopySettings() };
   if (input.folder !== undefined) {
     const f = String(input.folder).trim();
-    if (f && !path.isAbsolute(f)) throw new Error('Use a full folder path, e.g. A:\\Tavern Host Backups or \\\\nas\\backups');
+    if (f && !path.isAbsolute(f)) throw new Error('Use a full folder path, e.g. A:\\Server Forge Backups or \\\\nas\\backups');
     next.folder = f ? path.resolve(f) : '';
   }
   if (input.keepDays !== undefined) {

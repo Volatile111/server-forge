@@ -1,8 +1,8 @@
-/* Tavern Host: warm dark wood with amber/copper accents, taken from the tankard logo.
+/* Server Forge: dark panels with a vibrant blue accent by default (the tankard logo itself is drawn amber, hue 32).
    Everything hangs off --hue, so the colour picker (bottom-left) can move the whole theme around the spectrum. */
 :root {
   color-scheme: dark;
-  --hue: 32;
+  --hue: 214;
   --bg: hsl(var(--hue) 24% 6%);
   --panel: hsl(var(--hue) 22% 9%);
   --panel-2: hsl(var(--hue) 22% 12%);
@@ -12,8 +12,8 @@
   --accent: hsl(var(--hue) 84% 58%);
   --accent-strong: hsl(var(--hue) 85% 38%);
   --accent-strong-border: hsl(var(--hue) 77% 48%);
-  /* The logo is amber (hue 32); rotate it to match. */
-  --logo-shift: calc((var(--hue) - 32) * 1deg);
+  /* The logo is drawn in the default blue (hue 214); rotate it to match. */
+  --logo-shift: calc((var(--hue) - 214) * 1deg);
   --green: #22c55e;
   --red: #ef4444;
   --amber: #f59e0b;
@@ -190,6 +190,8 @@ main { overflow-y: auto; padding: 20px 24px; }
 .about-links .button-like { padding: 7px 12px; font-size: 13px; }
 .brand img, .auth-brand img { filter: hue-rotate(var(--logo-shift)); }
 .brand img.live, .auth-brand img.live { filter: none; }
+.brand-anim { display: inline-block; width: 40px; height: 40px; line-height: 0; flex: none; }
+.brand-anim svg { width: 100%; height: 100%; }
 
 .sidebar { display: flex; flex-direction: column; }
 #serverList { flex: 1; }
@@ -791,7 +793,7 @@ dialog.wide-dialog { width: min(720px, calc(100vw - 32px)); }
 @media (max-width: 700px) {
   #whoami { display: none; }
   .brand { font-size: 16px; gap: 8px; }
-  .brand img { width: 30px; height: 30px; }
+  .brand img, .brand-anim { width: 30px; height: 30px; }
   .top-right { gap: 6px; }
   .top-right button { padding: 5px 8px; }
   main, .layout, #serverView, .tab, .card { min-width: 0; max-width: 100%; }
@@ -808,3 +810,56 @@ dialog.wide-dialog { width: min(720px, calc(100vw - 32px)); }
   .api-ref .api-table td:first-child { white-space: normal; word-break: break-all; }
   .search-input { width: 100%; }
 }
+
+/* The one-time rename announcement works in Classic and optional Neon glass. */
+#rebrandDialog { width: min(680px, calc(100vw - 32px)); max-width: 680px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+#rebrandDialog .dialog-body { padding: clamp(20px, 4vw, 32px); }
+.rebrand-kicker { margin: 0 0 12px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+#rebrandTitle { margin: 0 0 14px; font: 700 clamp(23px, 4vw, 31px)/1.2 "Segoe UI", system-ui, sans-serif; letter-spacing: -.035em; }
+.rebrand-lead { color: var(--text); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
+.rebrand-identities { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 16px; padding: 22px 12px; margin: 0 0 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }
+.rebrand-identity { display: flex; align-items: center; flex-direction: column; gap: 6px; text-align: center; min-width: 0; }
+.rebrand-identity img { width: 72px; height: 72px; object-fit: contain; margin-bottom: 4px; }
+.rebrand-identity strong { font-size: clamp(16px, 3vw, 20px); line-height: 1.3; }
+.rebrand-identity small { color: var(--muted); font-size: 12px; }
+.rebrand-identity.is-old strong { color: #f5b942; }
+.rebrand-identity.is-new strong { color: var(--accent); }
+.rebrand-arrow { font-size: 26px; color: var(--muted); }
+.rebrand-explanation { line-height: 1.65; }
+.rebrand-explanation h3 { color: var(--text); font-size: 14px; margin: 18px 0 6px; }
+.rebrand-explanation p { margin: 0 0 12px; color: var(--muted); }
+.rebrand-explanation ul { margin: 0 0 18px; padding-left: 20px; color: var(--text); }
+.rebrand-explanation li { margin: 5px 0; }
+.rebrand-footer { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+.rebrand-footer p { margin: 0; font-size: 12px; color: var(--muted); flex: 1 1 220px; line-height: 1.5; }
+.rebrand-footer button { min-width: 230px; min-height: 42px; }
+@media (max-width: 480px) { .rebrand-identities { gap: 8px; padding: 18px 8px; } .rebrand-identity img { width: 58px; height: 58px; } .rebrand-footer button { width: 100%; min-width: 0; } }
+
+.rebrand-release { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 22px; }
+.rebrand-release > h3 { font-size: 17px; margin: 0 0 14px; color: var(--text); }
+.rebrand-release .whats-new { max-height: none; overflow: visible; padding: 0; }
+#rebrandDialog .rebrand-footer { position: sticky; bottom: 0; padding: 16px 0; background: var(--bg); box-shadow: 0 -10px 18px var(--bg); }
+
+
+/* Keep ONE content scrollbar while the countdown and close button remain visible. */
+#rebrandDialog { overflow: hidden; }
+#rebrandDialog .dialog-body { padding: 0; display: flex; flex-direction: column; max-height: calc(100dvh - 36px); }
+#rebrandDialog .rebrand-content { overflow-y: auto; min-height: 0; padding: clamp(20px, 4vw, 32px); }
+#rebrandDialog .rebrand-footer { position: static; flex-shrink: 0; margin-top: 0; padding: 16px clamp(20px, 4vw, 32px); box-shadow: none; }
+
+/* The UI mode is a local viewing preference, beside the colour wheel. */
+.theme-corner { flex-direction: column; align-items: stretch; gap: 9px; }
+.appearance-tools { display: flex; align-items: center; gap: 9px; }
+.appearance-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: none; min-height: 28px; padding: 4px 9px; font-size: 11px; }
+.appearance-button svg { flex: none; width: 14px; height: 14px; }
+.appearance-button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.theme-corner .credit { display: block; }
+.theme-corner .theme-pop { bottom: calc(100% + 8px); }
+.appearance-motion { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 4px; }
+.appearance-motion .toggle { font-size: 12px; }
+.appearance-motion p { margin: 0; }
+
+/* Scroll the server list while keeping viewing controls available. */
+.sidebar { overflow: hidden; }
+#serverList { min-height: 0; overflow-y: auto; }
+.theme-corner { flex-shrink: 0; }

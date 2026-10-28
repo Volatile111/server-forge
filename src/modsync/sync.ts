@@ -64,7 +64,7 @@ export interface Link {
 export function parseLink(text: string): Link {
   const raw = text.trim();
   const m = /^thmods:\/\/([^/:]+):(\d+)\/([\w-]{10,})\?fp=([0-9A-Fa-f:]{64,95})$/.exec(raw);
-  if (!m) throw new Error('That isn\'t a Tavern Host mod link. It should start with thmods:// (copy it from the server\'s Mods tab).');
+  if (!m) throw new Error('That isn\'t a Server Forge mod link. It should start with thmods:// (copy it from the server\'s Mods tab).');
   const fingerprint = m[4].replace(/:/g, '').toUpperCase();
   if (fingerprint.length !== 64) throw new Error('The link\'s security fingerprint is damaged; copy the whole link again.');
   return { host: m[1], port: Number(m[2]), token: m[3], fingerprint, raw };
@@ -107,7 +107,7 @@ export function pinnedGet(link: Link, urlPath: string, asBuffer = false): Promis
       },
     );
     req.on('timeout', () => req.destroy(new Error('The server did not answer (is it on, and is the port forwarded?).')));
-    req.on('error', (err) => reject(new Error(/ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|ENOTFOUND/.test(err.message) ? `Can't reach ${link.host}:${link.port}. Is Tavern Host running there with Remote access on?` : err.message)));
+    req.on('error', (err) => reject(new Error(/ECONNREFUSED|EHOSTUNREACH|ETIMEDOUT|ENOTFOUND/.test(err.message) ? `Can't reach ${link.host}:${link.port}. Is Server Forge running there with Remote access on?` : err.message)));
   });
 }
 
@@ -123,7 +123,7 @@ export interface SharedMod {
   description: string;
   file: string | null;
 }
-/** A mod setting the server owner sends to players (Tavern Host 0.6.1 and newer): a value in BepInEx/config/<file>. */
+/** A mod setting the server owner sends to players (Server Forge 0.6.1 and newer): a value in BepInEx/config/<file>. */
 export interface SharedSetting {
   file: string;
   section: string;
@@ -145,7 +145,7 @@ export async function fetchManifest(link: Link): Promise<Manifest> {
   return checkManifest(m);
 }
 
-// ---------- links for any game (Tavern Host 0.6.0 and newer share every game) ----------
+// ---------- links for any game (Server Forge 0.6.0 and newer share every game) ----------
 
 export interface Join {
   port: number;
@@ -189,7 +189,7 @@ export async function fetchAnyManifest(link: Link): Promise<AnyManifest> {
     server: String(m.server ?? '').slice(0, 100),
     game,
     gameName: GAMES[game],
-    // Links from Tavern Host before 0.6.0 are Valheim-only and have no mode.
+    // Links from Server Forge before 0.6.0 are Valheim-only and have no mode.
     mode: game === 'valheim' ? 'sync' : m.mode === 'sync' || m.mode === 'links' ? m.mode : 'info',
     join: Number.isInteger(port) && port > 0 && port < 65536 ? { port, protocol: j?.protocol === 'UDP' ? 'UDP' : 'TCP' } : null,
     note: String(m.note ?? '').slice(0, 400),

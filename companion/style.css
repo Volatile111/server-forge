@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  --hue: 32;
+  --hue: 214;
   --bg: hsl(var(--hue) 24% 6%);
   --panel: hsl(var(--hue) 22% 9%);
   --panel-2: hsl(var(--hue) 22% 12%);
@@ -30,7 +30,7 @@ header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr
   header { grid-template-columns: auto minmax(0, 1fr); }
   .top-left { display: none; }
 }
-.brand { display: flex; align-items: center; gap: 10px; font: 700 19px Georgia, serif; color: var(--accent); }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 21px "Segoe UI", system-ui, sans-serif; color: var(--accent); }
 .brand img { width: 30px; height: 30px; }
 .brand span { color: var(--text); font-weight: 400; }
 .spacer { flex: 1; }
@@ -90,7 +90,7 @@ details.nexus { margin: 4px 0 10px; padding: 8px 12px; background: var(--panel-2
 details.nexus summary { cursor: pointer; font-weight: 600; }
 details.nexus form { margin-top: 8px; }
 /* Colour wheel (bottom-left), like Tavern Host */
-.brand img { filter: hue-rotate(calc((var(--hue) - 32) * 1deg)); }
+.brand img { filter: hue-rotate(calc((var(--hue) - 214) * 1deg)); }
 .theme-corner { position: relative; z-index: 20; display: flex; }
 .theme-btn {
   width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--border);
@@ -155,7 +155,7 @@ body.starvalor-mode .game-tabs { align-items: center; padding: 6px 12px; backgro
 body.starvalor-mode .game-tabs button { padding: 4px 14px; font-size: 12.5px; background: #0f1420; border-color: #2a3348; color: #e8ecf4; white-space: nowrap; }
 body.starvalor-mode .game-tabs button.active { background: #e0303f; border-color: #ff5a67; }
 body.starvalor-mode .sv-bar-brand { display: flex; align-items: center; gap: 6px; margin-right: 8px; font: 600 12.5px "Segoe UI", system-ui, sans-serif; color: #8b93a7; white-space: nowrap; }
-body.starvalor-mode .sv-bar-brand img { width: 20px; height: 20px; filter: hue-rotate(calc((var(--hue) - 32) * 1deg)); }
+body.starvalor-mode .sv-bar-brand img { width: 20px; height: 20px; filter: hue-rotate(calc((var(--hue) - 214) * 1deg)); }
 body.starvalor-mode #view-starvalor { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 body.starvalor-mode .achilles-note { padding: 12px; }
 body.starvalor-mode .achilles-frame { flex: 1; height: auto; border: none; border-radius: 0; }

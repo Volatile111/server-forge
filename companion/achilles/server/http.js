@@ -19,7 +19,7 @@ import { Updater, parseSourceInput } from './lib/updater.js';
 import { BepInExManager } from './lib/bepinex.js';
 import { ShipEditor } from './lib/shipedit.js';
 
-// Achilles' own version (0.3.0 was the last standalone app); since 0.4.0 it's part of Tavern Client Mod Manager.
+// Achilles' own version (0.3.0 was the last standalone app); since 0.4.0 it's part of Mod Forge.
 export const APP_VERSION = '0.4.0';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,7 +58,7 @@ function readJsonBody(req) {
  * second copy of the app would fail to bind and its window would silently load the FIRST copy's
  * server. Resolves once actually listening, with the real port.
  *
- * `key`: every /api request must send it (X-Achilles-Key). The page gets it from Tavern Client Mod Manager in its URL
+ * `key`: every /api request must send it (X-Achilles-Key). The page gets it from Mod Forge in its URL
  * fragment; nothing else on the PC (or a web page guessing the port) can move mods around, launch the game or read
  * the Nexus key. The static UI files need no key.
  */

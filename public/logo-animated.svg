@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c3446"/><stop offset="1" stop-color="#0e121b"/></linearGradient>
+<radialGradient id="ember" cx="0.5" cy="0.95" r="0.75"><stop offset="0" stop-color="#3d8eef" stop-opacity="0.5"/><stop offset="0.55" stop-color="#3d8eef" stop-opacity="0.1"/><stop offset="1" stop-color="#3d8eef" stop-opacity="0"/></radialGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4e7ec"/><stop offset="1" stop-color="#8b929c"/></linearGradient>
+<linearGradient id="hot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9dcff"/><stop offset="1" stop-color="#3d8eef"/></linearGradient>
+<linearGradient id="hotR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#b9dcff"/><stop offset="1" stop-color="#3d8eef"/></linearGradient>
+<filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>
+<clipPath id="tileClip"><rect x="8" y="8" width="240" height="240" rx="54"/></clipPath></defs>
+<rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/><rect x="8" y="8" width="240" height="240" rx="54" fill="url(#ember)"/><g clip-path="url(#tileClip)"><g transform="translate(118 140)" fill="#3d8eef" opacity="0.24"><animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0.24;0.24;0.7;0.24" keyTimes="0;0.35;0.38;1"/>
+  <path transform="rotate(15)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(45)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(75)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(105)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(135)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(165)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(195)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(225)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(255)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(285)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(315)" d="M-9 0 L0 -108 L9 0 Z"/><path transform="rotate(345)" d="M-9 0 L0 -108 L9 0 Z"/></g>
+  <circle cx="118" cy="140" r="92" fill="none" stroke="#6fb0ff" stroke-width="9" opacity="0" filter="url(#ringGlow)"><animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;0.9;0" keyTimes="0;0.35;0.38;1"/></circle>
+  <circle cx="118" cy="140" r="92" fill="none" stroke="#4f9cff" stroke-width="4" opacity="0.35"><animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0.35;0.35;1;0.35" keyTimes="0;0.35;0.38;1"/><animate attributeName="stroke" dur="2.4s" repeatCount="indefinite" values="#4f9cff;#4f9cff;#dcefff;#4f9cff" keyTimes="0;0.35;0.38;1"/></circle><g transform="translate(118 140) scale(1.04) translate(-128 -88)">
+      <rect x="72" y="40" width="112" height="96" rx="11" fill="#6fb0ff" filter="url(#glow)" opacity="0.7"><animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0.7;0.7;1;0.7" keyTimes="0;0.35;0.38;1"/></rect>
+      <rect x="72" y="40" width="112" height="96" rx="11" fill="url(#hot)"/><g fill="#0b1730"><rect x="80" y="48" width="96" height="17" rx="4"/><rect x="80" y="70" width="96" height="17" rx="4"/><rect x="80" y="92" width="96" height="17" rx="4"/><rect x="80" y="114" width="96" height="17" rx="4"/></g>
+<g fill="#2a4f86"><rect x="134" y="53" width="32" height="7" rx="2"/><rect x="134" y="75" width="32" height="7" rx="2"/><rect x="134" y="97" width="32" height="7" rx="2"/><rect x="134" y="119" width="32" height="7" rx="2"/></g>
+<circle id="bay1p" cx="92" cy="56.5" r="5" fill="#4ade80"/><circle id="bay1a" cx="106" cy="56.5" r="5" fill="#60a5fa"/>
+<circle id="bay2p" cx="92" cy="78.5" r="5" fill="#4ade80"/><circle id="bay2a" cx="106" cy="78.5" r="5" fill="#60a5fa"/>
+<circle id="bay3p" cx="92" cy="100.5" r="5" fill="#4ade80"/><circle id="bay3a" cx="106" cy="100.5" r="5" fill="#60a5fa"/>
+<circle id="bay4p" cx="92" cy="122.5" r="5" fill="#fbbf24"/><circle id="bay4a" cx="106" cy="122.5" r="5" fill="#4ade80"/></g><ellipse cx="150" cy="90" rx="18" ry="7" fill="#f2f8ff" opacity="0" filter="url(#ringGlow)">
+  <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.36;0.47;1"/></ellipse><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;-61 -25;-61 -25" keyTimes="0;0.35;0.6499999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.6499999999999999;1"/>
+    <path d="M0 -11 L2.8 -2.8 11 0 2.8 2.8 0 11 -2.8 2.8 -11 0 -2.8 -2.8 Z" fill="#ffffff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;-38 -61;-38 -61" keyTimes="0;0.35;0.69;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.69;1"/>
+    <circle r="6" fill="#6fb0ff" opacity="0.5" filter="url(#ringGlow)"/><circle r="3.6" fill="#cfe6ff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;11 -55;11 -55" keyTimes="0;0.35;0.7299999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.7299999999999999;1"/>
+    <circle r="8" fill="#6fb0ff" opacity="0.5" filter="url(#ringGlow)"/><circle r="4.6" fill="#cfe6ff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;57 -38;57 -38" keyTimes="0;0.35;0.6499999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.6499999999999999;1"/>
+    <path d="M0 -11 L2.8 -2.8 11 0 2.8 2.8 0 11 -2.8 2.8 -11 0 -2.8 -2.8 Z" fill="#ffffff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;57 0;57 0" keyTimes="0;0.35;0.69;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.69;1"/>
+    <circle r="8" fill="#6fb0ff" opacity="0.5" filter="url(#ringGlow)"/><circle r="4.6" fill="#cfe6ff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;-47 0;-47 0" keyTimes="0;0.35;0.7299999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.7299999999999999;1"/>
+    <circle r="6" fill="#6fb0ff" opacity="0.5" filter="url(#ringGlow)"/><circle r="3.6" fill="#cfe6ff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;23 -34;23 -34" keyTimes="0;0.35;0.6499999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.6499999999999999;1"/>
+    <path d="M0 -11 L2.8 -2.8 11 0 2.8 2.8 0 11 -2.8 2.8 -11 0 -2.8 -2.8 Z" fill="#ffffff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;-8 -35;-8 -35" keyTimes="0;0.35;0.69;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.69;1"/>
+    <circle r="6" fill="#6fb0ff" opacity="0.5" filter="url(#ringGlow)"/><circle r="3.6" fill="#cfe6ff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;-28 -18;-28 -18" keyTimes="0;0.35;0.7299999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.7299999999999999;1"/>
+    <circle r="8" fill="#6fb0ff" opacity="0.5" filter="url(#ringGlow)"/><circle r="4.6" fill="#cfe6ff"/></g></g><g transform="translate(150 90)"><g opacity="0">
+    <animateTransform attributeName="transform" type="translate" dur="2.4s" repeatCount="indefinite"
+      values="0 0;0 0;33 -5;33 -5" keyTimes="0;0.35;0.6499999999999999;1" calcMode="spline" keySplines="0 0 1 1;0.1 0.6 0.4 1;0 0 1 1"/>
+    <animate attributeName="opacity" dur="2.4s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;0.35;0.37;0.6499999999999999;1"/>
+    <path d="M0 -11 L2.8 -2.8 11 0 2.8 2.8 0 11 -2.8 2.8 -11 0 -2.8 -2.8 Z" fill="#ffffff"/></g></g><g transform="translate(246 56)"><g><animateTransform attributeName="transform" type="rotate" dur="2.4s" repeatCount="indefinite" additive="sum"
+        values="32;0;7;0;32" keyTimes="0;0.35;0.41;0.47;1" calcMode="spline"
+        keySplines="0.6 0 1 1;0 0 0.4 1;0.6 0 1 1;0.4 0 0.3 1"/>
+    <rect x="-98" y="-6" width="102" height="12" rx="5" fill="rgb(168,107,52)"/><rect x="-16" y="-6" width="20" height="12" rx="4" fill="rgb(110,69,32)"/>
+    <rect x="-112" y="-30" width="32" height="64" rx="5" fill="url(#steel)"/><rect x="-112" y="-30" width="7" height="64" rx="3" fill="#f6f7f9"/>
+    <rect x="-112" y="28" width="32" height="6" rx="2" fill="#6b717a"/></g></g></g>
+</svg>

@@ -1,5 +1,5 @@
-// Chat relay for vanilla Bedrock servers. Bedrock Dedicated Server never prints player chat, so Tavern Host installs
-// a tiny behavior pack of its own ("Tavern Host Chat") whose script catches every chat message and writes it to the
+// Chat relay for vanilla Bedrock servers. Bedrock Dedicated Server never prints player chat, so Server Forge installs
+// a tiny behavior pack of its own ("Server Forge Chat") whose script catches every chat message and writes it to the
 // server console as one tagged line: [THCHAT]{"t":<ms>,"n":"<player>","m":"<message>"}. The panel reads those lines
 // (see chat.ts). Messages from the panel go back in with tellraw, which vanilla supports.
 //
@@ -21,15 +21,15 @@ const DEFAULT_MODULE_VERSION = '2.11.0-beta';
 /** Bumped whenever SCRIPT changes, so the Chat tab can offer to update relays installed by older versions. */
 export const CHAT_PACK_VERSION = [1, 1, 1];
 
-const SCRIPT = `// Tavern Host Chat: writes each chat message to the server console so Tavern Host can show it.
-// Made by Tavern Host; switched on/off from the server's Chat tab. It only reads messages, except from players the
-// owner muted in Tavern Host (their messages are held back and they're told they're muted).
+const SCRIPT = `// Server Forge Chat: writes each chat message to the server console so Server Forge can show it.
+// Made by Server Forge; switched on/off from the server's Chat tab. It only reads messages, except from players the
+// owner muted in Server Forge (their messages are held back and they're told they're muted).
 import { world, system } from '@minecraft/server';
 
-// Lets Tavern Host see that the relay loaded (and that script output reaches the console).
-console.warn('[THCHAT-READY] Tavern Host chat relay is running');
+// Lets Server Forge see that the relay loaded (and that script output reaches the console).
+console.warn('[THCHAT-READY] Server Forge chat relay is running');
 
-// Tavern Host sends the full list of muted players: scriptevent tavernhost:mutes name|other name  ("-" = nobody).
+// Server Forge sends the full list of muted players: scriptevent tavernhost:mutes name|other name  ("-" = nobody).
 // (The command can't take JSON: Bedrock rejects a message starting with "[". Gamertags can't contain "|".)
 const muted = new Set();
 system.afterEvents.scriptEventReceive.subscribe((ev) => {
@@ -59,8 +59,8 @@ function manifest(moduleVersion: string) {
   return {
     format_version: 2,
     header: {
-      name: 'Tavern Host Chat',
-      description: 'Lets Tavern Host show and relay in-game chat. Made by Tavern Host.',
+      name: 'Server Forge Chat',
+      description: 'Lets Server Forge show and relay in-game chat. Made by Server Forge.',
       uuid: CHAT_PACK_UUID,
       version: CHAT_PACK_VERSION,
       min_engine_version: [1, 21, 0],
@@ -118,7 +118,7 @@ export function chatStatus(installDir: string, level: string): ChatRelayStatus {
     suggestedFrom: suggestion.from,
     betaApis,
     contentLog: contentLogToConsole(installDir),
-    // Installed by an older Tavern Host (e.g. before mute): pressing Update rebuilds it.
+    // Installed by an older Server Forge (e.g. before mute): pressing Update rebuilds it.
     outdated: !!pack && pack.version.join('.') !== CHAT_PACK_VERSION.join('.'),
   };
 }
@@ -159,7 +159,7 @@ export async function setChatRelay(installDir: string, level: string, on: boolea
     mkdirSync(path.join(dir, 'scripts'), { recursive: true });
     writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest(version), null, 2));
     writeFileSync(path.join(dir, 'scripts', 'main.js'), SCRIPT);
-    await installAddonFile(installDir, level, dir, 'Tavern Host chat relay');
+    await installAddonFile(installDir, level, dir, 'Server Forge chat relay');
     enableContentLogToConsole(installDir);
   } finally {
     rmSync(work, { recursive: true, force: true });

@@ -181,10 +181,10 @@ const softwareField: SettingField = {
     {
       value: 'endstone',
       label: 'Endstone (plugins)',
-      help: 'Endstone runs the Bedrock server with plugin support (Python and C++ plugins) and still loads addons. Tavern Host downloads Python and Endstone itself. Endstone supports one Bedrock version at a time, so new Bedrock versions arrive with Endstone updates, usually a few days after Mojang releases them.',
+      help: 'Endstone runs the Bedrock server with plugin support (Python and C++ plugins) and still loads addons. Server Forge downloads Python and Endstone itself. Endstone supports one Bedrock version at a time, so new Bedrock versions arrive with Endstone updates, usually a few days after Mojang releases them.',
     },
   ],
-  help: 'Switching takes effect at the next start (Tavern Host sets Endstone up then). Worlds, settings and addons are kept.',
+  help: 'Switching takes effect at the next start (Server Forge sets Endstone up then). Worlds, settings and addons are kept.',
   restart: true,
 };
 
@@ -439,7 +439,7 @@ export const bedrock: GameModule = {
           await io.command('save query');
           const lines = await reply;
           // Bedrock answers "A previous save has not been completed" for a few seconds while it gets ready. Still that
-          // after ~15 s means an earlier hold that never finished (e.g. Tavern Host closed during a backup): release
+          // after ~15 s means an earlier hold that never finished (e.g. Server Forge closed during a backup): release
           // it once and start again, instead of waiting for a save that won't complete.
           if (lines && /A previous save has not been completed/.test(lines[0]) && !released && attempt >= 15) {
             released = true;

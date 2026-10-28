@@ -79,13 +79,13 @@ function items(record: ServerRecord) {
       file: full,
     };
   });
-  // DLLs dropped into BepInEx/plugins by hand: shown so nothing is hidden, but Tavern Host can't sync them.
+  // DLLs dropped into BepInEx/plugins by hand: shown so nothing is hidden, but Server Forge can't sync them.
   for (const loose of vm.looseMods(dir)) {
     out.push({
       id: `loose:${loose}`,
       name: loose,
       version: '',
-      description: 'Added to BepInEx/plugins by hand, not through Tavern Host.',
+      description: 'Added to BepInEx/plugins by hand, not through Server Forge.',
       typeLabel: 'Manual',
       typeClass: 'manual',
       enabled: true,
@@ -144,7 +144,7 @@ export const valheimAddons: AddonSupport = {
     noun: 'mod',
     plural: 'mods',
     dropHelp:
-      'Drop a Valheim mod <b>.zip</b> here (Thunderstore\'s "Manual Download"), or choose one. Tavern Host installs BepInEx if needed, puts the files in the right place and installs the mods it depends on.',
+      'Drop a Valheim mod <b>.zip</b> here (Thunderstore\'s "Manual Download"), or choose one. Server Forge installs BepInEx if needed, puts the files in the right place and installs the mods it depends on.',
   }),
   accept: '.zip',
   needsStopped: true,
@@ -236,7 +236,7 @@ export const valheimAddons: AddonSupport = {
   },
 };
 
-/** Takes over mods put on the server without Tavern Host (see adoptLooseMods), so they can be shared. */
+/** Takes over mods put on the server without Server Forge (see adoptLooseMods), so they can be shared. */
 export async function adoptManualMods(record: ServerRecord) {
   const r = await vm.adoptLooseMods(record.installDir);
   for (const full of Object.keys(vm.loadRegistry(record.installDir).mods)) placeOnServer(record, full);
@@ -306,7 +306,7 @@ export function shareManifest(record: ServerRecord) {
       site: m.source === 'hexium' ? 'hexium' : undefined,
       dependencies: m.dependencies,
       description: m.description,
-      // Uploaded mods are only on this system; the players' app downloads them from Tavern Host.
+      // Uploaded mods are only on this system; the players' app downloads them from Server Forge.
       file:
         m.source === 'hexium' || (m.source === 'upload' && existsSync(uploadCopy(record.id, vm.fullName(m), m.version))) ? `${vm.fullName(m)}-${m.version}.zip` : null,
     }));

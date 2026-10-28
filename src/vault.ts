@@ -1,6 +1,6 @@
 // Storage, through Tavern Vault (a separate app). When Tavern Vault's node mode is on, it runs a small service on
 // 127.0.0.1 and writes its address and key to C:\ProgramData\Tavern Vault\service.json (readable by the Windows account
-// that turned node mode on, which is the one Tavern Host runs as). Tavern Host passes storage requests to it, and a
+// that turned node mode on, which is the one Server Forge runs as). Server Forge passes storage requests to it, and a
 // master panel reaches it through the node link (/api/nodes/<id>/vault/...). Without Tavern Vault there's no storage
 // view, only an explanation of what's needed.
 import { readFileSync, existsSync } from 'node:fs';
@@ -27,8 +27,8 @@ export type VaultState =
 
 const MESSAGES = {
   missing: 'Storage needs Tavern Vault. Install Tavern Vault on this system, then turn on Node mode in its Settings.',
-  off: 'Tavern Vault is installed but Node mode is off. Open Tavern Vault → Settings → Node mode (show in Tavern Host).',
-  nokey: "Tavern Vault's node mode is on, but Tavern Host can't read its key yet. Wait a minute (the service starts with Windows), or turn Node mode off and on again in Tavern Vault while signed in to Windows as the account Tavern Host runs under.",
+  off: 'Tavern Vault is installed but Node mode is off. Open Tavern Vault → Settings → Node mode (show in Server Forge).',
+  nokey: "Tavern Vault's node mode is on, but Server Forge can't read its key yet. Wait a minute (the service starts with Windows), or turn Node mode off and on again in Tavern Vault while signed in to Windows as the account Server Forge runs under.",
   down: "Tavern Vault's service isn't answering. It starts with Windows: restart this PC, or turn Node mode off and on again in Tavern Vault.",
 };
 
@@ -106,7 +106,7 @@ export async function vaultEvents(since: number) {
   return json<{ seq: number; events: unknown[] }>(await request('GET', `/events?since=${Math.max(0, Math.floor(since) || 0)}`, undefined, 15_000));
 }
 
-/** One of Tavern Vault's page files, so its own interface can be shown inside Tavern Host. */
+/** One of Tavern Vault's page files, so its own interface can be shown inside Server Forge. */
 export async function vaultUiFile(name: string): Promise<string> {
   if (!UI_FILES[name]) throw Object.assign(new Error('Not found.'), { status: 404 });
   const res = await request('GET', `/ui/${name}`, undefined, 15_000);
@@ -115,11 +115,11 @@ export async function vaultUiFile(name: string): Promise<string> {
 }
 
 /**
- * The script that replaces the Tavern Vault window's bridge (window.vault) when its page runs inside Tavern Host:
- * calls go to Tavern Host's API for this system or a node, and SnapRAID output is polled.
+ * The script that replaces the Tavern Vault window's bridge (window.vault) when its page runs inside Server Forge:
+ * calls go to Server Forge's API for this system or a node, and SnapRAID output is polled.
  */
 export function vaultShim(apiBase: string): string {
-  return `// Tavern Host bridge for the Tavern Vault page (made by Tavern Host).
+  return `// Server Forge bridge for the Tavern Vault page (made by Server Forge).
 (() => {
   const base = ${JSON.stringify(apiBase)};
   const lineFns = [];

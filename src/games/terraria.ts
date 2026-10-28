@@ -1,7 +1,7 @@
 // Terraria with tModLoader. The server comes from tModLoader's GitHub releases (tModLoader.zip, checked against the
 // release's SHA-256); its .NET runtime is downloaded into the server folder the way tModLoader's own script does.
 // The server is started directly (its dotnet + tModLoader.dll -server) in its own hidden console: it only reads typed
-// commands from a real console (piped input is ignored), so Tavern Host types them in (scripts/send-console-input.ps1),
+// commands from a real console (piped input is ignored), so Server Forge types them in (scripts/send-console-input.ps1),
 // and reads tModLoader's own log (tModLoader-Logs/server.log) for the Console tab.
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync, cpSync, renameSync, statSync } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
@@ -38,11 +38,11 @@ export const savesDir = (record: ServerRecord) => String(record.settings.saveDir
 const worldFile = (record: ServerRecord) => path.join(savesDir(record), 'Worlds', `${String(record.settings.world)}.wld`);
 const modsDir = (record: ServerRecord) => path.join(savesDir(record), 'Mods');
 
-/** The serverconfig.txt Tavern Host writes before every start (its settings are the truth). Shared with vanilla Terraria. */
+/** The serverconfig.txt Server Forge writes before every start (its settings are the truth). Shared with vanilla Terraria. */
 export function writeConfig(record: ServerRecord) {
   const s = record.settings;
   const lines = [
-    '# Written by Tavern Host before every start. Change these in Tavern Host (Settings), not here.',
+    '# Written by Server Forge before every start. Change these in Server Forge (Settings), not here.',
     `world=${worldFile(record)}`,
     `autocreate=${s.worldSize}`,
     `worldname=${s.world}`,
@@ -114,7 +114,7 @@ async function latestRelease(): Promise<Release> {
   return { version: r.tag_name.replace(/^v/, ''), url: asset.browser_download_url, digest: asset.digest ?? null };
 }
 
-/** Installed tModLoader version (written by Tavern Host after each install). */
+/** Installed tModLoader version (written by Server Forge after each install). */
 export function installedTmlVersion(installDir: string): string | null {
   try {
     return readFileSync(path.join(installDir, VERSION_FILE), 'utf-8').trim() || null;
@@ -323,7 +323,7 @@ export const terraria: GameModule = {
       job.update('Unpacking…', null);
       await extractZip(zip, path.join(work, 'tml'));
       mkdirSync(record.installDir, { recursive: true });
-      // Replace tModLoader's files; the downloaded runtime (dotnet), saves and Tavern Host's config stay.
+      // Replace tModLoader's files; the downloaded runtime (dotnet), saves and Server Forge's config stay.
       cpSync(path.join(work, 'tml'), record.installDir, { recursive: true, force: true });
       writeFileSync(path.join(record.installDir, VERSION_FILE), rel.version);
       job.line(`tModLoader ${rel.version} is installed.`);

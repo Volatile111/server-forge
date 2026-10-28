@@ -4,7 +4,7 @@
 #   can't be replaced while they run, and closing them would stop the servers. Exit 2 so the installer can say so.
 # - Otherwise close the panel window and background service (current and pre-rename names). Runners from newer
 #   versions are "Tavern Host Runner.exe" in the data folder and are left alone, so game servers keep running.
-$names = @('Tavern Host.exe', 'Game Server Panel.exe')
+$names = @('Server Forge.exe', 'Tavern Host.exe', 'Game Server Panel.exe')
 $procs = @(Get-CimInstance Win32_Process | Where-Object { $names -contains $_.Name })
 if ($procs | Where-Object { $_.CommandLine -like '*runner.js*' }) { exit 2 }
 foreach ($p in $procs) { Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue }

@@ -38,7 +38,7 @@ export function text(v: unknown, name: string, max: number, required = false): s
   return s;
 }
 
-/** A password made for settings that need one (e.g. a server's admin password, used by Tavern Host's own API calls). */
+/** A password made for settings that need one (e.g. a server's admin password, used by Server Forge's own API calls). */
 export const newPassword = () => randomBytes(9).toString('base64url');
 
 /** Installs or updates the server with SteamCMD and checks `exe` (relative to the install folder) is there. */

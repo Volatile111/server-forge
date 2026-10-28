@@ -1,6 +1,6 @@
 // V Rising dedicated server (Steam app 1829350, anonymous SteamCMD). Started as the official example does, with
 // -persistentDataPath .\save-data so its settings and saves stay in the server folder (not in the Windows profile), and
-// a log file Tavern Host reads. Tavern Host writes its own values into save-data\Settings\ServerHostSettings.json
+// a log file Server Forge reads. Server Forge writes its own values into save-data\Settings\ServerHostSettings.json
 // (created from the defaults the server ships with) and keeps the rest; ServerGameSettings.json is left to the owner
 // (Files tab), with the game preset chosen here. RCON is switched on (this system only) so countdowns can warn players
 // in the game. Stop is Ctrl+C (the server saves and shuts down).
@@ -115,13 +115,13 @@ export const vrising: GameModule = {
     { key: 'preset', label: 'Game mode', type: 'select', options: GAME_PRESETS, restart: true, section: 'World' },
     { key: 'difficulty', label: 'Difficulty', type: 'select', options: DIFFICULTY, restart: true, section: 'World' },
     { key: 'world', label: 'Save name', type: 'text', help: 'save-data\\Saves\\v4\\<name>. A new one starts a new world.', restart: true, section: 'World' },
-    { key: 'rconPort', label: 'RCON port (this system only)', type: 'number', help: 'Default 25575. Used by Tavern Host to warn players before restarts; no need to forward it.', restart: true, section: 'Advanced' },
+    { key: 'rconPort', label: 'RCON port (this system only)', type: 'number', help: 'Default 25575. Used by Server Forge to warn players before restarts; no need to forward it.', restart: true, section: 'Advanced' },
   ],
   quickFields: ['serverName', 'port', 'password', 'preset', 'difficulty'],
 
   defaults: () => ({
     serverName: 'My V Rising Server',
-    description: 'Hosted with Tavern Host',
+    description: 'Hosted with Server Forge',
     port: 9876,
     password: '',
     maxPlayers: 40,

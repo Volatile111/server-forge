@@ -3,7 +3,7 @@
 // (Settings → Integrations): the "expansion" build for accounts that own Space Age, else "alpha" (the base game).
 // Everything the server writes stays in its own folder (config-path.cfg points there, not at %APPDATA%): saves/, mods/,
 // config/, the server-*.json lists and factorio-current.log.
-// It runs under Tavern Host's runner (output captured, commands piped). Factorio commands start with "/" (text without
+// It runs under Server Forge's runner (output captured, commands piped). Factorio commands start with "/" (text without
 // one is chat), so commands keep their slash. Stop saves first (/server-save), then /quit.
 // Mods come from the Factorio mod portal (needs the same login); players' games download a server's mods by themselves
 // when they join, so the share link only carries how to join.
@@ -89,7 +89,7 @@ function writeServerSettings(record: ServerRecord) {
   const settings = {
     name: s.serverName,
     description: s.description,
-    tags: ['Tavern Host'],
+    tags: ['Server Forge'],
     max_players: Number(s.maxPlayers) || 0,
     // Public listing needs a factorio.com login; without one the server is LAN/direct-connect only.
     visibility: { public: !!(s.public && login), lan: s.lan !== false },
@@ -420,7 +420,7 @@ const factorioAddons: AddonSupport = {
 function listCommands(list: string, added: string[], removed: string[]): string[] {
   if (list === 'admins') return [...added.map((n) => `/promote ${n}`), ...removed.map((n) => `/demote ${n}`)];
   if (list === 'whitelist') return [...added.map((n) => `/whitelist add ${n}`), ...removed.map((n) => `/whitelist remove ${n}`)];
-  return [...added.map((n) => `/ban ${n} Banned in Tavern Host`), ...removed.map((n) => `/unban ${n}`)];
+  return [...added.map((n) => `/ban ${n} Banned in Server Forge`), ...removed.map((n) => `/unban ${n}`)];
 }
 
 // ---------- install ----------
@@ -514,7 +514,7 @@ export const factorio: GameModule = {
 
   defaults: () => ({
     serverName: 'My Factorio Server',
-    description: 'Hosted with Tavern Host',
+    description: 'Hosted with Server Forge',
     port: 34197,
     password: '',
     maxPlayers: 0,

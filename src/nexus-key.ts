@@ -1,4 +1,4 @@
-// Tavern Host's Nexus Mods API key (Settings → Integrations), kept with the other integration keys in
+// Server Forge's Nexus Mods API key (Settings → Integrations), kept with the other integration keys in
 // data/integrations.json. Checked with Nexus Mods before it's saved.
 import { readJson, writeJson } from './store.ts';
 import { validateKey, type NexusUser } from './nexus.ts';

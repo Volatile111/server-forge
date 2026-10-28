@@ -1,4 +1,4 @@
-// What a share link (thmods://…) gives the Tavern Client Mod Manager, per game. Valheim and modded Minecraft Java are
+// What a share link (thmods://…) gives the Mod Forge, per game. Valheim and modded Minecraft Java are
 // synced by the app; Satisfactory mods are installed with Satisfactory Mod Manager (the app links each one); the other
 // games download what they need by themselves when a player joins, so the link only carries how to join.
 
@@ -14,7 +14,7 @@ interface Shareable {
   module: GameModule;
 }
 
-/** Minecraft Java: the loader Tavern Host installed (".tavernhost-version"). */
+/** Minecraft Java: the loader Server Forge installed (".tavernhost-version"). */
 function javaLoader(record: ServerRecord) {
   const flavor = String(record.settings.flavor ?? '');
   let mc = String(record.settings.mcVersion ?? '');
@@ -91,7 +91,7 @@ function join(inst: Shareable) {
   }
 }
 
-/** What the share card in Tavern Host shows. */
+/** What the share card in Server Forge shows. */
 export function shareSummary(inst: Shareable) {
   const { record } = inst;
   if (record.game === 'valheim') return { ...valheimSummary(record), mode: 'sync' };

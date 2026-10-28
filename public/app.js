@@ -1,3 +1,4 @@
+import { showRebrandAnnouncement } from './rebrand-announcement.js';
 import { serverIcon } from './icons.js';
 
 const $ = (id) => document.getElementById(id);
@@ -96,7 +97,7 @@ function ask(message, value = '') {
 
 /**
  * Asks yes/no in the panel's own dialog; resolves to true for OK. Used instead of confirm(): in the desktop app
- * (Electron on Windows) the page often stopped taking clicks after a native confirm box closed, until Tavern Host was
+ * (Electron on Windows) the page often stopped taking clicks after a native confirm box closed, until Server Forge was
  * reopened.
  */
 function confirmBox(message, okLabel = 'OK') {
@@ -138,23 +139,23 @@ function show(view) {
 }
 
 /**
- * The panel's name follows what it does: "Tavern Host", "Tavern Master" (only manages other systems) or "Tavern Super"
+ * The panel's name follows what it does: "Server Forge", "Forge Master" (only manages other systems) or "Super Forge"
  * (manages other systems and has its own servers or storage). Sent by the service with /api/me and the storage summary.
  */
 function applyPanelName(panel) {
   if (panel) state.panel = panel;
-  const name = state.panel?.name ?? 'Tavern Host';
-  const brand = document.querySelector('.brand span');
+  const name = state.panel?.name ?? 'Server Forge';
+  const brand = document.querySelector('.brand > span');
   if (brand) brand.textContent = name;
   document.querySelectorAll('.auth-brand span').forEach((s) => (s.textContent = name));
   document.title = state.dev ? `${name} – Development Panel` : name;
   if (brand)
     brand.title =
       {
-        master: 'Tavern Master: this panel manages other systems (nodes) and has no game servers or storage of its own.',
-        super: 'Tavern Super: this panel manages other systems (nodes) and has its own game servers or storage too.',
-        node: 'Tavern Node: a main panel on another system manages this one.',
-        supernode: 'Tavern Super Node: a main panel on another system manages this one, and Tavern Vault is here too.',
+        master: 'Forge Master: this panel manages other systems (nodes) and has no game servers or storage of its own.',
+        super: 'Super Forge: this panel manages other systems (nodes) and has its own game servers or storage too.',
+        node: 'Forge Node: a main panel on another system manages this one.',
+        supernode: 'Super Forge Node: a main panel on another system manages this one, and Tavern Vault is here too.',
       }[state.panel?.role] ?? '';
 }
 
@@ -172,7 +173,7 @@ function showBuild(build) {
   badge.title = dev ? 'Test panel running from the source code. Not for live servers.' : 'Installed release version';
   $('appVersion').appendChild(badge);
   const beta = el('span', 'build-badge beta', 'Beta');
-  beta.title = 'Tavern Host is in beta: it is actively being worked on and updates are frequent.';
+  beta.title = 'Server Forge is in beta: it is actively being worked on and updates are frequent.';
   $('appVersion').appendChild(beta);
   document.body.classList.toggle('dev-build', dev);
   state.dev = dev;
@@ -252,7 +253,13 @@ async function enterApp(user) {
   renderSidebar();
   connectEvents();
   loadAlerts();
-  showWhatsNew();
+  // The rename and release notes share one notice; later versions use normal notes.
+  void showRebrandAnnouncement({
+    version: state.version,
+    development: state.build === 'development',
+    loadNotes: version => api('GET', `/api/changelog?version=${encodeURIComponent(version)}`),
+    renderNotes,
+  }).then(shown => { if (!shown) showWhatsNew(); });
   if (hasGlobal('panel.settings')) {
     loadAppUpdate(false);
     // The service checks GitHub every 6 hours; asking it hourly just picks that up.
@@ -374,7 +381,7 @@ setInterval(updateSidebarStats, 3000);
 
 // Servers grouped by game (one section each), in the saved order inside a section (drag to change it). Sections are
 // ordered by where their first server sits in the saved list, so dragging a section moves its servers as a block.
-// BungeeCord networks: which Tavern Host servers each proxy's config.yml points at (matched by address), worked out on
+// BungeeCord networks: which Server Forge servers each proxy's config.yml points at (matched by address), worked out on
 // every sidebar redraw. proxyLinks: server id -> { proxy, name, address }; proxyChildren: proxy id -> [{ server, name }].
 let proxyLinks = new Map();
 let proxyChildren = new Map();
@@ -450,7 +457,7 @@ const STORAGE_STATE_TEXT = {
   off: 'Tavern Vault: node mode is off',
   nokey: 'Tavern Vault is starting…',
   down: 'Tavern Vault is not answering',
-  old: 'Update Tavern Host there (0.5.0+)',
+  old: 'Update Server Forge there (0.5.0+)',
   unreachable: 'System not reachable',
 };
 const vaultFor = (nk) => (nk === 'local' ? state.vault?.local : state.vault?.nodes?.find((n) => n.id === nk));
@@ -566,13 +573,13 @@ async function showStorage(nk) {
   frame.removeAttribute('src');
   need.innerHTML = '';
   need.hidden = false;
-  const title = v.state === 'missing' ? `Storage on ${name} needs Tavern Vault` : v.state === 'old' ? `${name} needs a newer Tavern Host` : v.state === 'unreachable' ? `Can't reach ${name}` : `Tavern Vault on ${name} isn't connected yet`;
+  const title = v.state === 'missing' ? `Storage on ${name} needs Tavern Vault` : v.state === 'old' ? `${name} needs a newer Server Forge` : v.state === 'unreachable' ? `Can't reach ${name}` : `Tavern Vault on ${name} isn't connected yet`;
   need.appendChild(el('h3', null, title));
   need.appendChild(el('p', null, v.message));
   if (v.state === 'missing' || v.state === 'off') {
     const ol = el('ol');
     if (v.state === 'missing') ol.appendChild(el('li', null, `Install Tavern Vault on ${name} (the system that has the drives).`));
-    ol.appendChild(el('li', null, 'Open Tavern Vault → Settings → Node mode (show in Tavern Host) and turn it on.'));
+    ol.appendChild(el('li', null, 'Open Tavern Vault → Settings → Node mode (show in Server Forge) and turn it on.'));
     ol.appendChild(el('li', null, 'Come back here: pools, drives and SnapRAID show up within a minute, with everything Tavern Vault can do.'));
     need.appendChild(ol);
     need.appendChild(
@@ -580,7 +587,7 @@ async function showStorage(nk) {
         'p',
         'muted small-text',
         nk === 'local'
-          ? 'Tavern Vault is a separate app; Tavern Host only shows it. Systems you manage as nodes are linked already (Settings → Nodes), so they need no extra code.'
+          ? 'Tavern Vault is a separate app; Server Forge only shows it. Systems you manage as nodes are linked already (Settings → Nodes), so they need no extra code.'
           : `${name} is already linked to this panel as a node, so no new code is needed: its storage comes through the same link.`,
       ),
     );
@@ -1037,7 +1044,7 @@ async function openPortsHelp(id) {
   const tips = [
     ...h.notes,
     'Give this system a fixed address on your network (a "DHCP reservation" in the router), or the forward stops working when its address changes.',
-    'Your public IP can change now and then. Tavern Host warns you when it does.',
+    'Your public IP can change now and then. Server Forge warns you when it does.',
     'Test from outside your network (e.g. a phone on mobile data), not from this system.',
   ];
   const ul = el('ul', 'muted small-text');
@@ -1200,10 +1207,10 @@ async function renderPlayersTab() {
   $('plCount').textContent = data.players.length ? `${data.players.length}` : '';
   $('plHelp').textContent =
     data.game === 'java'
-      ? 'Everyone who has joined since Tavern Host started tracking. Heads come from mc-heads.net.'
+      ? 'Everyone who has joined since Server Forge started tracking. Heads come from mc-heads.net.'
       : data.game === 'bedrock'
-        ? "Everyone who has joined since Tavern Host started tracking. Bedrock doesn't share player skins, so players are shown by name."
-        : 'Everyone who has joined since Tavern Host started tracking. Use Actions to make someone an admin (F5 console in-game), ban them or put them on the allow list: no IDs to look up.';
+        ? "Everyone who has joined since Server Forge started tracking. Bedrock doesn't share player skins, so players are shown by name."
+        : 'Everyone who has joined since Server Forge started tracking. Use Actions to make someone an admin (F5 console in-game), ban them or put them on the allow list: no IDs to look up.';
   const list = $('plList');
   list.innerHTML = '';
   if (!data.players.length) list.appendChild(el('p', 'muted', 'Nobody has joined yet.'));
@@ -1506,7 +1513,7 @@ async function runDiagAction(a, btn) {
       toast('EULA accepted. Start the server again.');
     } else if (a.type === 'install-vcredist') {
       const where = state.detail.node?.name ?? 'this PC';
-      if (!(await confirmBox(`Install the Microsoft Visual C++ Redistributable (x64) on ${where}?\n\nTavern Host downloads Microsoft's installer and runs it quietly. Windows will ask for admin rights on ${where}, so someone needs to be there to click Yes. It takes a minute or two.`, 'Install'))) {
+      if (!(await confirmBox(`Install the Microsoft Visual C++ Redistributable (x64) on ${where}?\n\nServer Forge downloads Microsoft's installer and runs it quietly. Windows will ask for admin rights on ${where}, so someone needs to be there to click Yes. It takes a minute or two.`, 'Install'))) {
         btn.disabled = false;
         return;
       }
@@ -1602,7 +1609,7 @@ async function renderOverview() {
     for (const b of world.bosses) {
       const pill = el('div', `boss${b.defeated ? ' done' : b.unsure ? ' unsure' : ''}`, b.unsure ? `${b.name} ?` : b.name);
       if (b.unsure) {
-        pill.title = `Can't tell yet. This world has a defeat marker Tavern Host doesn't recognise (${world.unknownKeys.join(', ')}). It may be ${b.name}'s, or come from a mod or an older Valheim version.`;
+        pill.title = `Can't tell yet. This world has a defeat marker Server Forge doesn't recognise (${world.unknownKeys.join(', ')}). It may be ${b.name}'s, or come from a mod or an older Valheim version.`;
       }
       box.appendChild(pill);
     }
@@ -1798,12 +1805,12 @@ function renderNetwork() {
   for (const s of n.servers) {
     const row = el('div', 'node-row');
     const info = el('div', 'node-info');
-    // Which Tavern Host server this is: same address (and the same name, when two servers share an address).
+    // Which Server Forge server this is: same address (and the same name, when two servers share an address).
     const match = n.candidates.find((c) => c.address === s.address && c.suggested === s.name) ?? n.candidates.find((c) => c.address === s.address);
     const title = el('b', null, s.name);
     info.appendChild(title);
     if (s.name === first) info.appendChild(el('span', 'type-badge loc-server', 'Players land here'));
-    info.appendChild(el('div', 'muted small-text', [s.address, match ? `Tavern Host: ${match.name}${match.node ? ` (on ${match.node})` : ''}` : null, s.restricted ? 'restricted' : null].filter(Boolean).join(' · ')));
+    info.appendChild(el('div', 'muted small-text', [s.address, match ? `Server Forge: ${match.name}${match.node ? ` (on ${match.node})` : ''}` : null, s.restricted ? 'restricted' : null].filter(Boolean).join(' · ')));
     row.appendChild(info);
     if (hasPerm('properties.edit')) {
       const actions = el('div', 'actions');
@@ -1836,7 +1843,7 @@ function renderNetwork() {
     list.appendChild(row);
   }
   if (!n.servers.length && !n.error) list.appendChild(el('p', 'muted', 'No servers yet.'));
-  // The picker: Tavern Host's Java servers (address filled in), or "Another server" for anything else.
+  // The picker: Server Forge's Java servers (address filled in), or "Another server" for anything else.
   const pick = $('networkPick');
   pick.innerHTML = '';
   pick.add(new Option('Another server (type its address)', ''));
@@ -2085,7 +2092,7 @@ async function loadDiscord() {
   try {
     d = await api('GET', `/api/servers/${id}/discord`);
   } catch {
-    // A node running an older Tavern Host doesn't have this.
+    // A node running an older Server Forge doesn't have this.
     $('discordCard').hidden = true;
     return;
   }
@@ -2180,12 +2187,12 @@ const UPDATE_GAMES = {
   },
   valheim: {
     source: 'Steam',
-    autoHelp: "Automatic updates: when Steam has a new Valheim server build, Tavern Host waits until nobody is online (at most an hour; Valheim can't message players), backs up the world, lets Steam install the update and starts the server again. Mods (BepInEx) are kept, but a big game update can break some until their authors update them. Checked every 30 minutes. Players' games must be on the same version (Steam updates them).",
+    autoHelp: "Automatic updates: when Steam has a new Valheim server build, Server Forge waits until nobody is online (at most an hour; Valheim can't message players), backs up the world, lets Steam install the update and starts the server again. Mods (BepInEx) are kept, but a big game update can break some until their authors update them. Checked every 30 minutes. Players' games must be on the same version (Steam updates them).",
     forceHelp: 'Force update: asks Steam right now and re-runs the update with a full file check, even if this server already looks up to date. Same steps: backup, update, start.',
   },
   satisfactory: {
     source: 'Steam',
-    autoHelp: "Automatic updates: when Steam has a new Satisfactory server build, Tavern Host waits until nobody is online (at most an hour; Satisfactory can't message players), saves and backs up, lets Steam install the update and starts the server again. Players' games must be on the same version (Steam updates them). Mods may need updating in Satisfactory Mod Manager after a big game update. Checked every 30 minutes.",
+    autoHelp: "Automatic updates: when Steam has a new Satisfactory server build, Server Forge waits until nobody is online (at most an hour; Satisfactory can't message players), saves and backs up, lets Steam install the update and starts the server again. Players' games must be on the same version (Steam updates them). Mods may need updating in Satisfactory Mod Manager after a big game update. Checked every 30 minutes.",
     forceHelp: 'Force update: asks Steam right now and re-runs the update with a full file check, even if this server already looks up to date.',
   },
   spaceengineers: {
@@ -2201,7 +2208,7 @@ const UPDATE_GAMES = {
   ...Object.fromEntries(
     [
       ['palworld', 'Palworld', 'players get a 5-minute countdown in chat'],
-      ['enshrouded', 'Enshrouded', "Tavern Host waits until nobody is online (at most an hour; Enshrouded can't message players)"],
+      ['enshrouded', 'Enshrouded', "Server Forge waits until nobody is online (at most an hour; Enshrouded can't message players)"],
       ['sevendays', '7 Days to Die', 'players get a 5-minute countdown in chat'],
       ['zomboid', 'Project Zomboid', 'players get a 5-minute countdown in chat'],
       ['vrising', 'V Rising', 'players get a 5-minute countdown in chat'],
@@ -2292,7 +2299,7 @@ $('btnBuForce').addEventListener('click', async () => {
   const src = UPDATE_GAMES[state.detail.game]?.source ?? 'for updates';
   let minutes = 0;
   if (running) {
-    const answer = await ask(`Force update: Tavern Host checks ${src} right now and installs the latest server, even if this one looks up to date.\n\nThe server is running. Warn players for how many minutes before it stops? (0 = right away)`, '5');
+    const answer = await ask(`Force update: Server Forge checks ${src} right now and installs the latest server, even if this one looks up to date.\n\nThe server is running. Warn players for how many minutes before it stops? (0 = right away)`, '5');
     if (answer === null) return;
     minutes = Math.max(0, Math.min(Number(answer) || 0, 60));
   } else if (!await confirmBox(`Force update: check ${src} right now and install the latest server, even if this one looks up to date?\n\nThe world is backed up first; worlds and settings are kept.`)) return;
@@ -2377,7 +2384,7 @@ function updateDeleteDialog() {
   const backups = $('delBackups').checked;
   const destructive = files || backups;
   $('delConfirmBox').hidden = !destructive;
-  $('delSubmit').textContent = files && backups ? 'Delete server, files and backups' : files ? 'Delete server and files' : backups ? 'Delete server and backups' : 'Remove from Tavern Host';
+  $('delSubmit').textContent = files && backups ? 'Delete server, files and backups' : files ? 'Delete server and files' : backups ? 'Delete server and backups' : 'Remove from Server Forge';
   $('delSubmit').disabled = destructive && $('delConfirm').value.trim() !== state.detail.name.trim();
 }
 $('btnDelete').addEventListener('click', async () => {
@@ -3115,7 +3122,7 @@ $('worldCheats').addEventListener('change', () => {
 $('worldUnlock').addEventListener('click', async (e) => {
   e.preventDefault();
   const ok = await confirmBox(
-    'Unlock experiments?\n\nThe game never lets you turn experiments off, because the world may contain experimental blocks, items or data that break without them (missing blocks, lost items, or a world that won\'t load).\n\nTavern Host keeps a copy of the world settings file (level.dat.tavernhost-bak), but make a backup on the Backups tab first to be safe.',
+    'Unlock experiments?\n\nThe game never lets you turn experiments off, because the world may contain experimental blocks, items or data that break without them (missing blocks, lost items, or a world that won\'t load).\n\nServer Forge keeps a copy of the world settings file (level.dat.tavernhost-bak), but make a backup on the Backups tab first to be safe.',
   );
   if (!ok) return;
   worldUnlocked = true;
@@ -3374,7 +3381,7 @@ document.addEventListener('click', (e) => {
   if (b) openBrowser(b.dataset.browse).catch((err) => toast(err.message, true));
 });
 
-// ---------- new server (Tavern Host downloads the software) ----------
+// ---------- new server (Server Forge downloads the software) ----------
 
 function slug(name) {
   return name.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
@@ -4083,11 +4090,11 @@ function renderChatRelay() {
     ? `Using scripting version ${r.moduleVersion}. If chat stops after a Bedrock update, change the version and press Update.`
     : `Scripting version ${r.suggestedVersion} (${r.suggestedFrom}). It must match this Bedrock version (Minecraft 26.51 uses 2.11.x-beta).`;
   $('chatBetaWarn').hidden = r.betaApis !== false;
-  // Older relays were turned on before Tavern Host also set this; pressing Update fixes it.
+  // Older relays were turned on before Server Forge also set this; pressing Update fixes it.
   $('chatBetaWarn').textContent = r.betaApis === false ? 'This world doesn\'t have "Beta APIs" turned on (World tab). The chat relay needs it.' : '';
   if (r.on && r.outdated) {
     $('chatBetaWarn').hidden = false;
-    $('chatBetaWarn').textContent = 'This chat relay was made by an older Tavern Host (no mute support). Press Update, then restart the server.';
+    $('chatBetaWarn').textContent = 'This chat relay was made by an older Server Forge (no mute support). Press Update, then restart the server.';
   }
   if (r.on && !r.contentLog) {
     $('chatBetaWarn').hidden = false;
@@ -4168,7 +4175,7 @@ async function stopAndWait(s) {
   throw new Error(`"${s.name}" didn't stop within 3 minutes.`);
 }
 
-// ---------- Tavern Host updates (GitHub releases) ----------
+// ---------- Server Forge updates (GitHub releases) ----------
 
 async function loadAppUpdate(force) {
   try {
@@ -4190,7 +4197,7 @@ function renderAppUpdate() {
   const canInstall = !!window.desktop?.installUpdate && state.build !== 'development';
   $('btnInstallUpdate').hidden = !(u.available && canInstall);
   if (u.available) {
-    box.appendChild(el('p', 'good-banner', `Tavern Host ${u.latest} is available. You have ${u.current}.`));
+    box.appendChild(el('p', 'good-banner', `Server Forge ${u.latest} is available. You have ${u.current}.`));
     if (u.notes) {
       const d = el('details', 'release-notes');
       d.append(el('summary', null, "What's new"), el('pre', null, u.notes));
@@ -4198,7 +4205,7 @@ function renderAppUpdate() {
     }
     if (!canInstall) {
       box.appendChild(
-        el('p', 'muted small-text', state.build === 'development' ? 'This is the development panel: update the installed Tavern Host instead.' : 'Install it from the Tavern Host app on the system it runs on, or download it from GitHub.'),
+        el('p', 'muted small-text', state.build === 'development' ? 'This is the development panel: update the installed Server Forge instead.' : 'Install it from the Server Forge app on the system it runs on, or download it from GitHub.'),
       );
     }
   } else if (u.error) {
@@ -4230,14 +4237,14 @@ window.desktop?.onUpdateProgress?.((p) => {
 $('btnInstallUpdate').addEventListener('click', async () => {
   const u = state.appUpdate;
   if (!u?.available) return;
-  if (!await confirmBox(`Install Tavern Host ${u.latest}?\n\nIt downloads from GitHub, then Tavern Host closes and opens again by itself. Game servers keep running.`)) return;
+  if (!await confirmBox(`Install Server Forge ${u.latest}?\n\nIt downloads from GitHub, then Server Forge closes and opens again by itself. Game servers keep running.`)) return;
   $('btnInstallUpdate').disabled = true;
   $('updateStatus').textContent = 'Starting the download…';
   try {
     // Tell connected clients (Watcher, other browsers) this is a planned restart, not an outage.
     await api('POST', '/api/panel/restarting', { reason: 'update' }).catch(() => {});
     await window.desktop.installUpdate();
-    $('updateStatus').textContent = 'Installing… Tavern Host will close and reopen.';
+    $('updateStatus').textContent = 'Installing… Server Forge will close and reopen.';
   } catch (err) {
     $('updateStatus').textContent = '';
     toast(err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, ''), true);
@@ -4245,7 +4252,7 @@ $('btnInstallUpdate').addEventListener('click', async () => {
   }
 });
 
-// ---------- "Tavern Host was updated" (once per browser, after a version change) ----------
+// ---------- "Server Forge was updated" (once per browser, after a version change) ----------
 
 const versionNewer = (a, b) => {
   const pa = a.split('.').map(Number);
@@ -4292,7 +4299,7 @@ async function showWhatsNew() {
   }
   const last = u.from;
   const r = await api('GET', `/api/changelog?version=${encodeURIComponent(current)}`).catch(() => null);
-  $('whatsNewTitle').textContent = `Tavern Host was updated to ${current}`;
+  $('whatsNewTitle').textContent = `Server Forge was updated to ${current}`;
   if (r?.notes) renderNotes($('whatsNewBody'), r.notes);
   else $('whatsNewBody').replaceChildren(el('p', 'muted', last ? `You were on ${last} before.` : 'See the release notes for what changed.'));
   $('whatsNewDialog').showModal();
@@ -4320,11 +4327,11 @@ $('btnUpdateFile').addEventListener('click', async () => {
   }
   if (!info) return;
   if (info.error) return toast(info.error, true);
-  const isTavern = /tavern host|game server panel/i.test(`${info.product} ${info.description}`);
+  const isTavern = /server forge|tavern host|game server panel/i.test(`${info.product} ${info.description}`);
   const lines = [
     isTavern
-      ? `Install ${info.product} ${info.version || '(unknown version)'} over this Tavern Host ${info.current}?`
-      : `"${info.name}" doesn't say it's a Tavern Host installer (it says "${info.product || info.description || 'nothing'}"). Run it anyway?`,
+      ? `Install ${info.product} ${info.version || '(unknown version)'} over this Server Forge ${info.current}?`
+      : `"${info.name}" doesn't say it's a Server Forge or legacy Tavern Host installer (it says "${info.product || info.description || 'nothing'}"). Run it anyway?`,
   ];
   if (isTavern && info.version && info.version === info.current) lines.push('\nThat is the version you have now: it will be reinstalled.');
   // Java/Bedrock servers started by versions before the separate runner have to stop for this one update.
@@ -4334,7 +4341,7 @@ $('btnUpdateFile').addEventListener('click', async () => {
       `\nThese servers were started by the older version and must stop for this update (their worlds are saved first):\n${oldStyle.map((s) => `• ${s.name}`).join('\n') || '• (Java/Bedrock servers)'}\nStart them again after the update; from then on they keep running through updates.`,
     );
   }
-  lines.push('\nTavern Host closes and opens again by itself when the update is done.');
+  lines.push('\nServer Forge closes and opens again by itself when the update is done.');
   if (!await confirmBox(lines.join('\n'))) return;
   $('btnUpdateFile').disabled = true;
   try {
@@ -4342,7 +4349,7 @@ $('btnUpdateFile').addEventListener('click', async () => {
       status.textContent = `Stopping ${s.name}…`;
       await stopAndWait(s);
     }
-    status.textContent = 'Installing… Tavern Host will close and reopen.';
+    status.textContent = 'Installing… Server Forge will close and reopen.';
     // Tell connected clients (Watcher, other browsers) this is a planned restart, not an outage.
     await api('POST', '/api/panel/restarting', { reason: 'update' }).catch(() => {});
     await window.desktop.runInstaller();
@@ -4854,7 +4861,7 @@ const API_DOCS = [
     ['GET', '/api/vault/summary', 'Storage at a glance for this system and every node', 'See storage'],
     ['POST', '/api/vault/call', 'Run a Tavern Vault call: {"method","args"} → {"ok","data"|"error"}. Reading (state, inventory, arrays, schedules, activity, scrubInfo, discoverArrays, validateArray, snapraidRunning) needs See storage; everything else (createPool, createVolume, addDisks, retireDisk, removeDisk, repairVolume, resizeVolume, attachPool, rename, deleteVolume, deletePool, eraseDisk, saveArray, snapraidRun, createSchedule…) needs Manage storage. Tavern Vault\'s practice mode and safety checks apply.', 'See / Manage storage'],
     ['GET', '/api/vault/events?since=', 'SnapRAID output and finish events after sequence number since', 'See storage'],
-    ['GET', '/api/nodes/{node}/vault', 'The same, for a node (through its node link; the node needs Tavern Host 0.5.0+ and Tavern Vault in node mode)', 'See storage'],
+    ['GET', '/api/nodes/{node}/vault', 'The same, for a node (through its node link; the node needs Server Forge 0.5.0+ and Tavern Vault in node mode)', 'See storage'],
     ['POST', '/api/nodes/{node}/vault/call', 'Run a Tavern Vault call on a node', 'See / Manage storage'],
     ['GET', '/api/nodes/{node}/vault/events?since=', 'SnapRAID output on a node', 'See storage'],
   ]],
@@ -4870,7 +4877,7 @@ const API_DOCS = [
     ['GET', '/api/alerts', 'Health warnings (low disk/RAM, stuck starts, failed backup copies, world checks…), nodes included', 'See the server (per server)'],
     ['POST', '/api/alerts/{alert}/dismiss', 'Dismiss a warning', 'See the server (per server)'],
     ['PUT', '/api/me/password', 'Change your own password: {"current","password"} (logins only, not API keys)', 'Any login'],
-    ['GET', '/api/app-update?check=1', 'New Tavern Host version on GitHub: {current, latest, available, notes, url, checkedAt, error}; check=1 looks right now (otherwise the 6-hourly check)', 'Panel settings'],
+    ['GET', '/api/app-update?check=1', 'New Server Forge version on GitHub: {current, latest, available, notes, url, checkedAt, error}; check=1 looks right now (otherwise the 6-hourly check)', 'Panel settings'],
   ]],
   ['Servers', [
     ['GET', '/api/servers', 'All servers you can see: status, players, version, join code, IP/port, your permissions', 'See the server'],
@@ -4887,7 +4894,7 @@ const API_DOCS = [
     ['GET', '/api/servers/{id}/ports', 'Port forwarding help: {lanIp, publicIp, forwards:[{protocol, ports, why}], problems:[{text, fix?}], notes, joinAddress}', 'See the server'],
     ['GET', '/api/servers/{id}/difficulty', 'Current difficulty and the choices for this game', 'See the server'],
     ['PUT', '/api/servers/{id}/difficulty', 'Set it: {"value":"hard"} (Minecraft: peaceful/easy/normal/hard, applied live; Valheim: casual/easy/normal/hard/hardcore/immersive/hammer, or "keep"; applies on the next start)', 'Change settings'],
-    ['DELETE', '/api/servers/{id}?files=0&backups=0', 'Remove the server from Tavern Host. files=1 also sends its folder to the Recycle Bin (needs Edit & upload files too); backups=1 deletes its backups', 'Remove server'],
+    ['DELETE', '/api/servers/{id}?files=0&backups=0', 'Remove the server from Server Forge. files=1 also sends its folder to the Recycle Bin (needs Edit & upload files too); backups=1 deletes its backups', 'Remove server'],
     ['POST', '/api/servers/{id}/eula', 'Accept the Minecraft EULA', 'Change settings'],
     ['PUT', '/api/server-order', 'Sidebar order: {"ids":[...]} in the new order (each listed server keeps a slot it already had; "position" in /api/servers)', 'Change settings (every listed server)'],
   ]],
@@ -4926,8 +4933,8 @@ const API_DOCS = [
     ['DELETE', '/api/servers/{id}/worlds/{folder}', 'Delete a world (Recycle Bin)', 'Edit & upload files'],
   ]],
   ['BungeeCord network', [
-    ['GET', '/api/servers/{id}/network', "A proxy's servers (config.yml), where players land first (priorities), and Tavern Host's Minecraft Java servers that can be added", 'See the server'],
-    ['POST', '/api/servers/{id}/network', 'Add a server: {"serverId"?: a Tavern Host server (address filled in) | "address": "host:port", "name", "first"?: true, "prepare"?: true (Paper/Spigot: bungeecord: true, online-mode=false)}', 'Edit properties & world (+ on the added server, to prepare it)'],
+    ['GET', '/api/servers/{id}/network', "A proxy's servers (config.yml), where players land first (priorities), and Server Forge's Minecraft Java servers that can be added", 'See the server'],
+    ['POST', '/api/servers/{id}/network', 'Add a server: {"serverId"?: a Server Forge server (address filled in) | "address": "host:port", "name", "first"?: true, "prepare"?: true (Paper/Spigot: bungeecord: true, online-mode=false)}', 'Edit properties & world (+ on the added server, to prepare it)'],
     ['DELETE', '/api/servers/{id}/network/{name}', "Remove a server from the proxy's list", 'Edit properties & world'],
     ['PUT', '/api/servers/{id}/network/default', 'Where players land first: {"name"}', 'Edit properties & world'],
   ]],
@@ -4974,13 +4981,13 @@ const API_DOCS = [
     ['POST', '/api/servers/{id}/addons/curseforge', 'Install the latest file of a CurseForge project: {"projectId"} (answers needsBrowser when the author only allows website downloads)', 'Manage mods / plugins / addons'],
     ['POST', '/api/servers/{id}/addons/hexium', 'Valheim: install from Hexium with dependencies: {"input":"https://valheim.hexium.gg/mods/Author/Mod"} or {"namespace","name","version"?}', 'Manage mods / plugins / addons'],
     ['POST', '/api/servers/{id}/addons/nexus', 'Valheim: install a Nexus Mods file: {"input":"nxm://…"} (needs the Nexus key in Integrations; a mod page address needs Premium)', 'Manage mods / plugins / addons'],
-    ['POST', '/api/servers/{id}/addons/adopt', 'Valheim: take over mods added without Tavern Host (r2modman, by hand) so they can be shared: {adopted, skipped}', 'Manage mods / plugins / addons'],
+    ['POST', '/api/servers/{id}/addons/adopt', 'Valheim: take over mods added without Server Forge (r2modman, by hand) so they can be shared: {adopted, skipped}', 'Manage mods / plugins / addons'],
     ['GET', '/api/servers/{id}/plugins', 'Bedrock on Endstone: its plugins (.whl/.dll). Every /addons route above also works under /plugins for them (upload, {item}/enabled, DELETE, check-updates, {item}/update, setup)', 'See the server'],
     ['GET', '/api/servers/{id}/plugins/search?q=', 'Endstone: search plugins on GitHub and PyPI: {results:[{id, name, summary, author, url, source, version?, stars?}], errors}', 'See the server'],
     ['POST', '/api/servers/{id}/plugins/found', 'Endstone: install the newest file of a search result: {"id":"pypi:endstone-essentials"} or {"id":"github:owner/repo"}', 'Manage mods / plugins / addons'],
     ['GET', '/api/servers/{id}/share', "Players' share link (Valheim, Minecraft Java, Satisfactory, Bedrock, Terraria tModLoader, Space Engineers): links, public link, what's shared (summary, with mode sync|links|info), Remote access status", 'Share mods with players'],
     ['POST', '/api/servers/{id}/share', 'Sharing on/off or a new link: {"enabled":true,"newLink":false}', 'Share mods with players'],
-    ['GET', '/api/share/{token}', "What the players' Tavern Client Mod Manager reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion", 'The share link token (no login)'],
+    ['GET', '/api/share/{token}', "What the players' Mod Forge reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion", 'The share link token (no login)'],
     ['GET', '/api/share/{token}/file/{name}', 'Download a shared mod file (Valheim uploads, Nexus and Hexium copies; Minecraft Java mod jars players need)', 'The share link token (no login)'],
   ]],
   ['Tasks', [
@@ -5026,7 +5033,7 @@ const API_DOCS = [
     ['POST', '/api/settings/backup-copy/test', 'Test a folder: {"folder"} → free space', 'Panel settings'],
     ['POST', '/api/settings/backup-copy/sync', 'Copy every existing backup that isn\'t there yet (in the background)', 'Panel settings'],
     ['GET', '/api/nodes', 'Nodes (other systems) managed from this panel', 'Panel settings'],
-    ['GET', '/api/node-targets', 'Systems you can create servers on (nodes with Tavern Host, and whether they are online)', 'Create & import servers'],
+    ['GET', '/api/node-targets', 'Systems you can create servers on (nodes with Server Forge, and whether they are online)', 'Create & import servers'],
     ['GET', '/api/nodes/{node}/games', "A node's games and their settings fields (for creating a server there)", 'Create & import servers'],
     ['GET', '/api/nodes/{node}/games/{game}/versions?from={type}', 'Versions a node can install', 'Create & import servers'],
     ['POST', '/api/nodes/{node}/servers/new', 'Create a server on a node (same body as POST /api/servers/new); the answer has its id here (n~node~server)', 'Create & import servers'],
@@ -5216,7 +5223,7 @@ async function loadBackups() {
   $('btnOpenBackups').hidden = !window.desktop?.openFolder;
   $('backupHint').textContent =
     d.game === 'bedrock'
-      ? 'Backups are safe while the server runs: Tavern Host pauses saving, copies the world, then lets it save again. Players can keep playing.'
+      ? 'Backups are safe while the server runs: Server Forge pauses saving, copies the world, then lets it save again. Players can keep playing.'
       : 'Backs up the world and the admin/ban/allow lists. Taken as-is while running.';
   $('bkEvery').value = d.backupSchedule.everyHours;
   $('bkKeep').value = d.backupSchedule.keep;
@@ -5474,7 +5481,7 @@ async function loadAddons() {
   $('addonDrop').hidden = !!addonState.readOnly || (!!addonState.canAddById && !addonState.accept);
   $('addonByIdForm').hidden = !addonState.canAddById;
   $('addonByIdInput').placeholder = addonState.byIdPlaceholder ?? 'Steam Workshop link or ID, e.g. https://steamcommunity.com/sharedfiles/filedetails/?id=123456789';
-  $('addonAddHelp').innerHTML = L.dropHelp; // fixed text from Tavern Host itself
+  $('addonAddHelp').innerHTML = L.dropHelp; // fixed text from Server Forge itself
   // Bedrock also takes unpacked pack folders.
   $('addonDrop').querySelector('span').innerHTML = addonState.folders
     ? `Drop ${L.plural} or unpacked pack folders here, or <u>choose files</u> · <u id="addonPickFolder">choose a folder</u>`
@@ -5507,7 +5514,7 @@ async function loadAddons() {
   renderAddons();
 }
 
-// Addon sites. In the desktop app they open in Tavern Host's own browser window, and addons downloaded there install
+// Addon sites. In the desktop app they open in Server Forge's own browser window, and addons downloaded there install
 // on this server by themselves. In a normal browser they open in a new tab; download, then drop the file above.
 function renderAddonSites() {
   const box = $('addonSites');
@@ -5517,8 +5524,8 @@ function renderAddonSites() {
   const L = addonState.labels;
   const files = addonState.accept.split(',').join(' / ');
   $('addonSitesHelp').textContent = inApp
-    ? `Opens the site in a Tavern Host window. Download any ${L.noun} (${files}) there and it's installed on "${state.detail.name}" automatically, with a warning if it doesn't match this server's version.`
-    : `Opens the site in a new tab. Download a ${L.noun} there, then drop the file in the box above. (In the Tavern Host desktop app, downloads install by themselves.)`;
+    ? `Opens the site in a Server Forge window. Download any ${L.noun} (${files}) there and it's installed on "${state.detail.name}" automatically, with a warning if it doesn't match this server's version.`
+    : `Opens the site in a new tab. Download a ${L.noun} there, then drop the file in the box above. (In the Server Forge desktop app, downloads install by themselves.)`;
   for (const link of addonState.links) {
     const btn = el('button', 'site-btn');
     btn.append(el('b', null, link.label));
@@ -5726,7 +5733,7 @@ $('addonCheckUpdates').addEventListener('click', async () => {
   }
 });
 
-// Sharing with players' Tavern Client Mod Manager (Valheim).
+// Sharing with players' Mod Forge (Valheim).
 async function loadShare() {
   let info;
   try {
@@ -5739,10 +5746,10 @@ async function loadShare() {
 
 /** How many mods players get, and which ones they don't (with the reason and, where there is one, the fix). */
 const SHARE_INTRO = {
-  sync: 'Players install <b>Tavern Client Mod Manager</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren\'t shared.',
-  java: 'Players install <b>Tavern Client Mod Manager</b> and paste this link once. It sets up the same mod loader in their Minecraft launcher (a separate profile, so their other worlds and mods are untouched) and keeps its mods the same as this server\'s. "Server only" mods aren\'t shared.',
-  links: 'Players install <b>Tavern Client Mod Manager</b> and paste this link once. It shows this server\'s mods with versions, and each one opens in <b>Satisfactory Mod Manager</b> to install, so players don\'t have to hunt for them.',
-  info: "This game downloads what it needs by itself when a player joins. The link gives players this server's join details in <b>Tavern Client Mod Manager</b>, next to their other servers.",
+  sync: 'Players install <b>Mod Forge</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren\'t shared.',
+  java: 'Players install <b>Mod Forge</b> and paste this link once. It sets up the same mod loader in their Minecraft launcher (a separate profile, so their other worlds and mods are untouched) and keeps its mods the same as this server\'s. "Server only" mods aren\'t shared.',
+  links: 'Players install <b>Mod Forge</b> and paste this link once. It shows this server\'s mods with versions, and each one opens in <b>Satisfactory Mod Manager</b> to install, so players don\'t have to hunt for them.',
+  info: "This game downloads what it needs by itself when a player joins. The link gives players this server's join details in <b>Mod Forge</b>, next to their other servers.",
 };
 
 function renderShareSummary(body, s) {
@@ -5755,11 +5762,11 @@ function renderShareSummary(body, s) {
     return;
   }
   body.appendChild(el('p', s.shared ? 'ok-text' : 'warn-text', s.vanilla ? 'A vanilla profile is active: players get no mods (their app removes the ones it added).' : s.shared ? `Players get ${s.shared} mod${s.shared === 1 ? '' : 's'}.` : 'Players get no mods yet: nothing on this server can be shared.'));
-  if (s.settings) body.appendChild(el('p', 'muted small-text', `Players also get ${s.settings} mod setting${s.settings === 1 ? '' : 's'} (chosen with "To players" in a mod's Settings). Needs Tavern Client Mod Manager 0.5.1 or newer.`));
-  if (s.loader && !s.loaderVersion) body.appendChild(el('p', 'warn-banner', "Tavern Host doesn't know which loader version this server runs (it wasn't installed by Tavern Host). Players' app syncs the mods but can't set the loader up, so players install it themselves."));
+  if (s.settings) body.appendChild(el('p', 'muted small-text', `Players also get ${s.settings} mod setting${s.settings === 1 ? '' : 's'} (chosen with "To players" in a mod's Settings). Needs Mod Forge 0.5.1 or newer.`));
+  if (s.loader && !s.loaderVersion) body.appendChild(el('p', 'warn-banner', "Server Forge doesn't know which loader version this server runs (it wasn't installed by Server Forge). Players' app syncs the mods but can't set the loader up, so players install it themselves."));
   if (s.manual?.length) {
     const box = el('div', 'warn-banner');
-    box.appendChild(el('p', null, `${s.manual.length} mod${s.manual.length === 1 ? ' was' : 's were'} added outside Tavern Host (by r2modman, another mod manager or by hand), so ${s.manual.length === 1 ? "it isn't" : "they aren't"} shared: ${names(s.manual)}. Tavern Host can take ${s.manual.length === 1 ? 'it' : 'them'} over if ${s.manual.length === 1 ? "it's" : "they're"} on Thunderstore or Hexium.`));
+    box.appendChild(el('p', null, `${s.manual.length} mod${s.manual.length === 1 ? ' was' : 's were'} added outside Server Forge (by r2modman, another mod manager or by hand), so ${s.manual.length === 1 ? "it isn't" : "they aren't"} shared: ${names(s.manual)}. Server Forge can take ${s.manual.length === 1 ? 'it' : 'them'} over if ${s.manual.length === 1 ? "it's" : "they're"} on Thunderstore or Hexium.`));
     if (hasPerm('addons.manage')) {
       const btn = el('button', 'primary small', 'Take them over');
       btn.addEventListener('click', async () => {
@@ -5802,7 +5809,7 @@ function renderShare(info) {
         'p',
         null,
         !info.remote.enabled
-          ? `Players' Tavern Client Mod Manager connects to this system through Remote access (HTTPS, port ${info.remote.port}), which is off. Turn it on to get the link.`
+          ? `Players' Mod Forge connects to this system through Remote access (HTTPS, port ${info.remote.port}), which is off. Turn it on to get the link.`
           : `Remote access is switched on but isn't running on port ${info.remote.port} (another program may be using the port). Check Settings → Remote access.`,
       ),
     );
@@ -5816,7 +5823,7 @@ function renderShare(info) {
           const r = await api('PUT', '/api/settings/remote', { enabled: true });
           if (!r.listening) throw new Error(r.error || `Remote access didn't start on port ${r.port}.`);
           // Windows asks for permission to add the firewall rule; the link works on this network either way once allowed.
-          await api('POST', '/api/settings/remote/firewall').catch(() => toast('Allow Tavern Host through the Windows Firewall (Settings → Remote access) so other systems can connect.', true));
+          await api('POST', '/api/settings/remote/firewall').catch(() => toast('Allow Server Forge through the Windows Firewall (Settings → Remote access) so other systems can connect.', true));
           toast(`Remote access is on (port ${r.port}). For players outside your network, forward TCP ${r.port} on your router.`);
         } catch (err) {
           toast(err.message, true);
@@ -5942,7 +5949,7 @@ function renderOtherSettingsFiles(list) {
   const box = el('div', 'settings-files');
   if (others.length) {
     box.appendChild(el('h4', null, 'Other mod settings files'));
-    box.appendChild(el('p', 'muted small-text', "Settings files Tavern Host couldn't match to a mod above (mods added by hand, or files left by removed mods)."));
+    box.appendChild(el('p', 'muted small-text', "Settings files Server Forge couldn't match to a mod above (mods added by hand, or files left by removed mods)."));
     const row = el('div', 'settings-file-list');
     for (const f of others) {
       const b = el('button', 'small', `${f.plugin ?? f.file}${f.shared ? ` · ${f.shared} to players` : ''}`);
@@ -5957,7 +5964,7 @@ function renderOtherSettingsFiles(list) {
 }
 
 // ---------- mod settings (Valheim: BepInEx config files) ----------
-// Each setting can be sent to players: their Tavern Client Mod Manager writes the server's value into their own copy of
+// Each setting can be sent to players: their Mod Forge writes the server's value into their own copy of
 // the file when it syncs. Needed for player-side settings, such as Server devcommands' automatic god mode for admins.
 
 let msState = null; // { server, data, edits: Map(id -> value), shared: Set(id) }
@@ -6084,7 +6091,7 @@ function renderModSettings() {
       }),
     );
     const share = el('label', 'toggle ms-share');
-    share.title = "Players' Tavern Client Mod Manager sets this to the server's value in their own game every time it syncs.";
+    share.title = "Players' Mod Forge sets this to the server's value in their own game every time it syncs.";
     const cb = el('input');
     cb.type = 'checkbox';
     cb.checked = msState.shared.has(id);
@@ -6333,7 +6340,7 @@ function addonRow(p, compact = false) {
     // Bedrock: link to a CurseForge project (so updates can be found), or remove the link.
     if (state.detail.game === 'bedrock' && addonKind === 'addons' && !compact) {
       const link = el('button', 'small ghost', p.curseforge ? 'Unlink' : 'Link to CurseForge…');
-      link.title = p.curseforge ? `Stop checking ${p.curseforge.name} on CurseForge for updates` : 'Find this addon on CurseForge so Tavern Host can update it';
+      link.title = p.curseforge ? `Stop checking ${p.curseforge.name} on CurseForge for updates` : 'Find this addon on CurseForge so Server Forge can update it';
       link.addEventListener('click', () => (p.curseforge ? unlinkCurseforge(p, packUrl) : linkCurseforge(p, packUrl)));
       actions.appendChild(link);
     }
@@ -6438,7 +6445,7 @@ function addonRow(p, compact = false) {
     }
     actions.append(rm);
   } else if (hasPerm('addons.manage') && p.readOnly) {
-    // Added by hand outside Tavern Host: can only be removed.
+    // Added by hand outside Server Forge: can only be removed.
     const rm = el('button', 'small red ghost', 'Remove');
     rm.addEventListener('click', async () => {
       if (!await confirmBox(`Remove "${p.name}" from BepInEx/plugins?`)) return;
@@ -6810,8 +6817,9 @@ $('btnRemoveCfKey').addEventListener('click', async () => {
 
 // ---------- colour theme (hue picker, bottom-left) ----------
 
-const DEFAULT_HUE = 32; // tavern amber
-const PRESET_HUES = [32, 0, 50, 95, 145, 185, 210, 265, 300, 330];
+const DEFAULT_HUE = 214; // vibrant blue
+const LOGO_HUE = 214; // the logo is drawn in the default blue; recolouring turns it by the difference from this
+const PRESET_HUES = [214, 32, 0, 50, 95, 145, 185, 265, 300, 330];
 let logoImage = null;
 
 function loadHue() {
@@ -6827,7 +6835,7 @@ function loadHue() {
 
 let logoSvg = null;
 let blinkOn = true;
-const LIGHT = { green: '#4ade80', greenDim: '#1f6b3a', blue: '#60a5fa', amber: '#fbbf24', amberDim: '#6b4a10', red: '#ef4444', off: '#3a2410' };
+const LIGHT = { green: '#4ade80', greenDim: '#1f6b3a', blue: '#60a5fa', amber: '#fbbf24', amberDim: '#6b4a10', red: '#ef4444', off: '#16264a' };
 
 /** Power + activity light colours for a server status (blinkOn flips every tick for the blinking ones). */
 function bayLights(status) {
@@ -6875,7 +6883,7 @@ function shiftHex(hex, delta) {
 
 /** The logo turned to the theme hue: every colour except the drive-bay lights (those show server status). */
 function recolourSvg(svg, hue) {
-  const delta = hue - DEFAULT_HUE;
+  const delta = hue - LOGO_HUE;
   if (!delta) return svg;
   return svg
     .split(/(<[^>]*id="bay\d[pa]"[^>]*>)/)
@@ -6905,12 +6913,68 @@ async function recolouredIcon(hue) {
   return canvas.toDataURL('image/png');
 }
 
+// Header logo, animated (the hammer strikes the rack) only in Neon glass with animation on: Classic, and so server
+// PCs, keep the still picture and pay nothing for it. It's inline SVG so the live lights can change without
+// restarting the animation (a new <img> src would start it over every blink).
+let animLogo = null;
+function animatedLogoWanted() {
+  const c = document.documentElement.classList;
+  return c.contains('neon') && !c.contains('neon-still') && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+async function refreshBrandAnim(hue) {
+  const brand = $('brandLogo');
+  if (!brand) return;
+  let box = $('brandAnim');
+  if (!animatedLogoWanted()) {
+    box?.remove();
+    brand.hidden = false;
+    return;
+  }
+  if (animLogo === null) animLogo = await (await fetch('/logo-animated.svg')).text();
+  // Mode changes/icon refreshes can overlap while the SVG loads. Re-read the
+  // current element so two pending refreshes cannot create duplicate logos.
+  box = $('brandAnim');
+  if (!animatedLogoWanted()) {
+    box?.remove();
+    brand.hidden = false;
+    return;
+  }
+  if (!box || box.dataset.hue !== String(hue)) {
+    // ids prefixed so they can't clash with any other SVG on the page
+    const svg = recolourSvg(animLogo, hue).replace(/id="([^"]+)"/g, 'id="sf-$1"').replace(/url\(#([^)]+)\)/g, 'url(#sf-$1)');
+    if (!box) {
+      box = document.createElement('div'); // not a <span>: applyPanelName writes the name into the header's span
+      box.id = 'brandAnim';
+      box.className = 'brand-anim';
+      box.setAttribute('aria-hidden', 'true');
+      brand.after(box);
+    }
+    box.innerHTML = svg;
+    box.dataset.hue = String(hue);
+  }
+  brand.hidden = true;
+  if (state.user) {
+    const servers = iconServers();
+    for (let i = 0; i < 4; i++) {
+      const [p, a] = bayLights(servers[i]?.status ?? 'none');
+      box.querySelector(`#sf-bay${i + 1}p`)?.setAttribute('fill', p);
+      box.querySelector(`#sf-bay${i + 1}a`)?.setAttribute('fill', a);
+    }
+  }
+  // Window hidden (appearance.js sets neon-paused): hold the hammer still too.
+  const svgEl = box.querySelector('svg');
+  if (document.documentElement.classList.contains('neon-paused')) svgEl?.pauseAnimations();
+  else svgEl?.unpauseAnimations();
+}
+
 let lastIcon = '';
 async function refreshIcon() {
   try {
     // (Hue 0 is red, a real choice: only fall back when the value isn't a number.)
     const picked = Number($('themeHue').value);
-    const url = await recolouredIcon(Number.isFinite(picked) && $('themeHue').value !== '' ? picked : DEFAULT_HUE);
+    const hue = Number.isFinite(picked) && $('themeHue').value !== '' ? picked : DEFAULT_HUE;
+    await refreshBrandAnim(hue).catch(() => {});
+    const url = await recolouredIcon(hue);
     if (url === lastIcon) return; // nothing changed (e.g. every server stopped): don't touch the taskbar
     lastIcon = url;
     document.querySelector('link[rel="icon"]').href = url;
@@ -6951,7 +7015,7 @@ function applyHue(hue, save = true) {
 for (const hue of PRESET_HUES) {
   const b = el('button');
   b.type = 'button';
-  b.title = hue === DEFAULT_HUE ? 'Tavern amber' : `Hue ${hue}`;
+  b.title = hue === DEFAULT_HUE ? 'Default blue' : hue === LOGO_HUE ? 'Tavern amber' : `Hue ${hue}`;
   b.style.background = `hsl(${hue} 84% 55%)`;
   b.addEventListener('click', () => applyHue(hue));
   $('themeSwatches').appendChild(b);

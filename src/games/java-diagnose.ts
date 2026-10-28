@@ -1,6 +1,6 @@
 // Crash checker for Java servers: reads the console log, Minecraft's crash-reports/ and Java's hs_err_pid*.log, spots
 // known causes and explains them in plain words, naming the mod/plugin and suggesting a fix (with a one-click action
-// where Tavern Host can do it, e.g. switching a mod off).
+// where Server Forge can do it, e.g. switching a mod off).
 import { existsSync, readdirSync, statSync, openSync, readSync, closeSync } from 'node:fs';
 import path from 'node:path';
 import type { ServerRecord } from './types.ts';
@@ -116,7 +116,7 @@ export function diagnoseJava(record: ServerRecord, panelLog: string, since: numb
       severity: 'error',
       title: `Needs Java ${need}, but the server runs Java ${have}`,
       detail: 'Something (the server itself or a mod/plugin) was built for a newer Java than the one this server starts with.',
-      fix: offer ? `Change "Java version" in Settings to Java ${offer} (Tavern Host downloads it), then start again.` : `Use a newer Java version in Settings.`,
+      fix: offer ? `Change "Java version" in Settings to Java ${offer} (Server Forge downloads it), then start again.` : `Use a newer Java version in Settings.`,
       evidence: grep(/UnsupportedClassVersionError|class file version/),
       actions: offer ? [{ type: 'set-java', version: offer, label: `Use Java ${offer}` }] : [],
     });
@@ -339,8 +339,8 @@ export function diagnoseJava(record: ServerRecord, panelLog: string, since: numb
       severity: 'info',
       title: exc.length ? 'No known cause recognised' : 'No errors found',
       detail: exc.length
-        ? `Tavern Host didn't recognise this problem${description ? ` ("${description}")` : ''}. The most relevant error lines are below.`
-        : 'The logs don\'t show a crash or error Tavern Host knows about.',
+        ? `Server Forge didn't recognise this problem${description ? ` ("${description}")` : ''}. The most relevant error lines are below.`
+        : 'The logs don\'t show a crash or error Server Forge knows about.',
       fix: exc.length ? 'Search the first error line online, or check the full log in the Console / Files tab.' : 'If the server still misbehaves, check the Console for warnings.',
       evidence: exc,
       actions: [],

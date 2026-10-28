@@ -141,7 +141,7 @@ export function readWorldSettings(installDir: string, level: string): WorldSetti
   const experiments = EXPERIMENTS.map((e) => ({ ...e, enabled: on(e.key), known: true, locked: on(e.key) }));
   for (const key of exp.keys()) {
     if (!BOOKKEEPING.has(key) && !EXPERIMENTS.some((e) => e.key === key)) {
-      experiments.push({ key, label: key, help: "Experiment set in this world (not in Tavern Host's list).", enabled: on(key), known: false, locked: on(key) });
+      experiments.push({ key, label: key, help: "Experiment set in this world (not in Server Forge's list).", enabled: on(key), known: false, locked: on(key) });
     }
   }
   return { ...base, exists: true, everUsedExperiments: on('experiments_ever_used'), cheatSettings: readCheatSettings(dat.root), experiments };

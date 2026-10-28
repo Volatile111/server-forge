@@ -1,5 +1,5 @@
 // "Let players outside your network join": which ports to forward on the router for a server, to which address, and
-// problems Tavern Host can spot (e.g. a Bedrock server-udp-ports line still holding an old public IP).
+// problems Server Forge can spot (e.g. a Bedrock server-udp-ports line still holding an old public IP).
 import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { readProperties } from './properties.ts';
@@ -33,7 +33,7 @@ function bedrockProps(record: ServerRecord) {
 
 /**
  * A free block of 20 UDP ports for server-udp-ports, clear of every other Bedrock server's block and game port, here
- * and in the other Tavern Hosts on this system (e.g. the development panel next to the installed one).
+ * and in the other Server Forges on this system (e.g. the development panel next to the installed one).
  */
 function freeUdpRange(selfId: string): { from: number; to: number } {
   const folders = [
@@ -106,7 +106,7 @@ export async function portHelp(record: ServerRecord, connection: { port: number 
     notes.push('Players join from the Join Game tab → Add server, with your public IP and port.');
   } else if (record.game === 'spaceengineers') {
     forwards.push({ protocol: 'UDP', ports: String(port ?? 27016), why: 'The game port players connect to.' });
-    notes.push('Don’t forward the Remote API port: only Tavern Host on this system uses it.');
+    notes.push('Don’t forward the Remote API port: only Server Forge on this system uses it.');
     notes.push('Players join from the in-game server list (Public) or Join Game → the IP and port.');
   } else if (record.game === 'satisfactory') {
     forwards.push({ protocol: 'TCP & UDP', ports: String(port ?? 7777), why: 'The game port; the server’s HTTPS API (used by the in-game Server Manager) is on it too.' });

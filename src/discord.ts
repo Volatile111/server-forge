@@ -1,5 +1,5 @@
 // Discord notifications: each server can post to a Discord channel through a webhook (Channel settings → Integrations →
-// Webhooks → New webhook → Copy URL). No bot needed. Tavern Host watches its own events and posts when a server starts,
+// Webhooks → New webhook → Copy URL). No bot needed. Server Forge watches its own events and posts when a server starts,
 // stops or crashes, players join or leave, an update is available, done or failed, or a backup fails.
 // Settings live in data/discord.json. Messages are queued per webhook and spaced out (Discord limits how fast a webhook
 // may post); players joining or leaving within a few seconds are grouped into one message.
@@ -102,7 +102,7 @@ async function drain(url: string) {
       // Up to 10 embeds per message (Discord's limit), all for the same webhook.
       const batch = q.items.splice(0, 10);
       await post(url, {
-        username: 'Tavern Host',
+        username: 'Server Forge',
         allowed_mentions: { parse: [] },
         embeds: batch.map((b) => ({ ...b.embed, footer: { text: b.server }, timestamp: new Date().toISOString() })),
       }).catch(() => {});
@@ -130,13 +130,13 @@ export async function testDiscord(serverId: string, url?: string) {
   if (!WEBHOOK.test(target)) throw new Error('Paste a Discord webhook address first.');
   const name = getInstance(serverId).record.name;
   await post(target, {
-    username: 'Tavern Host',
+    username: 'Server Forge',
     allowed_mentions: { parse: [] },
     embeds: [{ title: '👋 Test message', description: `Notifications for **${name.replace(/[*_`~|>]/g, '')}** will appear here.`, color: COLORS.info, footer: { text: name }, timestamp: new Date().toISOString() }],
   });
 }
 
-// ---------- watching Tavern Host's events ----------
+// ---------- watching Server Forge's events ----------
 
 const clean = (s: string) => s.replace(/[*_`~|>@]/g, '').slice(0, 200);
 const seen = new Map<string, { status: string; players: Set<string> }>();
@@ -163,11 +163,11 @@ function onState(serverId: string) {
   const players = new Set(inst.status === 'running' ? (inst.liveState().players ?? []).map((p) => p.name) : []);
   const before = seen.get(serverId);
   seen.set(serverId, { status, players });
-  if (!before) return; // first look after Tavern Host started: nothing changed yet
+  if (!before) return; // first look after Server Forge started: nothing changed yet
   if (status !== before.status) {
     if (status === 'running') notify(serverId, 'started', { title: '🟢 Server is up', description: 'Ready for players.', color: COLORS.good });
     else if (status === 'stopped' && ['running', 'stopping', 'starting'].includes(before.status)) notify(serverId, 'stopped', { title: '⚪ Server stopped', color: COLORS.muted });
-    else if (status === 'crashed') notify(serverId, 'crashed', { title: '🔴 Server crashed', description: clean(inst.lastError ?? 'It stopped without being asked to.') + (inst.record.autoRestart ? '\nTavern Host is restarting it.' : ''), color: COLORS.bad });
+    else if (status === 'crashed') notify(serverId, 'crashed', { title: '🔴 Server crashed', description: clean(inst.lastError ?? 'It stopped without being asked to.') + (inst.record.autoRestart ? '\nServer Forge is restarting it.' : ''), color: COLORS.bad });
   }
   // Players: only while running (a stop isn't everyone "leaving").
   if (status === 'running' && before.status === 'running') {
@@ -204,7 +204,7 @@ function onGameUpdate(u: { serverId: string; available: boolean; latest: string 
   notifiedUpdates.set(u.serverId, u.latest);
   notify(u.serverId, 'updateAvailable', {
     title: '🆕 Update available',
-    description: `Version ${clean(u.latest)}${u.auto ? ' (installing automatically)' : ' (update it from Tavern Host: Settings → Server software)'}.`,
+    description: `Version ${clean(u.latest)}${u.auto ? ' (installing automatically)' : ' (update it from Server Forge: Settings → Server software)'}.`,
     color: COLORS.warn,
   });
 }

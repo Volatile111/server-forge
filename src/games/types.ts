@@ -98,7 +98,7 @@ export interface BackupSupport {
    * lengths to copy, and a function to call when copying is done.
    */
   hot?(record: ServerRecord, io: ConsoleIO): Promise<{ files: { rel: string; length: number }[]; finish(): Promise<void> }>;
-  /** Turns saving back on after a live backup that was cut off (Tavern Host closed in the middle of it). */
+  /** Turns saving back on after a live backup that was cut off (Server Forge closed in the middle of it). */
   resume?(io: ConsoleIO): Promise<void>;
 }
 
@@ -187,7 +187,7 @@ export interface ChatRelayStatus {
   on: boolean;
   /** Scripting module version the pack asks for (e.g. "2.11.0-beta"). */
   moduleVersion: string | null;
-  /** What Tavern Host would use if switched on now (read from the beta packs already on this server). */
+  /** What Server Forge would use if switched on now (read from the beta packs already on this server). */
   suggestedVersion: string;
   /** Where that suggestion came from. */
   suggestedFrom: string;
@@ -195,7 +195,7 @@ export interface ChatRelayStatus {
   betaApis: boolean | null;
   /** server.properties prints script output to the console (content-log-console-output-enabled); the relay needs it. */
   contentLog: boolean;
-  /** The installed pack is from an older Tavern Host (missing newer features such as mute). */
+  /** The installed pack is from an older Server Forge (missing newer features such as mute). */
   outdated: boolean;
 }
 
@@ -241,10 +241,10 @@ export interface GameModule {
   playerCommands?: Partial<Record<'kick' | 'ban' | 'pardon' | 'op' | 'deop' | 'whitelist-add' | 'whitelist-remove', (name: string, reason: string) => string>>;
   /**
    * Games that only read commands typed into a real console window (Terraria / tModLoader ignore piped input). The
-   * server runs in its own hidden console and Tavern Host types commands into it; Stop types `stop`.
+   * server runs in its own hidden console and Server Forge types commands into it; Stop types `stop`.
    */
   consoleCommands?: { stop: string };
-  /** The game's own log file, read for the Console tab instead of Tavern Host's (games whose output can't be captured). */
+  /** The game's own log file, read for the Console tab instead of Server Forge's (games whose output can't be captured). */
   gameLog?(record: ServerRecord): string;
   /** Lines to leave out of the Console tab (e.g. hundreds of world-generation progress lines). Still read by the parser. */
   hideLine?(line: string): boolean;
@@ -289,7 +289,7 @@ export interface GameModule {
     ): string[];
   };
   /**
-   * In-game chat (Bedrock: vanilla servers don't log chat, so a small script pack made by Tavern Host writes each
+   * In-game chat (Bedrock: vanilla servers don't log chat, so a small script pack made by Server Forge writes each
    * message to the console as a tagged line). `sayCommand` turns a message from the panel into a console command.
    */
   chat?: {
@@ -302,10 +302,12 @@ export interface GameModule {
   /** Fields shown when creating a new server (defaults to quickFields picked from `fields`). */
   newFields?: SettingField[];
   createParser(): LogParser;
+  /** Optional independent readiness check when console output is missing or delayed. */
+  probeReady?(record: ServerRecord): Promise<boolean>;
   /** Extra info for the overview that isn't in the log (e.g. Valheim bosses from the world save). */
   details?(record: ServerRecord): Promise<Record<string, unknown>>;
   /**
-   * Downloads/installs (or updates) the server software into record.installDir. Present on games Tavern Host can set
+   * Downloads/installs (or updates) the server software into record.installDir. Present on games Server Forge can set
    * up from scratch; also used for the "Update server software" button. `force` reinstalls the latest version even when
    * the installed one looks current.
    */

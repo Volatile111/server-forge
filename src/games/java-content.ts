@@ -273,7 +273,7 @@ function checkCompat(info: JarInfo, flavor: string, mc: string): Warning[] {
   // versions, so no version checks.
   if (flavor === 'bungeecord') {
     if (info.loader === 'bungee' || info.bungee) return w;
-    if (info.loader === 'unknown') w.push({ level: 'error', text: "This jar isn't a plugin Tavern Host recognises (no bungee.yml or plugin.yml inside)." });
+    if (info.loader === 'unknown') w.push({ level: 'error', text: "This jar isn't a plugin Server Forge recognises (no bungee.yml or plugin.yml inside)." });
     else if (['fabric', 'quilt', 'forge', 'neoforge'].includes(info.loader)) w.push({ level: 'error', text: `This is a ${LOADER_NAMES[info.loader]}; BungeeCord runs BungeeCord plugins, not mods. It won't load.` });
     else if (info.loader === 'paper-plugin') w.push({ level: 'error', text: "This is a Paper plugin; it goes on a Paper server behind the proxy, not on BungeeCord." });
     else w.push({ level: 'warn', text: 'This jar has a plugin.yml but no bungee.yml. Most of these are Bukkit/Paper plugins for the servers behind the proxy, not for BungeeCord; check it says it supports BungeeCord or Waterfall.' });
@@ -283,7 +283,7 @@ function checkCompat(info: JarInfo, flavor: string, mc: string): Warning[] {
   const kind = KIND_BY_FLAVOR[flavor];
   const isMod = ['fabric', 'quilt', 'forge', 'neoforge'].includes(info.loader);
   const isPlugin = ['plugin', 'paper-plugin', 'bungee'].includes(info.loader);
-  if (info.loader === 'unknown') w.push({ level: 'error', text: `This jar isn't a mod or plugin Tavern Host recognises (no fabric.mod.json, mods.toml or plugin.yml inside).` });
+  if (info.loader === 'unknown') w.push({ level: 'error', text: `This jar isn't a mod or plugin Server Forge recognises (no fabric.mod.json, mods.toml or plugin.yml inside).` });
   else if (kind === 'plugins' && isMod) w.push({ level: 'error', text: `This is a ${LOADER_NAMES[info.loader]}, but this is a ${serverName} server, which runs plugins, not mods. It won't load.` });
   else if (kind === 'mods' && isPlugin) w.push({ level: 'error', text: `This is a ${LOADER_NAMES[info.loader]}, but ${serverName} runs mods, not plugins. It won't load.` });
   else if (info.loader === 'bungee') w.push({ level: 'error', text: 'This is a BungeeCord proxy plugin; it only works on a BungeeCord server.' });

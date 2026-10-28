@@ -1,5 +1,31 @@
 # Changelog
 
+## Server Forge 0.9.0
+
+**New name and look**
+- Tavern Host is now **Server Forge**, with a blue server-and-hammer icon, a blue default accent and updated names throughout the panel. Depending on its role, the header can show Forge Master, Super Forge, Forge Node or Super Forge Node.
+- **Basic / Fancy UI switch** beside the colour wheel at the bottom left. Fancy UI adds frosted panels, drifting glows, stars, animated active borders, polished scrollbars, controls and dialogs. Basic remains the default and does not load the effects. Animation can be switched off; reduced-motion preferences are respected. The Fancy UI header hammer animation pauses when hidden.
+- Your selected appearance and colour remain local to each viewing browser or desktop app, so a main panel can use Fancy while server PCs use Basic. Existing colour choices are retained.
+
+**Fixed**
+- Palworld could stay on Starting when its console output was buffered even though the game was ready. Server Forge now also checks its authenticated local API while starting, then reports Running once readiness is confirmed.
+
+**Upgrading**
+- Server records, users, settings, backups and node connections keep their existing data locations and application identity.
+- Installers use the Server Forge name. An identical Tavern-Host-named installer remains available for automatic updaters in older versions. New versions recognize both names.
+- The optional paid-hosting portal is a separate, paused project and is not included in this update. Server Forge remains usable on your own hardware without a hosting account or payment setup.
+
+## Mod Forge 0.6.0
+
+**New name and look**
+- Tavern Client Mod Manager is now **Mod Forge**, with the matching blue puzzle-piece-and-hammer icon, blue default accent, updated help and download text, and new installer/shortcut labels.
+- Achilles keeps its own name, icon and UI inside Star Valor. Its version line now identifies Mod Forge as its host app.
+- New Minecraft Launcher installations use the Mod Forge name. Existing installation IDs, folders and player-customized profile names are preserved.
+
+**Upgrading**
+- Existing server links, settings, mod profiles, protected Nexus credentials, game folders and saved colours stay in their existing locations. The dev copy keeps its separate data folder; isolated smoke tests can specify a temporary profile explicitly.
+- Installers use the Mod Forge name, with an identical legacy-named copy for older automatic updaters. New versions accept both names.
+
 ## Tavern Host 0.8.1
 
 Crash reports for Bedrock servers, and BungeeCord networks shown together.

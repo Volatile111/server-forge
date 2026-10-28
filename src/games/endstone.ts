@@ -2,7 +2,7 @@
 // a Python package whose launcher downloads the one BDS version it supports into the server folder and starts it with
 // Endstone's runtime injected. A Bedrock server set to "Endstone" runs that launcher instead of bedrock_server.exe.
 //
-// What it needs, all set up by Tavern Host (nothing system-wide):
+// What it needs, all set up by Server Forge (nothing system-wide):
 // - Python 3.11+ that isn't the Microsoft Store build: the official python.org build from NuGet, in tools/python.
 // - A virtual environment per server (<server>/.endstone-python) with the endstone package. Per server, because a
 //   running server keeps Endstone's DLLs locked, and plugins pip-installed into the environment load on every server.
@@ -141,7 +141,7 @@ export function endstoneBedrockVersion(installDir: string): string | null {
 }
 
 /**
- * Notes the Bedrock version in Tavern Host's version file (bedrock.ts VERSION_FILE, used for addon checks and, back on
+ * Notes the Bedrock version in Server Forge's version file (bedrock.ts VERSION_FILE, used for addon checks and, back on
  * vanilla, for Mojang updates). Mojang's fuller "1.26.52.3" is kept when Endstone's "1.26.52" is the same version.
  */
 export function recordBedrockVersion(installDir: string, version: string | null) {
@@ -373,7 +373,7 @@ export function listPlugins(installDir: string): PluginInfo[] {
       const pyOk = tags.python.some((t) => t.startsWith('py3') || t === pyTag) || (tags.abi === 'abi3' && tags.python.some((t) => /^cp3\d+$/.test(t)));
       if (tags.python.every((t) => t === 'py2' || t === 'cp2' || /^cp2\d/.test(t))) {
         warnings.push({ level: 'error', text: "Built for Python 2: Endstone can't install it, and while it's switched on no plugins load at all." });
-      } else if (!pyOk) warnings.push({ level: 'warn', text: `Built for ${tags.python.join('/')}; Tavern Host runs Endstone on Python ${PYTHON_SERIES}, so it may not load.` });
+      } else if (!pyOk) warnings.push({ level: 'warn', text: `Built for ${tags.python.join('/')}; Server Forge runs Endstone on Python ${PYTHON_SERIES}, so it may not load.` });
       if (tags.platform !== 'any' && !/win_amd64/.test(tags.platform)) warnings.push({ level: 'error', text: `Built for ${tags.platform}, not Windows.` });
       return {
         id,
@@ -602,14 +602,14 @@ async function checkPluginUpdates(installDir: string): Promise<Record<string, st
 
 async function updatePlugin(installDir: string, id: string) {
   const from = loadRegistry(installDir)[id]?.from ?? (id.startsWith('endstone-') ? ({ kind: 'pypi', project: id } as const) : null);
-  if (!from) throw new Error("Tavern Host doesn't know where this plugin came from, so it can't update it. Install the new file by hand.");
+  if (!from) throw new Error("Server Forge doesn't know where this plugin came from, so it can't update it. Install the new file by hand.");
   return installFrom(installDir, from);
 }
 
 // ---------- importing an existing Endstone server ----------
 // Someone who ran Endstone by hand has: a folder they ran `endstone` in, with the server in its bedrock_server folder;
 // a Python somewhere (a venv next to it, or a system Python) with endstone installed; and plugins either as .whl
-// files in plugins/ (they come along as they are) or pip-installed into that Python (they'd be lost: Tavern Host gives
+// files in plugins/ (they come along as they are) or pip-installed into that Python (they'd be lost: Server Forge gives
 // the server its own Python). Those are brought in as .whl files: the same version from PyPI, or else rebuilt from the
 // installed files.
 
@@ -730,7 +730,7 @@ async function probe(python: string): Promise<Probe | null> {
   }
 }
 
-/** A wheel of exactly this version from PyPI that runs on Tavern Host's Python, or null. */
+/** A wheel of exactly this version from PyPI that runs on Server Forge's Python, or null. */
 async function pypiWheel(name: string, version: string) {
   try {
     const j = await getJson<{ urls: { filename: string; url: string }[] }>(`${PYPI}/${encodeURIComponent(name)}/${encodeURIComponent(version)}/json`);
@@ -766,7 +766,7 @@ export async function importEndstone(chosen: string): Promise<{ installDir: stri
     return { installDir: dir, notes, endstone: true };
   }
   writeFileSync(path.join(dir, IMPORT_NOTE), JSON.stringify({ version: found.endstone, python: found.python, at: Date.now() }, null, 2));
-  notes.push(`It ran Endstone ${found.endstone} (${found.python}). Tavern Host gives it its own copy of that version on the first start; your old Python isn't changed.`);
+  notes.push(`It ran Endstone ${found.endstone} (${found.python}). Server Forge gives it its own copy of that version on the first start; your old Python isn't changed.`);
 
   const have = new Set(pluginFiles(dir).map((p) => pluginId(p.file)));
   const brought: string[] = [];
@@ -790,7 +790,7 @@ export async function importEndstone(chosen: string): Promise<{ installDir: stri
         file = line ? line.slice('TH-WHEEL'.length).trim() : null;
         source = `Imported (rebuilt from ${found.python})`;
         if (file && found.pyver !== PYTHON_SERIES && !/-none-any\.whl$/i.test(file)) {
-          notes.push(`${label} was built for Python ${found.pyver}; Tavern Host runs Endstone on Python ${PYTHON_SERIES}, so it may need a new build.`);
+          notes.push(`${label} was built for Python ${found.pyver}; Server Forge runs Endstone on Python ${PYTHON_SERIES}, so it may need a new build.`);
         }
       }
       if (!file || !existsSync(file)) throw new Error('no wheel');
@@ -842,7 +842,7 @@ export const endstonePlugins: AddonSupport = {
   ],
   status(record) {
     const v = installedEndstone(record.installDir);
-    if (!v) return { ok: false, title: "Endstone isn't set up yet", text: 'Tavern Host downloads Python, Endstone and the Bedrock version it supports. This also happens by itself on the next start.', setupLabel: 'Set up Endstone' };
+    if (!v) return { ok: false, title: "Endstone isn't set up yet", text: 'Server Forge downloads Python, Endstone and the Bedrock version it supports. This also happens by itself on the next start.', setupLabel: 'Set up Endstone' };
     const mc = endstoneBedrockVersion(record.installDir);
     return { ok: true, title: `Endstone ${v}${mc ? ` · Bedrock ${mc}` : ''}`, text: 'Plugins load when the server starts. Their settings are in plugins/<plugin name>/ (Files tab). Type "plugins" in the Console to see which loaded.' };
   },

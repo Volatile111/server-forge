@@ -1,5 +1,5 @@
 // Space Engineers dedicated server. Installed and updated with SteamCMD (app 298740, anonymous). Runs in console mode
-// with its own instance folder (-path), where SpaceEngineers-Dedicated.cfg, the logs and the saves live. Tavern Host
+// with its own instance folder (-path), where SpaceEngineers-Dedicated.cfg, the logs and the saves live. Server Forge
 // writes only its own settings into that file (everything else in it is kept), and turns on the game's Remote API
 // (VRage Remote API, HMAC-signed) with a random key on 127.0.0.1-only use: live players, chat warnings before a restart
 // or update, admins/bans and a clean stop. Steam Workshop mods are listed in the config by ID; the server downloads
@@ -35,7 +35,7 @@ const instanceDir = (record: ServerRecord) => String(record.settings.instanceDir
 const cfgFile = (record: ServerRecord) => path.join(instanceDir(record), CFG);
 const xmlEscape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// ---------- the config file (edited in place: only Tavern Host's own elements change) ----------
+// ---------- the config file (edited in place: only Server Forge's own elements change) ----------
 
 function readCfg(record: ServerRecord): string {
   try {
@@ -69,12 +69,12 @@ function getElement(xml: string, name: string): string | null {
   return m ? m[1] : null;
 }
 
-/** The Remote API key Tavern Host put in the config (base64), creating one if needed. */
+/** The Remote API key Server Forge put in the config (base64), creating one if needed. */
 function remoteKey(record: ServerRecord): string | null {
   return getElement(readCfg(record), 'RemoteSecurityKey');
 }
 
-/** Writes Tavern Host's settings into the config before each start (everything else in it stays as it is). */
+/** Writes Server Forge's settings into the config before each start (everything else in it stays as it is). */
 function writeCfg(record: ServerRecord) {
   const s = record.settings;
   mkdirSync(instanceDir(record), { recursive: true });
@@ -94,7 +94,7 @@ function writeCfg(record: ServerRecord) {
   xml = setElement(xml, 'SessionSettings', 'GameMode', String(s.gameMode));
   xml = setElement(xml, 'SessionSettings', 'MaxPlayers', String(s.maxPlayers));
   xml = setElement(xml, 'SessionSettings', 'OnlineMode', String(s.onlineMode));
-  // Remote API for Tavern Host only: a random key the first time, kept afterwards.
+  // Remote API for Server Forge only: a random key the first time, kept afterwards.
   const key = getElement(xml, 'RemoteSecurityKey') || randomBytes(24).toString('base64');
   xml = setElement(xml, 'MyConfigDedicated', 'RemoteApiEnabled', 'true');
   xml = setElement(xml, 'MyConfigDedicated', 'RemoteSecurityKey', key);
@@ -106,7 +106,7 @@ function writeCfg(record: ServerRecord) {
 
 export async function seApi<T = unknown>(record: ServerRecord, method: 'GET' | 'POST' | 'DELETE', resource: string, body?: unknown): Promise<T> {
   const key = remoteKey(record);
-  if (!key) throw new Error('The Remote API key is missing (start the server from Tavern Host once).');
+  if (!key) throw new Error('The Remote API key is missing (start the server from Server Forge once).');
   const url = `/vrageremote/${resource.replace(/^\//, '')}`;
   const nonce = String(randomBytes(4).readUInt32BE());
   const date = new Date().toUTCString();
@@ -255,7 +255,7 @@ export const spaceEngineers: GameModule = {
     { key: 'maxPlayers', label: 'Max players', type: 'number', restart: true },
     { key: 'port', label: 'Port', type: 'number', help: 'Default 27016 (UDP).', restart: true },
     { key: 'pauseWhenEmpty', label: 'Pause when nobody is online', type: 'boolean', restart: true },
-    { key: 'remotePort', label: 'Remote API port (this system only)', type: 'number', help: 'Default 8080. Tavern Host uses it for players, chat and stopping. Don’t forward it on your router.', restart: true },
+    { key: 'remotePort', label: 'Remote API port (this system only)', type: 'number', help: 'Default 8080. Server Forge uses it for players, chat and stopping. Don’t forward it on your router.', restart: true },
     { key: 'instanceDir', label: 'Instance folder', type: 'folder', help: 'The config, logs and saves live here.', restart: true },
   ],
   quickFields: ['serverName', 'world', 'scenario', 'gameMode', 'maxPlayers', 'port'],

@@ -1,6 +1,6 @@
 {
   "name": "tavern-host-desktop",
-  "productName": "Tavern Host",
+  "productName": "Server Forge",
   "version": "0.3.6",
   "private": true,
   "type": "module",

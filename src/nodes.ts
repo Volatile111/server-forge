@@ -1,4 +1,4 @@
-// Nodes: other systems running Tavern Host, managed from this panel. A node is reached over its remote-access HTTPS
+// Nodes: other systems running Server Forge, managed from this panel. A node is reached over its remote-access HTTPS
 // listener with an API key it made for this purpose ("Use this system as a node" makes a code with its address, the key
 // and its certificate fingerprint). The certificate is pinned: a node whose certificate changes is refused.
 //
@@ -21,7 +21,7 @@ export interface NodeRecord {
   /** SHA-256 of the node's certificate, hex, upper case, no colons. */
   fingerprint: string;
   addedAt: number;
-  /** "vault": a system with only Tavern Vault (no Tavern Host), linked by Tavern Vault's own code. Storage only. */
+  /** "vault": a system with only Tavern Vault (no Server Forge), linked by Tavern Vault's own code. Storage only. */
   kind?: 'host' | 'vault';
 }
 
@@ -126,12 +126,12 @@ export async function nodeJson<T = unknown>(node: NodeRecord, method: string, pa
 // ---------- adding / removing ----------
 
 /**
- * thnode://host:port/<th_key>?fp=<sha256>&name=<name> (Tavern Host), or thvault://host:port/<tv_key>?fp=…&name=…
- * (Tavern Vault on a system without Tavern Host: storage only).
+ * thnode://host:port/<th_key>?fp=<sha256>&name=<name> (Server Forge), or thvault://host:port/<tv_key>?fp=…&name=…
+ * (Tavern Vault on a system without Server Forge: storage only).
  */
 export function parseNodeCode(code: string) {
   const m = /^(thnode|thvault):\/\/([^/:\s]+):(\d+)\/((?:th|tv)_[0-9a-f]+)\?(.+)$/i.exec(String(code ?? '').trim());
-  if (!m) throw new Error('That isn\'t a node code. On the other system open Tavern Host → Settings → "Use this system as a node" (or, on a system with only Tavern Vault, Tavern Vault → Settings → Node mode) and copy the code (it starts with thnode:// or thvault://).');
+  if (!m) throw new Error('That isn\'t a node code. On the other system open Server Forge → Settings → "Use this system as a node" (or, on a system with only Tavern Vault, Tavern Vault → Settings → Node mode) and copy the code (it starts with thnode:// or thvault://).');
   const kind = m[1].toLowerCase() === 'thvault' ? 'vault' : 'host';
   if ((kind === 'vault') !== m[4].startsWith('tv_')) throw new Error("That code doesn't look right. Copy it again from the other system.");
   const q = new URLSearchParams(m[5]);
@@ -144,10 +144,10 @@ export async function addNode(code: string, name?: string) {
   const c = parseNodeCode(code);
   if (nodes.some((n) => n.host === c.host && n.port === c.port)) throw new Error('That system is already a node here.');
   const probe = { ...c, id: '', addedAt: 0 };
-  // Check it answers, the key works and it's a Tavern Host new enough to be a node (or a Tavern Vault).
+  // Check it answers, the key works and it's a Server Forge new enough to be a node (or a Tavern Vault).
   const me = await nodeJson<{ version?: string; global?: unknown; app?: string }>(probe as NodeRecord, 'GET', '/api/me');
   if (c.kind === 'vault' && me?.app !== 'Tavern Vault') throw new Error("That system didn't answer as Tavern Vault. Make a fresh code in Tavern Vault there.");
-  if (c.kind === 'host' && !Array.isArray(me?.global)) throw new Error('That system runs a Tavern Host too old to be a node. Update it first.');
+  if (c.kind === 'host' && !Array.isArray(me?.global)) throw new Error('That system runs a Server Forge too old to be a node. Update it first.');
   const node: NodeRecord = { id: randomBytes(3).toString('hex'), name: String(name ?? '').trim().slice(0, 40) || c.name, host: c.host, port: c.port, key: c.key, fingerprint: c.fingerprint, addedAt: Date.now(), kind: c.kind };
   nodes.push(node);
   writeJson(FILE, nodes);

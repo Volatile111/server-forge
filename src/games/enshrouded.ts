@@ -1,5 +1,5 @@
 // Enshrouded dedicated server (Steam app 2278520, anonymous SteamCMD). Everything is in enshrouded_server.json next to
-// the program (the server makes it on first start, with random group passwords). Tavern Host sets its own few values in
+// the program (the server makes it on first start, with random group passwords). Server Forge sets its own few values in
 // it before every start and keeps the rest (the Custom difficulty settings, bans, extra groups, tags...), which the owner
 // can still edit in the Files tab. Players join with a group's password: Admin, Friend, Guest or Visitor, each with its
 // own permissions. The log is logs/enshrouded_server.log. Stop is Ctrl+C (the server saves and shuts down).

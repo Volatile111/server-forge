@@ -26,7 +26,7 @@ export interface Sample {
 interface Target {
   id: string;
   pid: number;
-  /** Skip the root process itself (Tavern Host's runner, which owns the game's console). */
+  /** Skip the root process itself (Server Forge's runner, which owns the game's console). */
   excludeRoot: boolean;
   players: number | null;
 }

@@ -1,5 +1,5 @@
 // Java runtimes for Minecraft Java servers: Eclipse Temurin (official OpenJDK builds from Adoptium), downloaded into
-// Tavern Host's own tools folder per major version. Nothing is installed system-wide.
+// Server Forge's own tools folder per major version. Nothing is installed system-wide.
 import { existsSync, readdirSync, mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';

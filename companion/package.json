@@ -1,1 +1,7 @@
-{ "name": "tavern-client-mod-manager", "productName": "Tavern Client Mod Manager", "version": "0.5.5", "type": "module", "main": "main.js" }
+{
+  "name": "tavern-client-mod-manager",
+  "productName": "Mod Forge",
+  "version": "0.5.5",
+  "type": "module",
+  "main": "main.js"
+}

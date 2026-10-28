@@ -1,4 +1,4 @@
-// The runner: a small helper process that owns a game server's console, so Tavern Host can send typed commands to
+// The runner: a small helper process that owns a game server's console, so Server Forge can send typed commands to
 // servers that read them (Minecraft Java/Bedrock) and still restart or update without stopping the game.
 //
 // Started by the panel (in its own hidden console) with a JSON spec in TH_RUNNER_SPEC:

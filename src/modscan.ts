@@ -1,4 +1,4 @@
-// Safety checks for mod files before they're installed (Tavern Host and the Tavern Client Mod Manager).
+// Safety checks for mod files before they're installed (Server Forge and the Tavern Client Mod Manager).
 // Nothing can prove a mod is safe; this layers three checks:
 //   1. Windows Defender scans the file (a detection blocks it).
 //   2. Thunderstore status: removed or deprecated versions are flagged (removal is how malicious uploads are handled).

@@ -34,7 +34,7 @@ async function ensureCertificate(): Promise<{ pfx: Buffer; passphrase: string }>
   const script = [
     '$ErrorActionPreference = "Stop"',
     '$names = $env:PANEL_CERT_NAMES -split ","',
-    '$cert = New-SelfSignedCertificate -DnsName $names -CertStoreLocation Cert:\\CurrentUser\\My -NotAfter (Get-Date).AddYears(5) -KeyExportPolicy Exportable -FriendlyName "Tavern Host remote access"',
+    '$cert = New-SelfSignedCertificate -DnsName $names -CertStoreLocation Cert:\\CurrentUser\\My -NotAfter (Get-Date).AddYears(5) -KeyExportPolicy Exportable -FriendlyName "Server Forge remote access"',
     '$pw = ConvertTo-SecureString -String $env:PANEL_CERT_PASS -Force -AsPlainText',
     'Export-PfxCertificate -Cert $cert -FilePath $env:PANEL_CERT_PATH -Password $pw | Out-Null',
     'Remove-Item -Path ("Cert:\\CurrentUser\\My\\" + $cert.Thumbprint)',

@@ -1,6 +1,6 @@
-// Tavern Client Mod Manager: the players' app. Keeps a player's Valheim mods matched to a Tavern Host server's mods
+// Mod Forge: the players' app. Keeps a player's Valheim mods matched to a Server Forge server's mods
 // (from a thmods:// link), installs BepInEx, and has a Play button that syncs first and then starts Valheim.
-// Uses the same install code as Tavern Host (compiled to dist/), so both sides lay out mods identically.
+// Uses the same install code as Server Forge (compiled to dist/), so both sides lay out mods identically.
 import { app, BrowserWindow, dialog, ipcMain, shell, Menu, nativeImage, safeStorage } from 'electron';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, createWriteStream, mkdtempSync, cpSync, statSync } from 'node:fs';
 import { randomBytes, createHash } from 'node:crypto';
@@ -23,8 +23,10 @@ const nexus = await lib('nexus.js');
 // installed app's settings, links or profiles. The game folders are still the real ones.
 const DEV = !app.isPackaged;
 app.setAppUserModelId(DEV ? 'TavernClientModManager.Dev' : 'TavernClientModManager');
-app.setName('Tavern Client Mod Manager');
-if (DEV) app.setPath('userData', path.join(app.getPath('appData'), 'Tavern Client Mod Manager (dev)'));
+// Pin the pre-rebrand profile before changing the display name, including installed copies.
+// The explicit override is used for isolated smoke tests; never touch real settings in those runs.
+app.setPath('userData', process.env.MOD_FORGE_DATA_DIR || path.join(app.getPath('appData'), DEV ? 'Tavern Client Mod Manager (dev)' : 'Tavern Client Mod Manager'));
+app.setName('Mod Forge');
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 if (!app.requestSingleInstanceLock()) app.quit();
 
@@ -190,7 +192,7 @@ function createWindow() {
     height: 760,
     minWidth: 720,
     minHeight: 520,
-    title: `Tavern Client Mod Manager${DEV ? ' (DEV)' : ''}`,
+    title: `Mod Forge${DEV ? ' (DEV)' : ''}`,
     icon: path.join(here, 'icon.png'),
     backgroundColor: '#0d1219',
     autoHideMenuBar: true,
@@ -515,7 +517,7 @@ handle('browse-hexium', async () => openBrowser(vm.HEXIUM, 'Hexium'));
 let pickedInstaller = null;
 handle('pick-update', async () => {
   if (!app.isPackaged) throw new Error('Updating from a file only works in the installed app (this copy runs from the source files).');
-  const r = await dialog.showOpenDialog(win, { title: 'Choose a Tavern Client Mod Manager installer', filters: [{ name: 'Installer', extensions: ['exe'] }], properties: ['openFile'] });
+  const r = await dialog.showOpenDialog(win, { title: 'Choose a Mod Forge installer', filters: [{ name: 'Installer', extensions: ['exe'] }], properties: ['openFile'] });
   if (r.canceled || !r.filePaths[0]) return null;
   const file = r.filePaths[0];
   let info = {};
@@ -528,7 +530,7 @@ handle('pick-update', async () => {
     info = JSON.parse(out.trim() || '{}');
   } catch {}
   const version = String(info.version ?? /(\d+\.\d+\.\d+)/.exec(path.basename(file))?.[1] ?? '').replace(/\.0$/, '');
-  if (!/Tavern Client Mod Manager/i.test(`${info.product ?? ''} ${path.basename(file)}`)) throw new Error("That isn't a Tavern Client Mod Manager installer.");
+  if (!/Mod Forge|Tavern Client Mod Manager/i.test(`${info.product ?? ''} ${path.basename(file)}`)) throw new Error("That isn't a Mod Forge installer.");
   pickedInstaller = { file, version };
   return { name: path.basename(file), version, current: app.getVersion() };
 });
@@ -538,7 +540,7 @@ handle('run-update', async () => {
   pickedInstaller = null;
   if (!picked || !existsSync(picked.file)) throw new Error('Choose the installer again.');
   if (valheimRunning()) throw new Error('Close Valheim first.');
-  runUpdateWithWindow(picked.file, { product: 'Tavern Client Mod Manager', version: picked.version, note: 'Your mods and settings are kept.' });
+  runUpdateWithWindow(picked.file, { product: 'Mod Forge', version: picked.version, note: 'Your mods and settings are kept.' });
   setTimeout(() => app.quit(), 800);
 });
 
@@ -547,7 +549,7 @@ handle('run-update', async () => {
 // installing downloads the installer here (never from a page-given address) and runs it like "Update from a file".
 
 const RELEASES = 'Volatile111/tavern-client-releases';
-const INSTALLER_ASSET = /^Tavern-Client-Mod-Manager-Setup-(\d+\.\d+\.\d+)\.exe$/;
+const INSTALLER_ASSET = /^(?:Mod-Forge|Tavern-Client-Mod-Manager)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 let latestRelease = { at: 0, info: null, error: null };
 
 function isNewer(a, b) {
@@ -618,7 +620,7 @@ handle('install-app-update', async () => {
       rmSync(dir, { recursive: true, force: true });
       throw new Error("The downloaded installer doesn't match the release's checksum, so it wasn't run.");
     }
-    runUpdateWithWindow(file, { product: 'Tavern Client Mod Manager', version: info.version, note: 'Your mods and settings are kept.', cleanup: dir });
+    runUpdateWithWindow(file, { product: 'Mod Forge', version: info.version, note: 'Your mods and settings are kept.', cleanup: dir });
     setTimeout(() => app.quit(), 800);
     return { version: info.version };
   } finally {
@@ -629,7 +631,7 @@ handle('install-app-update', async () => {
 /**
  * Runs an installer silently behind a small "Updating…" window: it waits for this app to close, runs the installer
  * (/S --force-run starts the new version when it's done), and shows each step (closing → installing → done, or the
- * error). Same helper as Tavern Host's (desktop/main.js).
+ * error). Same helper as Server Forge's (desktop/main.js).
  */
 function runUpdateWithWindow(installer, { product, version, note = '', cleanup = null }) {
   const script = [
@@ -860,12 +862,12 @@ async function handleNxm(url) {
 
 function openBrowser(url, site) {
   if (browser && !browser.isDestroyed()) {
-    browser.setTitle(`${site} – Tavern Client Mod Manager`);
+    browser.setTitle(`${site} – Mod Forge`);
     browser.loadURL(url);
     browser.focus();
     return;
   }
-  browser = new BrowserWindow({ width: 1150, height: 820, title: `${site} – Tavern Client Mod Manager`, icon: path.join(here, 'icon.png'), webPreferences: { partition: 'persist:mods', sandbox: true, contextIsolation: true } });
+  browser = new BrowserWindow({ width: 1150, height: 820, title: `${site} – Mod Forge`, icon: path.join(here, 'icon.png'), webPreferences: { partition: 'persist:mods', sandbox: true, contextIsolation: true } });
   // Nexus "Mod Manager Download" (nxm://) and Hexium "Install with Gale" (gale://) links.
   const catchNxm = (e, next) => {
     if (/^nxm:\/\//i.test(next)) {

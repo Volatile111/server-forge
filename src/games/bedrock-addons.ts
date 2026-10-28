@@ -33,7 +33,7 @@ export interface PackInfo {
   hasIcon: boolean;
   /** Uses Bedrock's beta scripting APIs, which need the world's "Beta APIs" experiment. */
   needsBetaApis: boolean;
-  /** Installed by Tavern Host (vs. packs that were already there). */
+  /** Installed by Server Forge (vs. packs that were already there). */
   managed: boolean;
   installedAt: number | null;
   source: string | null;
@@ -203,7 +203,7 @@ function findPackDirs(root: string, depth = 0): string[] {
 
 // Bedrock loads packs from two places: the server folder's behavior_packs/resource_packs (shared by every world) and the
 // world's own worlds/<level>/behavior_packs + resource_packs (travel with the world). Either way the world's
-// world_*_packs.json decides what is switched on. Tavern Host manages both; the owner picks where new addons go.
+// world_*_packs.json decides what is switched on. Server Forge manages both; the owner picks where new addons go.
 export type PackLocation = 'server' | 'world';
 export const LOCATIONS: PackLocation[] = ['server', 'world'];
 
@@ -267,7 +267,7 @@ export function setInstallLocation(installDir: string, location: PackLocation) {
   saveRegistry(installDir, reg);
 }
 
-/** The Bedrock version Tavern Host installed (".tavernhost-version"), e.g. [1, 26, 51]. */
+/** The Bedrock version Server Forge installed (".tavernhost-version"), e.g. [1, 26, 51]. */
 function serverVersion(installDir: string): number[] | null {
   try {
     const v = readFileSync(path.join(installDir, '.tavernhost-version'), 'utf-8').trim();

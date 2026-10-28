@@ -1,5 +1,5 @@
 // Satisfactory dedicated server. Installed and updated with SteamCMD (app 1690800, anonymous). Satisfactory has its own
-// server tools (the in-game Server Manager and an HTTPS API), so Tavern Host uses the API instead of duplicating it:
+// server tools (the in-game Server Manager and an HTTPS API), so Server Forge uses the API instead of duplicating it:
 // stopping (save, then shut down), live state for the overview, console commands, and applying the few settings kept
 // here. Saves stay where the game keeps them (%LOCALAPPDATA%\FactoryGame\Saved\SaveGames\server), and mods are left to
 // Satisfactory Mod Manager (SMM), which can manage a server folder and players' games; the Mods tab lists what's
@@ -33,7 +33,7 @@ function num(v: unknown, name: string, min: number, max: number): number {
   return n;
 }
 
-/** Where the dedicated server keeps its saves (per Windows account: the one Tavern Host runs as). */
+/** Where the dedicated server keeps its saves (per Windows account: the one Server Forge runs as). */
 export const saveFolder = () => path.join(process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'), 'FactoryGame', 'Saved', 'SaveGames', 'server');
 const logFile = (record: ServerRecord) => path.join(record.installDir, 'FactoryGame', 'Saved', 'Logs', 'FactoryGame.log');
 const port = (record: ServerRecord) => Number(record.settings.port) || 7777;
@@ -212,7 +212,7 @@ export const satisfactory: GameModule = {
         '-unattended',
         `-Port=${s.port}`,
         `-ReliablePort=${s.reliablePort}`,
-        // Lets Tavern Host (on this system) use the server's API without a token: clean stops, live state, commands.
+        // Lets Server Forge (on this system) use the server's API without a token: clean stops, live state, commands.
         '-ini:Engine:[SystemSettings]:FG.DedicatedServer.AllowInsecureLocalAccess=1',
         `-ini:Game:[/Script/Engine.GameSession]:MaxPlayers=${s.maxPlayers}`,
       ],
@@ -222,7 +222,7 @@ export const satisfactory: GameModule = {
 
   gameLog: logFile,
 
-  /** Ready: claim a new server, create its first game, and apply the settings kept in Tavern Host. */
+  /** Ready: claim a new server, create its first game, and apply the settings kept in Server Forge. */
   async onReady(record, note) {
     const p = port(record);
     const s = record.settings;

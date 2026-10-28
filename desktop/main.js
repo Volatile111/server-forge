@@ -1,4 +1,4 @@
-// Tavern Host desktop app: a native window around the panel. It starts the panel service if it isn't running, logs in as the
+// Server Forge desktop app: a native window around the panel. It starts the panel service if it isn't running, logs in as the
 // owner automatically (using the key the service writes to its data folder), and shows the same UI as the web version.
 // Closing this window doesn't stop the panel service or any game servers.
 import { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeImage } from 'electron';
@@ -26,7 +26,7 @@ const portable = app.isPackaged && existsSync(path.join(exeDir, 'portable.txt'))
 // Development copy (run from the source folder): a separate app identity, window profile and single-instance lock,
 // so it runs side by side with the installed release instead of focusing or replacing it.
 const dev = !app.isPackaged;
-if (dev) app.setPath('userData', path.join(app.getPath('appData'), 'Tavern Host Dev'));
+app.setPath('userData', path.join(app.getPath('appData'), dev ? 'Tavern Host Dev' : 'Tavern Host')); // stable pre-rebrand profile
 const dataDir = process.env.PANEL_DATA_DIR ?? (portable ? path.join(exeDir, 'data') : app.isPackaged ? installedDataDir() : path.join(root, 'data'));
 mkdirSync(dataDir, { recursive: true });
 if (portable) app.setPath('userData', path.join(dataDir, 'desktop-app'));
@@ -46,8 +46,8 @@ const PANEL_URL = `http://127.0.0.1:${readConfig().port ?? 8190}`;
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 
 app.setAppUserModelId(dev ? 'TavernHost.Dev' : 'TavernHost');
-app.setName(dev ? 'Tavern Host Dev' : 'Tavern Host');
-const WINDOW_TITLE = dev ? 'Tavern Host – Development Panel' : 'Tavern Host';
+app.setName(dev ? 'Server Forge Dev' : 'Server Forge');
+const WINDOW_TITLE = dev ? 'Server Forge – Development Panel' : 'Server Forge';
 
 if (!app.requestSingleInstanceLock()) app.quit();
 
@@ -194,11 +194,11 @@ function createWindow() {
     win.show();
     if (dev) win.setOverlayIcon(devBadge(), 'Development panel');
   });
-  // Keep our title, except for the panel's own names (Tavern Host / Tavern Master / Tavern Super, set by the page from
+  // Keep our title, except for the panel's own names (Server Forge / Forge Master / Super Forge, set by the page from
   // what this panel manages).
   win.on('page-title-updated', (e, title) => {
     e.preventDefault();
-    if (/^Tavern (Host|Master|Super|Node|Super Node)( – Development Panel)?$/.test(title)) win.setTitle(title);
+    if (/^(Server Forge|Forge Master|Super Forge|Forge Node|Super Forge Node)( – Development Panel)?$/.test(title)) win.setTitle(title);
   });
   // The addon browser is a separate window; close it together with the panel.
   win.on('closed', () => {
@@ -274,7 +274,7 @@ async function installHexium(pkg) {
     type: 'question',
     title: 'Install on the server?',
     message: `Install ${pkg.name}${pkg.version ? ` ${pkg.version}` : ''} (by ${pkg.namespace}) from Hexium on "${target.serverName || 'the server'}"?`,
-    detail: 'Tavern Host downloads it and what it needs, and safety-checks everything first.',
+    detail: 'Server Forge downloads it and what it needs, and safety-checks everything first.',
     buttons: ['Cancel', 'Install'],
     defaultId: 1,
     cancelId: 0,
@@ -311,7 +311,7 @@ async function installNexusLink(link) {
     type: 'question',
     title: 'Install on the server?',
     message: `Install this Nexus Mods file on "${target.serverName || 'the server'}"?`,
-    detail: 'Tavern Host downloads it with your Nexus Mods API key (Settings → Integrations) and safety-checks it first.',
+    detail: 'Server Forge downloads it with your Nexus Mods API key (Settings → Integrations) and safety-checks it first.',
     buttons: ['Cancel', 'Install'],
     defaultId: 1,
     cancelId: 0,
@@ -356,7 +356,7 @@ function openAddonBrowser({ url, serverId, serverName, accept, kind = 'addons' }
     width: 1200,
     height: 850,
     // A normal window (not a child of the panel), so clicking the panel brings the panel to the front.
-    title: 'Tavern Host – addon browser',
+    title: 'Server Forge – addon browser',
     icon: path.join(here, 'icon.png'),
     // Separate cookie jar: the websites never see the panel session.
     webPreferences: { partition: 'persist:addon-browser', contextIsolation: true, sandbox: true, nodeIntegration: false },
@@ -471,9 +471,9 @@ function oldStyleRunners() {
 }
 
 ipcMain.handle('pick-installer', async () => {
-  if (!app.isPackaged) return { error: "Updating from a file only works in the installed Tavern Host. This is the development panel, and it would install over your release copy." };
+  if (!app.isPackaged) return { error: "Updating from a file only works in the installed Server Forge. This is the development panel, and it would install over your release copy." };
   const { canceled, filePaths } = await dialog.showOpenDialog(win, {
-    title: 'Choose a Tavern Host installer',
+    title: 'Choose a Server Forge installer',
     filters: [{ name: 'Installer', extensions: ['exe'] }],
     properties: ['openFile'],
   });
@@ -511,7 +511,7 @@ ipcMain.handle('run-installer', async () => {
       env: { ...process.env, TH_FILE: file },
     }).trim();
   } catch {}
-  runUpdateWithWindow(file, { product: 'Tavern Host', version, note: 'Your game servers keep running.' });
+  runUpdateWithWindow(file, { product: 'Server Forge', version, note: 'Your game servers keep running.' });
   setTimeout(() => app.quit(), 800);
   return true;
 });
@@ -521,7 +521,7 @@ ipcMain.handle('run-installer', async () => {
 // is looked up here, never taken from the page, and only a Tavern Host installer from that release is accepted.
 
 const RELEASES = 'Volatile111/tavern-host';
-const INSTALLER_ASSET = /^Tavern-Host-Setup-(\d+\.\d+\.\d+)\.exe$/;
+const INSTALLER_ASSET = /^(?:Server-Forge|Tavern-Host)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 
 function isNewer(a, b) {
   const pa = a.split('.').map(Number);
@@ -575,7 +575,7 @@ async function downloadLatestInstaller(repo, assetRe, onProgress) {
 
 let updating = false;
 ipcMain.handle('install-update', async () => {
-  if (!app.isPackaged) throw new Error('Updates install only in the installed Tavern Host (this is the development panel).');
+  if (!app.isPackaged) throw new Error('Updates install only in the installed Server Forge (this is the development panel).');
   if (updating) throw new Error('The update is already downloading.');
   if (oldStyleRunners()) throw new Error('Some Java/Bedrock servers are still running under the old version. Stop them first, or update from a file.');
   updating = true;
@@ -587,7 +587,7 @@ ipcMain.handle('install-update', async () => {
     });
     updateLog(`downloaded ${version} (checksum matched): ${file}`);
     // The download folder is removed once the installer has finished.
-    runUpdateWithWindow(file, { product: 'Tavern Host', version, note: 'Your game servers keep running.', cleanup: path.dirname(file) });
+    runUpdateWithWindow(file, { product: 'Server Forge', version, note: 'Your game servers keep running.', cleanup: path.dirname(file) });
     setTimeout(() => app.quit(), 800);
     return { version };
   } finally {
@@ -698,7 +698,7 @@ app.whenReady().then(async () => {
     await desktopLogin(w.webContents.session);
     await w.loadURL(PANEL_URL);
   } catch (err) {
-    dialog.showErrorBox('Tavern Host', err.message);
+    dialog.showErrorBox('Server Forge', err.message);
     app.quit();
   }
 });

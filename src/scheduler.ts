@@ -210,7 +210,7 @@ function isDue(task: Task, now: number): boolean {
   if (t.type === 'manual') return false;
   if (t.type === 'interval') return now >= (task.lastRun ?? task.createdAt) + t.everyMinutes * 60_000;
   const slot = lastDailySlot(t, now);
-  // Run a slot once; if Tavern Host was off at the time, still run it if it's less than 10 minutes late.
+  // Run a slot once; if Server Forge was off at the time, still run it if it's less than 10 minutes late.
   return slot !== null && slot > (task.lastRun ?? task.createdAt) && now - slot < 10 * 60_000;
 }
 

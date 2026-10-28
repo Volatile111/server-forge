@@ -67,7 +67,7 @@ function packLists(inst: Instance): string {
 }
 
 const VALHEIM_APP = 896660;
-// Tavern Host's own note of the Steam build it installed (SteamCMD doesn't always leave its app manifest in the folder).
+// Server Forge's own note of the Steam build it installed (SteamCMD doesn't always leave its app manifest in the folder).
 const buildNote = (inst: Instance) => path.join(inst.record.installDir, '.tavernhost-steam.json');
 
 /** A dedicated server installed with SteamCMD: the public branch's build, compared with the installed one. */

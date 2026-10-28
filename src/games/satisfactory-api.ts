@@ -1,4 +1,4 @@
-// Satisfactory's dedicated server HTTPS API (https://<host>:<port>/api/v1, self-signed certificate). Tavern Host starts
+// Satisfactory's dedicated server HTTPS API (https://<host>:<port>/api/v1, self-signed certificate). Server Forge starts
 // the server with FG.DedicatedServer.AllowInsecureLocalAccess=1, so calls from this system (127.0.0.1) need no token:
 // that's how it stops the server cleanly, reads its state and runs console commands without keeping the admin password.
 import https from 'node:https';

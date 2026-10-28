@@ -1,6 +1,6 @@
 // Crash checker for Bedrock servers (vanilla and Endstone): reads the console log since the last start, including the
 // runner's "Server exited (code N)" line, and explains what went wrong in plain words, with a fix (and a one-click
-// action where Tavern Host can do it, e.g. installing the Visual C++ runtime BDS needs).
+// action where Server Forge can do it, e.g. installing the Visual C++ runtime BDS needs).
 //
 // Windows exit codes: a process that Windows itself stops reports an NTSTATUS code, e.g. 3221225781 = 0xC0000135 (a DLL
 // it needs is missing). Those say more than the log, which is often empty because the server never got going.
@@ -88,7 +88,7 @@ const WINDOWS_CODES: Record<number, { name: string; title: string; detail: strin
     name: 'STATUS_CONTROL_C_EXIT',
     title: 'The server was closed with Ctrl+C',
     detail: 'The server was told to close (Ctrl+C or its console window was closed), so the world may not have saved its last minutes.',
-    fix: 'Use Stop in Tavern Host so the server saves first.',
+    fix: 'Use Stop in Server Forge so the server saves first.',
   },
 };
 
@@ -202,7 +202,7 @@ export function diagnoseBedrock(record: ServerRecord, panelLog: string, _since: 
         severity: 'error',
         title: 'This Bedrock version is newer than Endstone supports',
         detail: `The server files are Bedrock ${m[1]}, and the installed Endstone can't run a newer Bedrock than its own. This happens if vanilla server files were installed over an Endstone server.`,
-        fix: 'Use "Update server software" on this server: Tavern Host installs the newest Endstone and the Bedrock version it supports.',
+        fix: 'Use "Update server software" on this server: Server Forge installs the newest Endstone and the Bedrock version it supports.',
         evidence: [m[0]],
         actions: [],
       });
@@ -212,7 +212,7 @@ export function diagnoseBedrock(record: ServerRecord, panelLog: string, _since: 
         severity: 'error',
         title: "Endstone's Python environment is broken",
         detail: 'Endstone could not find part of its Python setup.',
-        fix: 'Use "Update server software" with Force: Tavern Host sets Endstone up again (worlds, plugins and settings are kept).',
+        fix: 'Use "Update server software" with Force: Server Forge sets Endstone up again (worlds, plugins and settings are kept).',
         evidence: grep(/No module named|ModuleNotFoundError|Unable to find Python/i),
         actions: [],
       });

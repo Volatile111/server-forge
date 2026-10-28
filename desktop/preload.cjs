@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('desktop', {
   pickInstaller: () => ipcRenderer.invoke('pick-installer'),
   /** Runs the installer picked last (silently), then this app closes; the new version starts by itself. */
   runInstaller: () => ipcRenderer.invoke('run-installer'),
-  /** Downloads the latest Tavern Host release from GitHub and installs it (this app closes; the new version starts). */
+  /** Downloads the latest Server Forge release from GitHub and installs it (this app closes; the new version starts). */
   installUpdate: () => ipcRenderer.invoke('install-update'),
   /** Called with { received, total, version } while the update downloads. */
   onUpdateProgress: (fn) => ipcRenderer.on('update-progress', (_e, p) => fn(p)),

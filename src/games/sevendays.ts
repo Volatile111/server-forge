@@ -1,7 +1,7 @@
 // 7 Days to Die dedicated server (Steam app 294420, anonymous SteamCMD). Settings go in tavernhost-serverconfig.xml, a
 // copy of the shipped serverconfig.xml (Steam's file check would put the original back on every update), with Tavern
 // Host's values set in its <property> lines and everything else kept. -UserDataFolder points into the server folder, so
-// worlds and saves stay there (not in %APPDATA%\7DaysToDie). The server writes the log Tavern Host reads.
+// worlds and saves stay there (not in %APPDATA%\7DaysToDie). The server writes the log Server Forge reads.
 // Its telnet console (on this system only: no telnet password) is used for console commands, chat warnings before
 // restarts, player actions, and a clean stop ("shutdown" saves the world first).
 import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'node:fs';
@@ -70,7 +70,7 @@ function writeConfig(record: ServerRecord) {
       WorldGenSize: String(s.size),
       GameName: String(s.gameName),
       PlayerKillingMode: String(s.killing),
-      // Tavern Host's console access: telnet on this system only (no password = loopback only).
+      // Server Forge's console access: telnet on this system only (no password = loopback only).
       TelnetEnabled: 'true',
       TelnetPort: String(s.telnetPort),
       TelnetPassword: '',
@@ -163,13 +163,13 @@ export const sevenDays: GameModule = {
     { key: 'seed', label: 'Random world seed', type: 'text', help: 'For "Random world" only.', restart: true, section: 'World' },
     { key: 'size', label: 'Random world size', type: 'select', options: ['6144', '8192', '10240'].map((v) => ({ value: v, label: v })), restart: true, section: 'World' },
     { key: 'killing', label: 'Player killing', type: 'select', options: KILLING, restart: true, section: 'World' },
-    { key: 'telnetPort', label: 'Telnet port (this system only)', type: 'number', help: 'Default 8081. Used by Tavern Host for the console; no need to forward it.', restart: true, section: 'Advanced' },
+    { key: 'telnetPort', label: 'Telnet port (this system only)', type: 'number', help: 'Default 8081. Used by Server Forge for the console; no need to forward it.', restart: true, section: 'Advanced' },
   ],
   quickFields: ['serverName', 'port', 'password', 'maxPlayers', 'world', 'gameName'],
 
   defaults: () => ({
     serverName: 'My 7 Days to Die Server',
-    description: 'Hosted with Tavern Host',
+    description: 'Hosted with Server Forge',
     port: 26900,
     password: '',
     maxPlayers: 8,

@@ -410,7 +410,7 @@ export function usedAsNode(): boolean {
 let lastUsedSaved = 0;
 
 export function apiKeyPrincipal(key: string | undefined): Principal | null {
-  // "th_" = Tavern Host; "gsp_" keys were issued before the rename and still work.
+  // "th_" = Server Forge; "gsp_" keys were issued before the rename and still work.
   if (!key || !/^(th|gsp)_/.test(key)) return null;
   const keys = loadKeys();
   const hash = Buffer.from(sha256(key), 'hex');

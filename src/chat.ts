@@ -9,7 +9,7 @@ import { events } from './events.ts';
 export interface ChatMessage {
   /** When it was sent (ms). */
   t: number;
-  /** 'game' = typed in the game; 'panel' = sent from Tavern Host (panel, API key, Discord via Watcher...). */
+  /** 'game' = typed in the game; 'panel' = sent from Server Forge (panel, API key, Discord via Watcher...). */
   from: 'game' | 'panel';
   name: string;
   text: string;

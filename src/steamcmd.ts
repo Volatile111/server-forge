@@ -1,5 +1,5 @@
 // SteamCMD: Valve's official command-line tool for installing and updating dedicated servers (anonymously, no Steam
-// account needed). Tavern Host downloads it into its own data folder the first time a Steam game server needs it.
+// account needed). Server Forge downloads it into its own data folder the first time a Steam game server needs it.
 import { existsSync, mkdirSync, rmSync, readdirSync, statSync, readFileSync, type Dirent } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';

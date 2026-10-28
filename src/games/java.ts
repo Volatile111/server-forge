@@ -52,7 +52,7 @@ const JAVA_PROPS: Record<string, Info> = {
   'force-gamemode': { d: 'Force players into the default game mode when they join.', t: 'boolean', def: 'false' },
   'spawn-monsters': { d: 'Hostile mobs spawn.', t: 'boolean', def: 'true' },
   'generate-structures': { d: 'Generate villages, temples and other structures in new chunks.', t: 'boolean', def: 'true' },
-  'enable-rcon': { d: 'Remote console access (not needed with Tavern Host; keep off unless you know you need it).', t: 'boolean', def: 'false' },
+  'enable-rcon': { d: 'Remote console access (not needed with Server Forge; keep off unless you know you need it).', t: 'boolean', def: 'false' },
   'enable-query': { d: 'Answer GameSpy4 status queries (used by some server lists).', t: 'boolean', def: 'false' },
   'max-world-size': { d: 'World border radius in blocks.', t: 'number', def: '29999984' },
   'network-compression-threshold': { d: 'Compress network packets larger than this many bytes.', t: 'number', def: '256' },
@@ -168,7 +168,7 @@ export const java: GameModule = {
       label: 'Java version',
       type: 'select',
       options: JAVA_VERSIONS.map((v) => ({ value: String(v), label: `Java ${v}` })),
-      help: 'Chosen automatically for new servers from what Mojang says the Minecraft version needs. Tavern Host downloads it if missing.',
+      help: 'Chosen automatically for new servers from what Mojang says the Minecraft version needs. Server Forge downloads it if missing.',
       restart: true,
     },
     { key: 'jar', label: 'Server jar', type: 'text', help: 'The .jar to run (not used by modern Forge/NeoForge, which use an args file).', restart: true },
@@ -222,7 +222,7 @@ export const java: GameModule = {
 
   detect(installDir) {
     const out: Settings = {};
-    // Servers Tavern Host installed record what they are.
+    // Servers Server Forge installed record what they are.
     const marker = path.join(installDir, VERSION_FILE);
     if (existsSync(marker)) {
       try {
@@ -467,7 +467,7 @@ export const java: GameModule = {
     for (const name of added) {
       const uuid = await mojangUuid(name);
       if (list === 'ops') newEntries.push({ uuid, name, level: 4, bypassesPlayerLimit: false });
-      else if (list === 'banned') newEntries.push({ uuid, name, created: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' +0000', source: 'Tavern Host', expires: 'forever', reason: 'Banned by an operator.' });
+      else if (list === 'banned') newEntries.push({ uuid, name, created: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' +0000', source: 'Server Forge', expires: 'forever', reason: 'Banned by an operator.' });
       else newEntries.push({ uuid, name });
     }
     const file = path.join(record.installDir, def.file);

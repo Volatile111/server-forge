@@ -1,7 +1,7 @@
 // Vanilla Terraria: the official dedicated server from terraria.org (no mods; vanilla players can't join a tModLoader
 // server and the other way round, so it's its own server type). The Windows server needs Microsoft's XNA Framework 4.0,
 // which the Steam game installs on players' systems but a server often lacks: the install puts it on (Windows asks for
-// admin once). It runs under Tavern Host's runner (output captured, commands piped, Stop types "exit" so it saves).
+// admin once). It runs under Server Forge's runner (output captured, commands piped, Stop types "exit" so it saves).
 // World settings, the serverconfig.txt and the log reader are shared with Terraria (tModLoader).
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, cpSync, rmSync } from 'node:fs';
 import { execFile } from 'node:child_process';

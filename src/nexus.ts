@@ -1,4 +1,4 @@
-// Nexus Mods (Valheim), shared by Tavern Host and Tavern Client Mod Manager. Downloads go through the official API with
+// Nexus Mods (Valheim), shared by Server Forge and Tavern Client Mod Manager. Downloads go through the official API with
 // the user's personal API key (nexusmods.com → Site preferences → API keys):
 //   - "Mod Manager Download" buttons give an nxm:// link carrying a one-time key; with it any account can download.
 //   - Premium accounts can also download a mod's files straight from its page address.

@@ -61,7 +61,7 @@ export const SERVER_PERM_GROUPS: { group: string; perms: [ServerPerm, PermInfo][
       ['settings.edit', { label: 'Change settings', help: 'Name, folder, memory, Java version and arguments, difficulty, and Valheim profiles (create, edit and switch world + mods).', danger: true }],
       ['server.update', { label: 'Update server software', help: 'Download/update the official server software, install Bedrock and Valheim game updates, and turn automatic updates on or off.' }],
       ['properties.edit', { label: 'Edit properties & world', help: 'server.properties (and repairing it), world options, experiments and cheats, and which world is active.' }],
-      ['server.delete', { label: 'Remove server', help: 'Remove the server from Tavern Host (its files stay on disk).' }],
+      ['server.delete', { label: 'Remove server', help: 'Remove the server from Server Forge (its files stay on disk).' }],
     ],
   },
   {
@@ -101,7 +101,7 @@ export const GLOBAL_PERM_INFO: Record<GlobalPerm, PermInfo> = {
   'files.browse': { label: 'Browse all files on this system', help: 'The folder picker sees every drive on this system.', danger: true },
   'users.manage': { label: 'Manage users & API keys', help: 'Add, change and remove users and API keys (never more than they have themselves).', danger: true },
   'panel.settings': { label: 'Panel settings', help: 'Remote access, firewall, integrations (CurseForge and Nexus Mods keys), backup copies and nodes (other systems).' },
-  'audit.view': { label: 'View activity log', help: 'See who did what in Tavern Host.' },
+  'audit.view': { label: 'View activity log', help: 'See who did what in Server Forge.' },
   'storage.view': { label: 'See storage (Tavern Vault)', help: "See each system's drives, pools, SnapRAID arrays and schedules. Needs Tavern Vault in node mode on that system." },
   'storage.manage': { label: 'Manage storage (Tavern Vault)', help: 'Everything Tavern Vault can do: create, grow, repair and delete pools and volumes, erase drives, run SnapRAID, change schedules. Can destroy data.', danger: true },
 };

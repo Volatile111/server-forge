@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tavern Host</title>
+<title>Server Forge</title>
 <link rel="icon" href="/icon.png">
 <link rel="stylesheet" href="/styles.css">
+<script type="module" src="/appearance.js"></script>
 <script type="module" src="/app.js"></script>
 </head>
 <body>
@@ -13,9 +14,9 @@
 <!-- First run: create the owner account -->
 <section id="viewSetup" class="auth" hidden>
   <form id="setupForm" class="auth-card">
-    <div class="auth-brand"><img src="/logo.svg" alt="" width="56" height="56"><span>Tavern Host</span></div>
+    <div class="auth-brand"><img src="/logo.svg" alt="" width="56" height="56"><span>Server Forge</span></div>
     <h1>Welcome, innkeeper</h1>
-    <p class="muted">Create the owner account for this Tavern Host. You'll use it to log in and manage your game servers.</p>
+    <p class="muted">Create the owner account for this Server Forge. You'll use it to log in and manage your game servers.</p>
     <label for="setupUser">Username</label>
     <input id="setupUser" autocomplete="username" required>
     <label for="setupPass">Password (8+ characters)</label>
@@ -29,7 +30,7 @@
 
 <section id="viewLogin" class="auth" hidden>
   <form id="loginForm" class="auth-card">
-    <div class="auth-brand"><img src="/logo.svg" alt="" width="56" height="56"><span>Tavern Host</span></div>
+    <div class="auth-brand"><img src="/logo.svg" alt="" width="56" height="56"><span>Server Forge</span></div>
     <h1>Log in</h1>
     <label for="loginUser">Username</label>
     <input id="loginUser" autocomplete="username" required>
@@ -44,17 +45,17 @@
   <header class="topbar">
     <div class="top-left">
       <span class="version" id="appVersion"></span>
-      <span class="credit">Created by CorruptedVariant · <a href="https://github.com/Volatile111/tavern-client-releases/releases/latest" target="_blank" rel="noopener" title="Tavern Client Mod Manager: keeps players' Valheim mods matched to your server">Get the player mod manager</a></span>
+      <span class="credit">Created by CorruptedVariant · <a href="https://github.com/Volatile111/tavern-client-releases/releases/latest" target="_blank" rel="noopener" title="Mod Forge: keeps players' Valheim mods matched to your server">Get the player mod manager</a></span>
     </div>
-    <div class="brand"><img src="/logo.svg" alt="" width="40" height="40" id="brandLogo"><span>Tavern Host</span></div>
+    <div class="brand"><img src="/logo.svg" alt="" width="40" height="40" id="brandLogo"><span>Server Forge</span></div>
     <div class="top-right">
       <div class="alerts-wrap">
         <button class="ghost small alerts-btn" id="btnAlerts" hidden title="Health warnings">⚠ <span id="alertCount">0</span></button>
         <div class="alerts-pop" id="alertsPop" hidden></div>
       </div>
-      <button class="small update-pill" id="btnAppUpdate" hidden title="A new version of Tavern Host is out">⬆ Update available</button>
+      <button class="small update-pill" id="btnAppUpdate" hidden title="A new version of Server Forge is out">⬆ Update available</button>
       <span class="muted" id="whoami"></span>
-      <button class="ghost small" id="btnHelp" title="About Tavern Host, report a problem">Help</button>
+      <button class="ghost small" id="btnHelp" title="About Server Forge, report a problem">Help</button>
       <button class="ghost small" data-global="users.manage|panel.settings|audit.view" id="btnSettings">Settings</button>
       <button class="ghost small" id="btnAccount">Account</button>
       <button class="ghost small" id="btnLogout">Log out</button>
@@ -66,19 +67,29 @@
       <div class="side-head">
         <span>Servers</span>
         <div class="side-actions" data-global="servers.create">
-          <button class="small primary" id="btnNewServer" title="Create a brand-new server; Tavern Host downloads the software">+ New</button>
+          <button class="small primary" id="btnNewServer" title="Create a brand-new server; Server Forge downloads the software">+ New</button>
           <button class="small" id="btnAddServer" title="Add a server you already have the files for">Import</button>
         </div>
       </div>
       <nav id="serverList"></nav>
       <div class="theme-corner">
+        <div class="appearance-tools">
         <button type="button" class="theme-btn" id="btnTheme" title="Change colours" aria-label="Change colours" aria-expanded="false"></button>
-        <span class="credit" title="Tavern Host's first user, and the tester who has helped shape it from the start. Thank you!">🍺 Special thanks to <b>Smart74</b>, first user &amp; tester</span>
+          <button type="button" class="small appearance-button" id="panelAppearance" aria-pressed="false" title="Switch to Fancy UI">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3ZM20 2v4M18 4h4"/></svg>
+            <span id="panelAppearanceLabel">Basic UI</span>
+          </button>
+        </div>
+        <span class="credit" title="Server Forge's first user, and the tester who has helped shape it from the start. Thank you!">🍺 Special thanks to <b>Smart74</b>, first user &amp; tester</span>
         <div class="theme-pop" id="themePop" hidden>
           <label for="themeHue">Colour</label>
           <input type="range" id="themeHue" min="0" max="359" step="1" class="hue-slider">
           <div class="theme-swatches" id="themeSwatches"></div>
-          <button type="button" class="small ghost" id="themeReset">Reset to tavern amber</button>
+          <button type="button" class="small ghost" id="themeReset">Reset to default blue</button>
+          <div class="appearance-motion">
+            <label class="toggle"><input type="checkbox" id="panelMotion"> Animate Fancy UI</label>
+            <p class="muted small-text" id="appearanceStatus" role="status">Basic UI uses fewer resources.</p>
+          </div>
         </div>
       </div>
     </aside>
@@ -246,7 +257,7 @@
             <div data-perm="properties.edit">
               <h4 class="section-label">Add a server</h4>
               <div class="form-grid">
-                <div><label for="networkPick">Tavern Host server</label><select id="networkPick"></select></div>
+                <div><label for="networkPick">Server Forge server</label><select id="networkPick"></select></div>
                 <div><label for="networkName">Name in BungeeCord</label><input id="networkName" maxlength="32" spellcheck="false"></div>
                 <div><label for="networkAddress">Address</label><input id="networkAddress" placeholder="host:port" spellcheck="false"></div>
               </div>
@@ -276,7 +287,7 @@
               <div class="backup-head">
                 <div>
                   <h3>Profiles</h3>
-                  <p class="muted small-text">Several setups on one server: each profile is a world plus which mods are on (or vanilla, with the mod loader off). Switching sets both; players' Tavern Client Mod Manager follows the active profile's mods by itself. The active profile remembers changes you make.</p>
+                  <p class="muted small-text">Several setups on one server: each profile is a world plus which mods are on (or vanilla, with the mod loader off). Switching sets both; players' Mod Forge follows the active profile's mods by itself. The active profile remembers changes you make.</p>
                 </div>
                 <div class="spacer"></div>
                 <button type="button" data-perm="settings.edit" id="btnNewProfile">New profile…</button>
@@ -344,7 +355,7 @@
             <section class="danger-zone" data-perm="server.delete">
               <div>
                 <h3>Delete this server</h3>
-                <p class="muted">Remove it from Tavern Host, and optionally delete its files and backups too. The server must be stopped.</p>
+                <p class="muted">Remove it from Server Forge, and optionally delete its files and backups too. The server must be stopped.</p>
               </div>
               <button type="button" class="red" id="btnDelete">Delete server…</button>
             </section>
@@ -422,7 +433,7 @@
               <div>
                 <div id="addonStatus"></div>
                 <h3 id="addonAddTitle">Add an addon</h3>
-                <p class="muted" id="addonAddHelp">Drop a <b>.mcaddon</b> or <b>.mcpack</b> here, or choose a file. Tavern Host installs its behavior and resource packs and adds them to the world.</p>
+                <p class="muted" id="addonAddHelp">Drop a <b>.mcaddon</b> or <b>.mcpack</b> here, or choose a file. Server Forge installs its behavior and resource packs and adds them to the world.</p>
               </div>
             </div>
             <label class="drop-zone" id="addonDrop" for="addonFile">
@@ -447,7 +458,7 @@
               <h3>Share mods with players</h3>
               <label class="toggle"><input type="checkbox" id="shareEnabled"> Sharing on</label>
             </div>
-            <p class="muted" id="shareIntro">Players install <b>Tavern Client Mod Manager</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren't shared.</p>
+            <p class="muted" id="shareIntro">Players install <b>Mod Forge</b>, paste this link once, and their game gets the same mods as this server: new mods are added, updated mods are updated and removed mods are removed (their own extra mods are left alone). "Server only" mods aren't shared.</p>
             <div class="share-link">
               <span class="muted small">Player download:</span>
               <code id="clientDownloadUrl">https://github.com/Volatile111/tavern-client-releases/releases/latest</code>
@@ -553,7 +564,7 @@
             <div class="chat-relay-row">
               <div>
                 <h3>Chat relay <span class="pill-mini" id="chatRelayState"></span></h3>
-                <p class="muted small-text" id="chatRelayHelp">Bedrock servers don't record chat. Turning this on adds a small Tavern Host pack to the world that passes chat to the panel (it only reads messages). Takes effect when the server starts or restarts.</p>
+                <p class="muted small-text" id="chatRelayHelp">Bedrock servers don't record chat. Turning this on adds a small Server Forge pack to the world that passes chat to the panel (it only reads messages). Takes effect when the server starts or restarts.</p>
               </div>
               <div class="chat-relay-actions" data-perm="addons.manage">
                 <label class="inline-label" for="chatModuleVersion">Scripting version</label>
@@ -616,7 +627,7 @@
                 <button class="primary" id="btnNewTask">+ New task</button>
               </div>
             </div>
-            <p class="muted small-text">Tasks run on this system's clock while Tavern Host is running (the service keeps running when you close the window).</p>
+            <p class="muted small-text">Tasks run on this system's clock while Server Forge is running (the service keeps running when you close the window).</p>
             <div class="task-list" id="taskList"></div>
           </section>
         </div>
@@ -648,6 +659,8 @@
           <button class="ghost" id="btnCloseSettings">Back to servers</button>
         </div>
 
+
+
         <section class="card" data-global="panel.settings">
           <h3>Remote access</h3>
           <p class="muted">Lets people use the panel from other devices (another system, a phone, or over the internet with port forwarding).
@@ -669,9 +682,9 @@
 
         <section class="card" data-global="panel.settings">
           <h3>Nodes (other systems) <span class="count" id="nodeCount"></span></h3>
-          <p class="muted">Manage servers on other systems from this panel. On the other system, open Tavern Host → Settings → <b>Use this system as a node</b>, copy the code, and paste it here.
+          <p class="muted">Manage servers on other systems from this panel. On the other system, open Server Forge → Settings → <b>Use this system as a node</b>, copy the code, and paste it here.
             Their servers then show in the list on the left, grouped by system. If that system also runs Tavern Vault in node mode, its <b>Storage</b> shows there too (no extra code needed).
-            A system with only Tavern Vault (no Tavern Host) can be added too: Tavern Vault → Settings → Node mode makes its own code (thvault://…) to paste here.</p>
+            A system with only Tavern Vault (no Server Forge) can be added too: Tavern Vault → Settings → Node mode makes its own code (thvault://…) to paste here.</p>
           <div id="nodeList" class="node-list"></div>
           <div class="with-button">
             <input id="nodeCode" placeholder="thnode://192.168.1.50:8191/th_…  or  thvault://…" spellcheck="false" autocomplete="off">
@@ -681,16 +694,16 @@
 
         <section class="card" data-global="storage.view|panel.settings" id="storageCard">
           <h3>Storage (Tavern Vault)</h3>
-          <label class="toggle"><input type="checkbox" id="storageToggle"> Show storage (drive pools, SnapRAID, drive health) in Tavern Host</label>
+          <label class="toggle"><input type="checkbox" id="storageToggle"> Show storage (drive pools, SnapRAID, drive health) in Server Forge</label>
           <p class="muted"><b>This needs Tavern Vault</b>, a separate app, on each system that has the drives, with its <b>Node mode</b> turned on (Tavern Vault → Settings → Node mode).
             A system gets a <b>Storage</b> entry in the list on the left only when Tavern Vault is connected there; systems without it show nothing.</p>
-          <p class="muted">Turn this on here to see storage, and also in Tavern Host on each node whose storage you want to see from here. Nodes need no new code: storage comes through the same node link as their servers (Nodes, above). Tavern Vault doesn't need to be on this panel's own system.</p>
+          <p class="muted">Turn this on here to see storage, and also in Server Forge on each node whose storage you want to see from here. Nodes need no new code: storage comes through the same node link as their servers (Nodes, above). Tavern Vault doesn't need to be on this panel's own system.</p>
           <div id="storageSystems" class="storage-systems"></div>
         </section>
 
         <section class="card" data-global="panel.settings" id="nodeCodeCard">
           <h3>Use this system as a node</h3>
-          <p class="muted">Lets a Tavern Host on another system (e.g. your main system) manage this system's servers. Needs Remote access on (above).
+          <p class="muted">Lets a Server Forge on another system (e.g. your main system) manage this system's servers. Needs Remote access on (above).
             The code holds a key that can run this system's servers and, if Tavern Vault is in node mode here, see and manage its storage (but not manage users or settings): treat it like a password, and don't paste it into chats.</p>
           <div class="btn-row"><button id="btnNodeCode">Make a node code</button><span class="muted small-text" id="nodeCodeStatus"></span></div>
           <div class="with-button" id="nodeCodeBox" hidden>
@@ -701,11 +714,11 @@
 
         <section class="card" data-global="panel.settings">
           <h3>Backup copies</h3>
-          <p class="muted">Also copy every backup to another drive, a NAS or a network share (e.g. <b>A:\Tavern Host Backups</b>), so worlds survive if this system's disk fails.
+          <p class="muted">Also copy every backup to another drive, a NAS or a network share (e.g. <b>A:\Server Forge Backups</b>), so worlds survive if this system's disk fails.
             Each server gets its own folder there. Copies older than the limit are removed, but the newest 3 per server always stay.</p>
           <div class="remote-row">
             <label class="toggle"><input type="checkbox" id="bcEnabled"> Copy backups</label>
-            <input id="bcFolder" placeholder="A:\Tavern Host Backups" spellcheck="false" class="folder-input">
+            <input id="bcFolder" placeholder="A:\Server Forge Backups" spellcheck="false" class="folder-input">
             <label for="bcKeep" class="inline-label">Keep</label>
             <input id="bcKeep" type="number" min="1" max="3650" class="port-input">
             <span class="muted">days</span>
@@ -719,7 +732,7 @@
         </section>
 
         <section class="card" data-global="panel.settings" id="panelUpdateCard">
-          <h3>Update Tavern Host</h3>
+          <h3>Update Server Forge</h3>
           <div id="appUpdateInfo"><p class="muted">Checking for updates…</p></div>
           <div class="btn-row">
             <button class="primary" id="btnInstallUpdate" hidden>Install update</button>
@@ -784,7 +797,7 @@
           </div>
           <p class="muted small-text" id="factorioStatus"></p>
           <div id="cfIntegration" hidden>
-            <p class="muted">CurseForge: lets you search and install mods and Bedrock addons from CurseForge inside Tavern Host.
+            <p class="muted">CurseForge: lets you search and install mods and Bedrock addons from CurseForge inside Server Forge.
               Get a free API key at <a href="https://console.curseforge.com/" target="_blank" rel="noopener">console.curseforge.com</a>
               and paste it here. It's stored only on this system.</p>
             <div class="with-button">
@@ -798,7 +811,7 @@
 
         <section class="card" data-global="users.manage">
           <h3>API reference</h3>
-          <p class="muted">Send the key in a header with every request: <code>Authorization: Bearer th_…</code> (or <code>X-Api-Key: th_…</code>). Keys made before the Tavern Host rename start with <code>gsp_</code> and still work.
+          <p class="muted">Send the key in a header with every request: <code>Authorization: Bearer th_…</code> (or <code>X-Api-Key: th_…</code>). Keys made before the Server Forge rename start with <code>gsp_</code> and still work.
             Use <code id="apiBase">http://127.0.0.1:8190</code> on this system, or the remote address (<code>https://…</code>) from elsewhere. Bodies are JSON (<code>Content-Type: application/json</code>).
             Each request needs the permission shown, on that server (or all servers) for the key; the owner can do everything.</p>
           <input id="apiSearch" class="search-input" placeholder="Filter requests…">
@@ -863,6 +876,34 @@
   </form>
 </dialog>
 
+<dialog id="rebrandDialog" aria-labelledby="rebrandTitle" aria-describedby="rebrandLead">
+  <div class="dialog-body">
+    <div class="rebrand-content">
+    <p class="rebrand-kicker">A new name for the app you know</p>
+    <h2 id="rebrandTitle" tabindex="-1">Tavern Host is now Server Forge</h2>
+    <p id="rebrandLead" class="rebrand-lead">This is the same application you've been using, with a new name and look.</p>
+    <div class="rebrand-identities" aria-label="Tavern Host has been renamed to Server Forge">
+      <div class="rebrand-identity is-old"><img src="/rebrand-tavern-host.svg" alt="Original Tavern Host tankard icon"><strong>Tavern Host</strong><small>The name you know</small></div>
+      <span class="rebrand-arrow" aria-hidden="true">→</span>
+      <div class="rebrand-identity is-new"><img src="/logo.svg" alt="Server Forge server and hammer icon"><strong>Server Forge</strong><small>The same app, renamed</small></div>
+    </div>
+    <div class="rebrand-explanation">
+      <h3>Why the new name?</h3>
+      <p>Server Forge better describes what the app does: create, host and manage game servers across your own PCs. It continues Tavern Host's development under a name that fits its growing range of games and tools.</p>
+      <h3>Your setup stays with you</h3>
+      <ul><li>Your servers, worlds, accounts and settings are kept.</li><li>Your mods, backups and connected PCs stay in place.</li><li>You continue using the same app, from the same developer.</li></ul>
+      <p>The player companion has a new name too: <strong>Tavern Client Mod Manager is now Mod Forge</strong>.</p>
+    </div>
+    <section class="rebrand-release" aria-labelledby="rebrandReleaseTitle">
+      <h3 id="rebrandReleaseTitle">What's new in Server Forge <span id="rebrandReleaseVersion">0.9.0</span></h3>
+      <div id="rebrandReleaseBody" class="whats-new"></div>
+      <a class="small-text" href="https://github.com/Volatile111/tavern-host/releases" target="_blank" rel="noopener">All releases</a>
+    </section>
+    </div>
+    <div class="rebrand-footer"><p id="rebrandCountdown" role="status">Please take a moment to read about the new name.</p><button type="button" class="primary" id="rebrandContinue" disabled>Continue in 10 seconds</button></div>
+  </div>
+</dialog>
+
 <dialog id="whatsNewDialog">
   <div class="dialog-body">
     <h2 id="whatsNewTitle"></h2>
@@ -911,7 +952,7 @@
   <div class="dialog-body">
     <h2 id="msTitle"></h2>
     <p class="muted small-text" id="msSub"></p>
-    <p class="muted small-text">Changes are used when the server (re)starts. <span id="msShareHelp"><b>To players</b>: players' Tavern Client Mod Manager sets that setting to the server's value in their own game every time it syncs, for settings that work on the player's side (for example Server devcommands' automatic god mode for admins). Anyone with the share link can see those values, so don't send passwords or keys.</span><span id="msReadOnlyHelp"> Greyed-out settings (lists, multi-line values) can't be changed here: edit the file in the Files tab.</span></p>
+    <p class="muted small-text">Changes are used when the server (re)starts. <span id="msShareHelp"><b>To players</b>: players' Mod Forge sets that setting to the server's value in their own game every time it syncs, for settings that work on the player's side (for example Server devcommands' automatic god mode for admins). Anyone with the share link can see those values, so don't send passwords or keys.</span><span id="msReadOnlyHelp"> Greyed-out settings (lists, multi-line values) can't be changed here: edit the file in the Files tab.</span></p>
     <div class="ms-tools">
       <input id="msFilter" type="search" placeholder="Filter settings…" autocomplete="off" spellcheck="false">
       <label class="toggle" id="msOnlySharedRow"><input type="checkbox" id="msOnlyShared"> Only the ones sent to players</label>
@@ -923,8 +964,8 @@
 
 <dialog id="aboutDialog">
   <div class="dialog-body about">
-    <h2><img src="/logo.svg" alt="" width="32" height="32"> Tavern Host <span class="muted" id="aboutVersion"></span></h2>
-    <p><span class="build-badge beta">Beta</span> Tavern Host is actively being worked on and updates are frequent. If something goes wrong, please report it.</p>
+    <h2><img src="/logo.svg" alt="" width="32" height="32"> Server Forge <span class="muted" id="aboutVersion"></span></h2>
+    <p><span class="build-badge beta">Beta</span> Server Forge is actively being worked on and updates are frequent. If something goes wrong, please report it.</p>
     <div class="about-links">
       <a class="button-like" id="aboutReport" href="https://github.com/Volatile111/tavern-host/issues/new/choose" target="_blank" rel="noopener">Report a problem</a>
       <a class="button-like" href="https://github.com/Volatile111/tavern-host/issues" target="_blank" rel="noopener">Known problems</a>
@@ -986,7 +1027,7 @@
 <dialog id="deleteDialog">
   <form id="deleteForm" class="dialog-body">
     <h2>Delete <span id="delName"></span>?</h2>
-    <p>It will be removed from Tavern Host along with its tasks, player history and statistics.</p>
+    <p>It will be removed from Server Forge along with its tasks, player history and statistics.</p>
     <label class="toggle"><input type="checkbox" id="delFiles"> Also delete the server folder</label>
     <p class="muted mono small-path" id="delFolder"></p>
     <label class="toggle"><input type="checkbox" id="delBackups"> Also delete its backups</label>
@@ -997,7 +1038,7 @@
     </div>
     <p class="error" id="deleteError"></p>
     <div class="form-actions">
-      <button class="red" type="submit" id="delSubmit">Remove from Tavern Host</button>
+      <button class="red" type="submit" id="delSubmit">Remove from Server Forge</button>
       <button type="button" class="ghost" id="deleteCancel">Cancel</button>
     </div>
   </form>
@@ -1046,7 +1087,7 @@
 <dialog id="newDialog" class="wide-dialog">
   <form id="newForm" class="dialog-body">
     <h2>New server</h2>
-    <p class="muted">Tavern Host downloads the official server software for you. It can take a few minutes.</p>
+    <p class="muted">Server Forge downloads the official server software for you. It can take a few minutes.</p>
     <div id="newSystemWrap" hidden>
       <label for="newSystem">System</label>
       <select id="newSystem"></select>

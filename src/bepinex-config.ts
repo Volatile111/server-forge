@@ -1,4 +1,4 @@
-// BepInEx config files (BepInEx/config/<plugin GUID>.cfg), shared by Tavern Host (the mod settings editor) and Tavern
+// BepInEx config files (BepInEx/config/<plugin GUID>.cfg), shared by Server Forge (the mod settings editor) and Tavern
 // Client Mod Manager (settings the server sends to players). A file looks like:
 //
 //   ## Settings file was created by plugin Server Devcommands v1.115.0

@@ -122,6 +122,8 @@ class ServerInstance {
   private crashTimes: number[] = [];
   private tailTimer: NodeJS.Timeout | null = null;
   private busy = false;
+  private readinessProbe = false;
+  private nextReadinessProbe = 0;
   /** Runner command pipe and its secret (games with `commands` only). */
   pipe: string | null = null;
   token: string | null = null;
@@ -238,7 +240,6 @@ class ServerInstance {
       this.logOffset = size;
       const lines = (this.partial + buf.toString('utf-8')).split(/\r?\n/);
       this.partial = lines.pop() ?? '';
-      const wasReady = this.parser.state().ready;
       for (const raw of lines) {
         // Some servers (Sponge, BungeeCord) colour their output with terminal escape codes; show plain text.
         const line = raw.replace(ANSI_CODES, '');
@@ -252,7 +253,7 @@ class ServerInstance {
         this.parser.feed(line);
         if (line.trim() && !this.module.hideLine?.(line)) this.pushLine(line);
       }
-      if (!wasReady && this.parser.state().ready && this.status === 'starting') {
+      if (this.parser.state().ready && this.status === 'starting') {
         this.note('Server is ready for players.');
         this.setStatus('running', null);
         this.sendMutes().catch(() => {});
@@ -273,7 +274,31 @@ class ServerInstance {
         this.readLog();
       } catch {}
       this.checkAlive();
+      void this.checkReadiness();
     }, 1000);
+  }
+
+  private async checkReadiness() {
+    if (this.status !== 'starting' || !this.pid || !this.module.probeReady || this.readinessProbe || Date.now() < this.nextReadinessProbe) return;
+    const pid = this.pid;
+    const startedAt = this.startedAt;
+    this.readinessProbe = true;
+    this.nextReadinessProbe = Date.now() + 5000;
+    try {
+      const ready = await this.module.probeReady(this.record);
+      // A stop or restart can happen while the request is in flight.
+      if (ready && this.pid === pid && this.startedAt === startedAt && this.status === 'starting' && isAlive(pid)) {
+        this.parser.state().ready = true;
+        this.note('Server is ready for players (confirmed by its API).');
+        this.setStatus('running', null);
+        this.sendMutes().catch(() => {});
+        this.module.onReady?.(this.record, (m) => this.note(m)).catch((err) => this.note(`Setup after start failed: ${(err as Error).message}`));
+      }
+    } catch {
+      // An unavailable API is normal during startup; keep waiting for it or the log.
+    } finally {
+      this.readinessProbe = false;
+    }
   }
 
   private stopWatching() {
@@ -335,7 +360,7 @@ class ServerInstance {
   }
 
   // ---------- Ownership lock ----------
-  // Several Tavern Hosts can run on one system (installed, portable, development) and could list the same server folder.
+  // Several Server Forges can run on one system (installed, portable, development) and could list the same server folder.
   // Whoever starts a server writes this file into its folder; the others refuse to start or update it while that
   // server process is alive, so a test panel can never double-start or overwrite a live server.
 
@@ -343,7 +368,7 @@ class ServerInstance {
     return path.join(this.record.installDir, '.tavernhost-owner.json');
   }
 
-  /** Throws if another Tavern Host lists this server's folder, or (different data folder) is running it right now. */
+  /** Throws if another Server Forge lists this server's folder, or (different data folder) is running it right now. */
   assertNotOwnedElsewhere() {
     assertFolderFree(this.record.installDir);
     let lock: { dataDir?: string; pid?: number; panel?: string } | null = null;
@@ -354,7 +379,7 @@ class ServerInstance {
     }
     if (!lock?.pid || !lock.dataDir || path.resolve(lock.dataDir).toLowerCase() === path.resolve(dataDir).toLowerCase()) return;
     if (!isAlive(lock.pid)) return;
-    throw new Error(`This server folder is being run by another Tavern Host (${lock.panel ?? 'unknown'} panel, PID ${lock.pid}). Stop it there first.`);
+    throw new Error(`This server folder is being run by another Server Forge (${lock.panel ?? 'unknown'} panel, PID ${lock.pid}). Stop it there first.`);
   }
 
   /** Clears the lock once our server has stopped (only if it's ours). */
@@ -634,7 +659,7 @@ class ServerInstance {
     events.emit('force-stopped', this.id);
   }
 
-  /** Writes a Tavern Host note into the console (e.g. from the task scheduler). */
+  /** Writes a Server Forge note into the console (e.g. from the task scheduler). */
   log(message: string) {
     this.note(message);
   }
@@ -682,9 +707,9 @@ class ServerInstance {
     this.note(`Re-attached to running server (PID ${pid}).`);
     this.startWatching();
     events.emit('state', this.id);
-    // A live backup that was running when Tavern Host closed left the server's saving paused: turn it back on.
+    // A live backup that was running when Server Forge closed left the server's saving paused: turn it back on.
     resumeCutOffBackup(this.backupTarget())
-      .then((did) => did && this.note('A backup was cut off when Tavern Host closed; saving is back on.'))
+      .then((did) => did && this.note('A backup was cut off when Server Forge closed; saving is back on.'))
       .catch((err) => this.note(`Couldn't turn saving back on after a cut-off backup: ${(err as Error).message}`));
   }
 
@@ -712,7 +737,7 @@ class ServerInstance {
       name: this.record.name,
       position: positionOf(this.id),
       installDir: this.record.installDir,
-      // Another Tavern Host on this system uses this folder too: this panel won't start, update or delete it.
+      // Another Server Forge on this system uses this folder too: this panel won't start, update or delete it.
       folderConflict: folderUsedElsewhere(this.record.installDir),
       autoRestart: this.record.autoRestart,
       settings: this.record.settings,
@@ -838,8 +863,8 @@ function saveServers() {
   publishFolders();
 }
 
-// ---------- folders used by other Tavern Hosts on this system ----------
-// Several Tavern Hosts can run on one system (installed release, portable copies, the development panel). Each one lists
+// ---------- folders used by other Server Forges on this system ----------
+// Several Server Forges can run on one system (installed release, portable copies, the development panel). Each one lists
 // its server folders in a shared file, and no panel may use a folder another panel lists (or one inside it, or around
 // it), so one can never start, update or delete another's servers.
 
@@ -880,13 +905,13 @@ function installedDataDirs(): string[] {
   return appData ? [path.join(appData, 'Tavern Host', 'data'), path.join(appData, 'Game Server Panel', 'data')] : [];
 }
 
-/** Which other Tavern Host on this system uses `dir` (or a folder inside/around it), or null. */
+/** Which other Server Forge on this system uses `dir` (or a folder inside/around it), or null. */
 export function folderUsedElsewhere(dir: string): string | null {
   const reg = readFolderRegistry();
   for (const [key, entry] of Object.entries(reg)) {
     if (key === ourKey() || !existsSync(key)) continue;
     const hit = entry.folders.find((f) => overlaps(f, dir));
-    if (hit) return `the ${entry.build} Tavern Host (data in ${key}) uses ${hit}`;
+    if (hit) return `the ${entry.build} Server Forge (data in ${key}) uses ${hit}`;
   }
   // Installed panels that don't publish yet: read their server list directly.
   for (const d of installedDataDirs()) {
@@ -895,13 +920,13 @@ export function folderUsedElsewhere(dir: string): string | null {
     try {
       const list = JSON.parse(readFileSync(path.join(d, 'servers.json'), 'utf-8')) as { installDir?: string }[];
       const hit = list.map((s) => s.installDir).find((f): f is string => !!f && overlaps(f, dir));
-      if (hit) return `the installed Tavern Host (data in ${d}) uses ${hit}`;
+      if (hit) return `the installed Server Forge (data in ${d}) uses ${hit}`;
     } catch {}
   }
   return null;
 }
 
-/** Server folders the other Tavern Hosts on this system use (e.g. to avoid giving two servers the same ports). */
+/** Server folders the other Server Forges on this system use (e.g. to avoid giving two servers the same ports). */
 export function foldersUsedElsewhere(): string[] {
   const reg = readFolderRegistry();
   return Object.entries(reg)
@@ -909,10 +934,10 @@ export function foldersUsedElsewhere(): string[] {
     .flatMap(([, entry]) => entry.folders);
 }
 
-/** Throws if another Tavern Host on this system uses this folder. */
+/** Throws if another Server Forge on this system uses this folder. */
 export function assertFolderFree(dir: string) {
   const other = folderUsedElsewhere(dir);
-  if (other) throw new Error(`That folder can't be used here: ${other}. Each Tavern Host needs its own server folders.`);
+  if (other) throw new Error(`That folder can't be used here: ${other}. Each Server Forge needs its own server folders.`);
 }
 
 interface RuntimeEntry {
@@ -1123,7 +1148,7 @@ export async function deleteServer(id: string, opts: { files?: boolean; backups?
     try {
       assertModifiable(folder, others);
     } catch (err) {
-      const msg = (err as Error).message.replace('A running server is using this folder. Stop it first.', 'Another server in Tavern Host uses this folder, so it can\'t be deleted.');
+      const msg = (err as Error).message.replace('A running server is using this folder. Stop it first.', 'Another server in Server Forge uses this folder, so it can\'t be deleted.');
       throw new Error(`The folder can't be deleted: ${msg}`);
     }
     try {

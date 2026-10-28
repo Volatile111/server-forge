@@ -1,6 +1,6 @@
 # Tavern Host HTTP API
 
-Reference for Tavern Host 0.8.1. This file is generated from the list in `public/app.js` (the same one the panel shows in Settings → API reference) by `node tools/make-api-docs.mjs`.
+Reference for Tavern Host 0.9.0. This file is generated from the list in `public/app.js` (the same one the panel shows in Settings → API reference) by `node tools/make-api-docs.mjs`.
 
 > Tavern Host is in beta and updates are frequent. Routes can change between versions; check this file for the version you run.
 
@@ -50,7 +50,7 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `GET /api/vault/summary` | Storage at a glance for this system and every node | See storage |
 | `POST /api/vault/call` | Run a Tavern Vault call: {"method","args"} → {"ok","data"\|"error"}. Reading (state, inventory, arrays, schedules, activity, scrubInfo, discoverArrays, validateArray, snapraidRunning) needs See storage; everything else (createPool, createVolume, addDisks, retireDisk, removeDisk, repairVolume, resizeVolume, attachPool, rename, deleteVolume, deletePool, eraseDisk, saveArray, snapraidRun, createSchedule…) needs Manage storage. Tavern Vault's practice mode and safety checks apply. | See / Manage storage |
 | `GET /api/vault/events?since=` | SnapRAID output and finish events after sequence number since | See storage |
-| `GET /api/nodes/{node}/vault` | The same, for a node (through its node link; the node needs Tavern Host 0.5.0+ and Tavern Vault in node mode) | See storage |
+| `GET /api/nodes/{node}/vault` | The same, for a node (through its node link; the node needs Server Forge 0.5.0+ and Tavern Vault in node mode) | See storage |
 | `POST /api/nodes/{node}/vault/call` | Run a Tavern Vault call on a node | See / Manage storage |
 | `GET /api/nodes/{node}/vault/events?since=` | SnapRAID output on a node | See storage |
 
@@ -69,7 +69,7 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `GET /api/alerts` | Health warnings (low disk/RAM, stuck starts, failed backup copies, world checks…), nodes included | See the server (per server) |
 | `POST /api/alerts/{alert}/dismiss` | Dismiss a warning | See the server (per server) |
 | `PUT /api/me/password` | Change your own password: {"current","password"} (logins only, not API keys) | Any login |
-| `GET /api/app-update?check=1` | New Tavern Host version on GitHub: {current, latest, available, notes, url, checkedAt, error}; check=1 looks right now (otherwise the 6-hourly check) | Panel settings |
+| `GET /api/app-update?check=1` | New Server Forge version on GitHub: {current, latest, available, notes, url, checkedAt, error}; check=1 looks right now (otherwise the 6-hourly check) | Panel settings |
 
 ## Servers
 
@@ -89,7 +89,7 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `GET /api/servers/{id}/ports` | Port forwarding help: {lanIp, publicIp, forwards:[{protocol, ports, why}], problems:[{text, fix?}], notes, joinAddress} | See the server |
 | `GET /api/servers/{id}/difficulty` | Current difficulty and the choices for this game | See the server |
 | `PUT /api/servers/{id}/difficulty` | Set it: {"value":"hard"} (Minecraft: peaceful/easy/normal/hard, applied live; Valheim: casual/easy/normal/hard/hardcore/immersive/hammer, or "keep"; applies on the next start) | Change settings |
-| `DELETE /api/servers/{id}?files=0&backups=0` | Remove the server from Tavern Host. files=1 also sends its folder to the Recycle Bin (needs Edit & upload files too); backups=1 deletes its backups | Remove server |
+| `DELETE /api/servers/{id}?files=0&backups=0` | Remove the server from Server Forge. files=1 also sends its folder to the Recycle Bin (needs Edit & upload files too); backups=1 deletes its backups | Remove server |
 | `POST /api/servers/{id}/eula` | Accept the Minecraft EULA | Change settings |
 | `PUT /api/server-order` | Sidebar order: {"ids":[...]} in the new order (each listed server keeps a slot it already had; "position" in /api/servers) | Change settings (every listed server) |
 
@@ -140,8 +140,8 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 
 | Request | What it does | Permission |
 |---|---|---|
-| `GET /api/servers/{id}/network` | A proxy's servers (config.yml), where players land first (priorities), and Tavern Host's Minecraft Java servers that can be added | See the server |
-| `POST /api/servers/{id}/network` | Add a server: {"serverId"?: a Tavern Host server (address filled in) \| "address": "host:port", "name", "first"?: true, "prepare"?: true (Paper/Spigot: bungeecord: true, online-mode=false)} | Edit properties & world (+ on the added server, to prepare it) |
+| `GET /api/servers/{id}/network` | A proxy's servers (config.yml), where players land first (priorities), and Server Forge's Minecraft Java servers that can be added | See the server |
+| `POST /api/servers/{id}/network` | Add a server: {"serverId"?: a Server Forge server (address filled in) \| "address": "host:port", "name", "first"?: true, "prepare"?: true (Paper/Spigot: bungeecord: true, online-mode=false)} | Edit properties & world (+ on the added server, to prepare it) |
 | `DELETE /api/servers/{id}/network/{name}` | Remove a server from the proxy's list | Edit properties & world |
 | `PUT /api/servers/{id}/network/default` | Where players land first: {"name"} | Edit properties & world |
 
@@ -197,13 +197,13 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `POST /api/servers/{id}/addons/curseforge` | Install the latest file of a CurseForge project: {"projectId"} (answers needsBrowser when the author only allows website downloads) | Manage mods / plugins / addons |
 | `POST /api/servers/{id}/addons/hexium` | Valheim: install from Hexium with dependencies: {"input":"https://valheim.hexium.gg/mods/Author/Mod"} or {"namespace","name","version"?} | Manage mods / plugins / addons |
 | `POST /api/servers/{id}/addons/nexus` | Valheim: install a Nexus Mods file: {"input":"nxm://…"} (needs the Nexus key in Integrations; a mod page address needs Premium) | Manage mods / plugins / addons |
-| `POST /api/servers/{id}/addons/adopt` | Valheim: take over mods added without Tavern Host (r2modman, by hand) so they can be shared: {adopted, skipped} | Manage mods / plugins / addons |
+| `POST /api/servers/{id}/addons/adopt` | Valheim: take over mods added without Server Forge (r2modman, by hand) so they can be shared: {adopted, skipped} | Manage mods / plugins / addons |
 | `GET /api/servers/{id}/plugins` | Bedrock on Endstone: its plugins (.whl/.dll). Every /addons route above also works under /plugins for them (upload, {item}/enabled, DELETE, check-updates, {item}/update, setup) | See the server |
 | `GET /api/servers/{id}/plugins/search?q=` | Endstone: search plugins on GitHub and PyPI: {results:[{id, name, summary, author, url, source, version?, stars?}], errors} | See the server |
 | `POST /api/servers/{id}/plugins/found` | Endstone: install the newest file of a search result: {"id":"pypi:endstone-essentials"} or {"id":"github:owner/repo"} | Manage mods / plugins / addons |
 | `GET /api/servers/{id}/share` | Players' share link (Valheim, Minecraft Java, Satisfactory, Bedrock, Terraria tModLoader, Space Engineers): links, public link, what's shared (summary, with mode sync\|links\|info), Remote access status | Share mods with players |
 | `POST /api/servers/{id}/share` | Sharing on/off or a new link: {"enabled":true,"newLink":false} | Share mods with players |
-| `GET /api/share/{token}` | What the players' Tavern Client Mod Manager reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion | The share link token (no login) |
+| `GET /api/share/{token}` | What the players' Mod Forge reads (Remote access port): {server, game, gameName, mode, join:{port,protocol}, note, mods…}. Minecraft Java mod servers add loader, mcVersion, loaderVersion | The share link token (no login) |
 | `GET /api/share/{token}/file/{name}` | Download a shared mod file (Valheim uploads, Nexus and Hexium copies; Minecraft Java mod jars players need) | The share link token (no login) |
 
 ## Tasks
@@ -258,7 +258,7 @@ curl -X POST -H "Authorization: Bearer th_…" -H "Content-Type: application/jso
 | `POST /api/settings/backup-copy/test` | Test a folder: {"folder"} → free space | Panel settings |
 | `POST /api/settings/backup-copy/sync` | Copy every existing backup that isn't there yet (in the background) | Panel settings |
 | `GET /api/nodes` | Nodes (other systems) managed from this panel | Panel settings |
-| `GET /api/node-targets` | Systems you can create servers on (nodes with Tavern Host, and whether they are online) | Create & import servers |
+| `GET /api/node-targets` | Systems you can create servers on (nodes with Server Forge, and whether they are online) | Create & import servers |
 | `GET /api/nodes/{node}/games` | A node's games and their settings fields (for creating a server there) | Create & import servers |
 | `GET /api/nodes/{node}/games/{game}/versions?from={type}` | Versions a node can install | Create & import servers |
 | `POST /api/nodes/{node}/servers/new` | Create a server on a node (same body as POST /api/servers/new); the answer has its id here (n~node~server) | Create & import servers |

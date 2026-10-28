@@ -1,6 +1,6 @@
 // BungeeCord network: the servers behind a proxy, kept in the proxy's config.yml ("servers:" and the first listener's
 // "priorities:", the server players land on first). Edited as text so the rest of the file (comments included) stays
-// exactly as it is. Tavern Host's own Minecraft Java servers can be added with their address filled in, and optionally
+// exactly as it is. Server Forge's own Minecraft Java servers can be added with their address filled in, and optionally
 // prepared for the proxy (Paper/Spigot: bungeecord: true in spigot.yml, online-mode=false).
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -148,7 +148,7 @@ export function setDefaultProxyServer(proxy: ServerRecord, name: string) {
   write(proxy, lines, text.includes('\r\n') ? '\r\n' : '\n');
 }
 
-/** A safe BungeeCord name for a Tavern Host server ("Survival World" → "survival-world"). */
+/** A safe BungeeCord name for a Server Forge server ("Survival World" → "survival-world"). */
 export function proxyName(serverName: string): string {
   return (
     serverName

@@ -74,7 +74,7 @@ export interface SettingsFileInfo {
   file: string;
   plugin: string | null;
   version: string | null;
-  /** The installed mod ("Author-Name") it belongs to, or null if Tavern Host can't tell. */
+  /** The installed mod ("Author-Name") it belongs to, or null if Server Forge can't tell. */
   mod: string | null;
   settings: number;
   shared: number;

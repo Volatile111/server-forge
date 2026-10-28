@@ -249,7 +249,7 @@ route('GET', '/api/version', async (ctx) => {
 });
 
 // The version this data folder ran last: when it changed, this start is the first one after an update (the page shows
-// "Tavern Host was updated to X" once).
+// "Server Forge was updated to X" once).
 const updatedFrom: { from: string | null; at: number } | null = (() => {
   const seen = readJson<{ version?: string; updatedFrom?: { from: string | null; at: number } } | null>('version.json', null);
   if (seen?.version && seen.version !== PANEL_VERSION) {
@@ -270,14 +270,14 @@ const updatedFrom: { from: string | null; at: number } | null = (() => {
 
 /**
  * What this panel is, for its name:
- * - manages nodes, nothing of its own (no game servers, no Tavern Vault connected here): "Tavern Master"
- * - manages nodes and has its own servers or storage too: "Tavern Super"
- * - is a node of another panel (its node link has been used): "Tavern Node", or "Tavern Super Node" with Tavern Vault here
- * - otherwise: "Tavern Host"
+ * - manages nodes, nothing of its own (no game servers, no Tavern Vault connected here): "Forge Master"
+ * - manages nodes and has its own servers or storage too: "Super Forge"
+ * - is a node of another panel (its node link has been used): "Forge Node", or "Super Forge Node" with Tavern Vault here
+ * - otherwise: "Server Forge"
  * Managing nodes wins if a panel is both. Whether Tavern Vault is connected here is checked at most once a minute.
  */
 type PanelRole = 'host' | 'master' | 'super' | 'node' | 'supernode';
-const PANEL_NAMES: Record<PanelRole, string> = { host: 'Tavern Host', master: 'Tavern Master', super: 'Tavern Super', node: 'Tavern Node', supernode: 'Tavern Super Node' };
+const PANEL_NAMES: Record<PanelRole, string> = { host: 'Server Forge', master: 'Forge Master', super: 'Super Forge', node: 'Forge Node', supernode: 'Super Forge Node' };
 let ownVault = { at: 0, ok: false };
 async function panelIdentity(): Promise<{ role: PanelRole; name: string }> {
   if (Date.now() - ownVault.at > 60_000) ownVault = { at: Date.now(), ok: (await vaultState().catch(() => ({ state: 'down' }))).state === 'ok' };
@@ -509,7 +509,7 @@ for (const action of ['start', 'stop', 'restart', 'kill'] as const) {
   route('POST', `/api/servers/:id/${action}`, async (ctx) => {
     const p = needServer(ctx, `control.${action}`, ctx.params[0]);
     const inst = getInstance(ctx.params[0]);
-    // Refuse right away (with the reason) if another Tavern Host on this system is running this server folder.
+    // Refuse right away (with the reason) if another Server Forge on this system is running this server folder.
     if (action === 'start' || action === 'restart') inst.assertNotOwnedElsewhere();
     // Stop/restart can count down first: {"countdownMinutes": 5, "message"?: "... {time} ..."}. Start/restart take
     // {"force": true} to skip the world checks (answered with 428 and the reason, so the panel can ask first).
@@ -613,7 +613,7 @@ route('POST', '/api/node-code', async (ctx) => {
 // in Settings (on this panel to show it, on a node to share that node's storage). Reading needs storage.view, any change
 // storage.manage (checked here, by method). Nodes are reached through their node link.
 
-const STORAGE_OFF_HERE = 'Storage is turned off in Tavern Host on this system. Turn it on in Settings → Storage (Tavern Vault).';
+const STORAGE_OFF_HERE = 'Storage is turned off in Server Forge on this system. Turn it on in Settings → Storage (Tavern Vault).';
 
 function needStorageOn() {
   if (!config.storage.enabled) throw new HttpError(409, STORAGE_OFF_HERE);
@@ -635,7 +635,7 @@ function needStorage(ctx: Ctx, method?: string): Principal {
 function vaultVia(p: Principal, body: { via?: unknown }): string {
   // The key's own name is always kept, so a key can't make its changes look like someone else's.
   if (p.kind === 'apikey' && typeof body.via === 'string' && body.via) return `${body.via.slice(0, 60)} [key: ${p.name}]`.slice(0, 100);
-  return `Tavern Host · ${p.name}`.slice(0, 80);
+  return `Server Forge · ${p.name}`.slice(0, 80);
 }
 
 route('GET', '/api/vault', async (ctx) => {
@@ -668,7 +668,7 @@ route('GET', '/api/vault/ui/:file', async (ctx) => {
 
 // Nodes: the same, through the node link. A node older than 0.5.0 answers 404.
 const tooOld = (err: { status?: number }) => err.status === 404;
-const OLD_NODE = 'That system runs a Tavern Host older than 0.5.0. Update Tavern Host there to see its storage.';
+const OLD_NODE = 'That system runs a Server Forge older than 0.5.0. Update Server Forge there to see its storage.';
 
 async function nodeVault<T>(id: string, method: string, path: string, body?: unknown): Promise<T> {
   needStorageOn();
@@ -685,12 +685,12 @@ async function nodeVaultState(n: { id: string; name: string; online?: boolean; e
   if (n.online === false) return { state: 'unreachable', message: `${n.name} is offline${n.error ? ` (${n.error})` : ''}.` };
   try {
     const v = await nodeJson<Record<string, any>>(getNode(n.id), 'GET', '/api/vault');
-    if (v.state === 'disabled') return { state: 'disabled', message: `Storage is turned off in Tavern Host on ${n.name}. Turn it on there in Settings → Storage (Tavern Vault).` };
+    if (v.state === 'disabled') return { state: 'disabled', message: `Storage is turned off in Server Forge on ${n.name}. Turn it on there in Settings → Storage (Tavern Vault).` };
     if (v.state === 'missing') return { state: 'missing', message: `Tavern Vault isn't installed on ${n.name}. Install it there and turn on its Node mode.` };
     if (v.state === 'off') return { state: 'off', message: `Tavern Vault is installed on ${n.name}, but its Node mode is off (Tavern Vault → Settings → Node mode).` };
     return v;
   } catch (err) {
-    return tooOld(err as { status?: number }) ? { state: 'old', message: `${n.name} runs a Tavern Host older than 0.5.0. Update Tavern Host there.` } : { state: 'unreachable', message: (err as Error).message };
+    return tooOld(err as { status?: number }) ? { state: 'old', message: `${n.name} runs a Server Forge older than 0.5.0. Update Server Forge there.` } : { state: 'unreachable', message: (err as Error).message };
   }
 }
 
@@ -783,12 +783,12 @@ function nodeForCreate(ctx: Ctx, id: string) {
   const p = needGlobal(ctx, 'servers.create');
   const node = getNode(id);
   const info = listNodes().find((n) => n.id === id);
-  if (info?.kind === 'vault') throw new HttpError(400, `${node.name} only has Tavern Vault; install Tavern Host there to run game servers.`);
+  if (info?.kind === 'vault') throw new HttpError(400, `${node.name} only has Tavern Vault; install Server Forge there to run game servers.`);
   if (!info?.online) throw new HttpError(409, `${node.name} is offline right now.`);
   return { p, node };
 }
 
-// The node's own list of games and versions (it may run a newer or older Tavern Host than this panel).
+// The node's own list of games and versions (it may run a newer or older Server Forge than this panel).
 route('GET', '/api/nodes/:id/games', async (ctx) => {
   const { node } = nodeForCreate(ctx, ctx.params[0]);
   return nodeJson(node, 'GET', '/api/games');
@@ -962,7 +962,7 @@ route('DELETE', '/api/servers/:id/worlds/:folder', async (ctx) => {
 
 function chatOf(id: string) {
   const inst = getInstance(id);
-  if (!inst.module.chat) throw new HttpError(404, `${inst.module.name} servers don't have chat in Tavern Host yet.`);
+  if (!inst.module.chat) throw new HttpError(404, `${inst.module.name} servers don't have chat in Server Forge yet.`);
   return { inst, chat: inst.module.chat };
 }
 
@@ -1086,7 +1086,7 @@ route('GET', '/api/servers/:id/addons', async (ctx) => {
       tab: 'Addons',
       noun: 'addon',
       plural: 'addons',
-      dropHelp: 'Drop a <b>.mcaddon</b> or <b>.mcpack</b> here, or choose a file. Tavern Host installs its behavior and resource packs and adds them to the world.',
+      dropHelp: 'Drop a <b>.mcaddon</b> or <b>.mcpack</b> here, or choose a file. Server Forge installs its behavior and resource packs and adds them to the world.',
     },
     curseforge: addons.curseforgeGame ? { available: !!curseforgeKey() } : null,
     links: typeof addons.links === 'function' ? addons.links(inst.record) : (addons.links ?? []),
@@ -1543,7 +1543,7 @@ function proxyOf(id: string) {
   return inst;
 }
 
-/** Tavern Host's Minecraft Java servers that could go behind this proxy (this system's and the nodes'), with their address. */
+/** Server Forge's Minecraft Java servers that could go behind this proxy (this system's and the nodes'), with their address. */
 function proxyCandidates(p: Principal, proxyId: string) {
   const local = listInstances()
     .filter((i) => i.id !== proxyId && i.record.game === 'java' && i.record.settings.flavor !== 'bungeecord' && can(p, 'view', i.id))
@@ -1569,7 +1569,7 @@ route('GET', '/api/servers/:id/network', async (ctx) => {
   return { ...current, candidates: proxyCandidates(p, inst.id), running: inst.isRunning };
 });
 
-// Body: {"serverId"?: "<a Tavern Host server>", "name": "survival", "address"?: "host:port", "first"?: true, "prepare"?: true}.
+// Body: {"serverId"?: "<a Server Forge server>", "name": "survival", "address"?: "host:port", "first"?: true, "prepare"?: true}.
 // With serverId the address is filled in; prepare also sets that (Paper/Spigot) server up for the proxy.
 route('POST', '/api/servers/:id/network', async (ctx) => {
   const p = needServer(ctx, 'properties.edit', ctx.params[0]);
@@ -1723,7 +1723,7 @@ route('POST', '/api/servers/:id/addons/hexium', async (ctx) => {
   return { ...result, running: inst.isRunning };
 });
 
-// Valheim: take over mods put on the server without Tavern Host (r2modman, by hand), so they can be shared.
+// Valheim: take over mods put on the server without Server Forge (r2modman, by hand), so they can be shared.
 route('POST', '/api/servers/:id/addons/adopt', async (ctx) => {
   const p = needServer(ctx, 'addons.manage', ctx.params[0]);
   const { inst } = addonsOf(ctx.params[0], true);
@@ -2198,7 +2198,7 @@ route('GET', '/api/servers/:id/players', async (ctx) => {
 });
 
 // Valheim has no console: admins, bans and the allow list are its list files (adminlist.txt etc.), one player ID per
-// line. Tavern Host knows each player's ID from the log ("Steam_7656…", "Xbox_…"). Steam players are written in both
+// line. Server Forge knows each player's ID from the log ("Steam_7656…", "Xbox_…"). Steam players are written in both
 // forms (with and without "Steam_"), which every Valheim version accepts.
 const VALHEIM_LIST_ACTIONS: Record<string, { list: string; add: boolean; done: string }> = {
   'admin-add': { list: 'admins', add: true, done: 'is now an admin' },
@@ -2260,7 +2260,7 @@ route('POST', '/api/servers/:id/players/:name/action', async (ctx) => {
   const listAction = inst.record.game === 'valheim' ? VALHEIM_LIST_ACTIONS[a] : undefined;
   if (listAction) {
     const id = knownPlayers(inst.id).find((x) => x.name.toLowerCase() === name.toLowerCase())?.id;
-    if (!id) throw new HttpError(400, `Tavern Host hasn't seen ${name}'s player ID yet (it's picked up when they join). Add it in the Access tab instead.`);
+    if (!id) throw new HttpError(400, `Server Forge hasn't seen ${name}'s player ID yet (it's picked up when they join). Add it in the Access tab instead.`);
     const forms = idForms(id);
     const current = inst.module.readAccessList!(inst.record, listAction.list);
     const lower = new Set(forms.map((f) => f.toLowerCase()));
@@ -2632,7 +2632,7 @@ route('POST', '/api/settings/remote/firewall', async (ctx) => {
 });
 
 // ---------- restart notices ----------
-// Before Tavern Host restarts on purpose (e.g. installing an update) it tells connected clients, so they can show
+// Before Server Forge restarts on purpose (e.g. installing an update) it tells connected clients, so they can show
 // "restarting" instead of treating the gap as an outage. When it's back, /api/health and the live stream say when it
 // went down and why.
 
@@ -2681,14 +2681,14 @@ route('POST', '/api/alerts/:id/dismiss', async (ctx) => {
   return {};
 });
 
-// New Tavern Host versions (GitHub releases). ?check=1 looks right now instead of using the last 6-hourly check.
+// New Server Forge versions (GitHub releases). ?check=1 looks right now instead of using the last 6-hourly check.
 route('GET', '/api/app-update', async (ctx) => {
   needGlobal(ctx, 'panel.settings');
   await checkAppUpdate(new URL(ctx.req.url ?? '', 'http://x').searchParams.get('check') === '1');
   return appUpdateInfo(PANEL_VERSION);
 });
 
-// What changed in a version, from the CHANGELOG.md that ships with Tavern Host (the "updated to X" box after an update).
+// What changed in a version, from the CHANGELOG.md that ships with Server Forge (the "updated to X" box after an update).
 route('GET', '/api/changelog', async (ctx) => {
   need(ctx);
   const version = new URL(ctx.req.url ?? '', 'http://x').searchParams.get('version') ?? PANEL_VERSION;
@@ -2697,7 +2697,7 @@ route('GET', '/api/changelog', async (ctx) => {
   try {
     text = readFileSync(path.join(rootDir, 'CHANGELOG.md'), 'utf-8');
   } catch {}
-  const heading = `## Tavern Host ${version}`;
+  const heading = `## Server Forge ${version}`;
   const at = text.indexOf(heading);
   if (at < 0) return { version, notes: null };
   const rest = text.slice(at + heading.length);
@@ -2888,7 +2888,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse, remot
   // own at 127.0.0.1 ("DNS rebinding") and would then count as the same site as the panel; its requests still carry
   // its own domain in Host, so they stop here.
   if (!remote && !/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i.test(String(req.headers.host ?? ''))) {
-    send(res, 421, { error: 'Open Tavern Host at http://127.0.0.1 (or localhost).' });
+    send(res, 421, { error: 'Open Server Forge at http://127.0.0.1 (or localhost).' });
     return;
   }
 
@@ -3011,7 +3011,7 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse, remot
 }
 
 await loadInstances();
-// Valheim servers made before profiles existed (e.g. right after updating Tavern Host) get their "Main" profile now.
+// Valheim servers made before profiles existed (e.g. right after updating Server Forge) get their "Main" profile now.
 for (const inst of listInstances()) {
   if (inst.record.game !== 'valheim') continue;
   try {
@@ -3021,7 +3021,7 @@ for (const inst of listInstances()) {
 // 0.5.0: node links made before storage existed get "See / Manage storage", so the master panel can reach Tavern Vault.
 {
   const upgraded = auth.upgradeNodeLinkKeys();
-  if (upgraded) logActivity({ at: Date.now(), who: 'Tavern Host', kind: 'user', id: 'system', what: `gave ${upgraded} node link key(s) the new storage permissions (Tavern Vault on this system)` });
+  if (upgraded) logActivity({ at: Date.now(), who: 'Server Forge', kind: 'user', id: 'system', what: `gave ${upgraded} node link key(s) the new storage permissions (Tavern Vault on this system)` });
 }
 startHealthChecks();
 startWorldChecks();
@@ -3046,7 +3046,7 @@ async function autoUpdateAddons() {
         try {
           await addons.update!(inst.record, id);
           inst.log(`Addon updated from CurseForge: ${pack.name} → ${labels[id]}${inst.isRunning ? ' (loaded at the next restart)' : ''}.`);
-          logActivity({ at: Date.now(), who: 'Tavern Host', kind: 'system', id: inst.id, what: `updated addon "${pack.name}" to ${labels[id]} on "${inst.record.name}" (automatic)` });
+          logActivity({ at: Date.now(), who: 'Server Forge', kind: 'system', id: inst.id, what: `updated addon "${pack.name}" to ${labels[id]} on "${inst.record.name}" (automatic)` });
         } catch (err) {
           inst.log(`Couldn't update addon ${pack.name}: ${(err as Error).message}`);
         }

@@ -1,6 +1,6 @@
 // Tavern Client Mod Manager: Minecraft Java. Each followed server gets its own game folder (.minecraft\tavern\<name>)
 // and its own Minecraft Launcher profile, so the server's mods never mix with the player's other worlds and mods. The
-// server's mod jars are downloaded from Tavern Host, checked (size, Windows Defender, and whether Modrinth knows the
+// server's mod jars are downloaded from Server Forge, checked (size, Windows Defender, and whether Modrinth knows the
 // exact file), and kept matched: added, updated and removed with the server. Jars the player adds to that folder
 // themselves are left alone. Fabric is set up in the launcher automatically; Forge and NeoForge need their installer run
 // once ("Install client").
@@ -148,7 +148,7 @@ function writeProfile(folder: string, server: string, id: string) {
   data.profiles[key] = {
     created: now,
     icon: 'Furnace',
-    name: `${server} (Tavern)`,
+    name: `${server} (Mod Forge)`,
     javaArgs: LAUNCHER_JVM_ARGS,
     ...old,
     type: 'custom',

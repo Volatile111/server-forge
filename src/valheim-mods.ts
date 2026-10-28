@@ -1,4 +1,4 @@
-// Valheim modding (BepInEx + Thunderstore packages), shared by Tavern Host (server side) and Tavern Client Mod Manager (the
+// Valheim modding (BepInEx + Thunderstore packages), shared by Server Forge (server side) and Tavern Client Mod Manager (the
 // players' app). Installs packages the same way r2modman does:
 //   BepInExPack_Valheim/*          -> the game folder (winhttp.dll, doorstop_config.ini, BepInEx/core, ...)
 //   plugins/*, loose files         -> BepInEx/plugins/<Namespace-Name>/
@@ -443,7 +443,7 @@ export function dependents(gameDir: string, full: string): string[] {
     .map((m) => m.name);
 }
 
-/** DLLs someone dropped straight into BepInEx/plugins (not installed through Tavern Host). */
+/** DLLs someone dropped straight into BepInEx/plugins (not installed through Server Forge). */
 export function looseMods(gameDir: string): string[] {
   const dir = path.join(bepDir(gameDir), 'plugins');
   if (!existsSync(dir)) return [];
@@ -453,9 +453,9 @@ export function looseMods(gameDir: string): string[] {
 }
 
 /**
- * Takes over mods that were put in BepInEx/plugins without Tavern Host (by r2modman or another mod manager, or by
+ * Takes over mods that were put in BepInEx/plugins without Server Forge (by r2modman or another mod manager, or by
  * hand): a folder named "Author-ModName" with the package's manifest.json inside is recognised, looked up on
- * Thunderstore (then Hexium) and recorded like a mod Tavern Host installed, so it can be switched, updated and shared.
+ * Thunderstore (then Hexium) and recorded like a mod Server Forge installed, so it can be switched, updated and shared.
  * Lone DLLs, and packages neither site has, are left as they are (with the reason).
  */
 export async function adoptLooseMods(gameDir: string): Promise<{ adopted: string[]; skipped: { name: string; reason: string }[] }> {
@@ -625,7 +625,7 @@ export async function installWithDependencies(
       for (const dep of opts.noDependencies ? [] : dependencies) {
         const ref = parseRef(dep);
         if (!ref) {
-          report.warnings.push(`${item.name} lists a dependency Tavern Host can't read: "${dep}".`);
+          report.warnings.push(`${item.name} lists a dependency Server Forge can't read: "${dep}".`);
           continue;
         }
         // A Hexium mod's dependencies are looked up on Hexium first.

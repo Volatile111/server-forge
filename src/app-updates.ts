@@ -1,9 +1,9 @@
-// Tavern Host's own updates. New versions are published as GitHub releases (github.com/Volatile111/tavern-host); the
+// Server Forge's own updates. New versions are published as GitHub releases (github.com/Volatile111/tavern-host); the
 // service looks every 6 hours so the panel can say when one is out. Installing is done by the desktop app, which
 // downloads the installer itself and runs it on this system (desktop/main.js).
 
 const REPO = 'Volatile111/tavern-host';
-const ASSET = /^Tavern-Host-Setup-(\d+\.\d+\.\d+)\.exe$/;
+const ASSET = /^(?:Server-Forge|Tavern-Host)-Setup-(\d+\.\d+\.\d+)\.exe$/;
 const EVERY = 6 * 3600_000;
 
 export interface AppRelease {
@@ -45,7 +45,7 @@ async function fetchLatest(): Promise<void> {
     const r = (await res.json()) as { tag_name?: string; body?: string; html_url?: string; published_at?: string; assets?: { name: string }[] };
     const asset = r.assets?.map((a) => ASSET.exec(a.name)).find(Boolean);
     const version = asset?.[1] ?? String(r.tag_name ?? '').replace(/^v/, '');
-    if (!/^\d+\.\d+\.\d+$/.test(version) || !asset) throw new Error("The latest release doesn't have a Tavern Host installer.");
+    if (!/^\d+\.\d+\.\d+$/.test(version) || !asset) throw new Error("The latest release doesn't have a Server Forge installer.");
     latest = { version, notes: String(r.body ?? '').slice(0, 4000), url: String(r.html_url ?? `https://github.com/${REPO}/releases/latest`), publishedAt: String(r.published_at ?? '') };
     lastError = null;
   } catch (err) {

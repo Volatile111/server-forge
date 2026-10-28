@@ -6,21 +6,22 @@
 // Run by `npm run release` / `npm run release:client` after building.
 import { readFileSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { releaseNames, prepareAssets } from './forge-release-assets.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const which = process.argv[2];
 const APPS = {
   host: {
     repo: 'Volatile111/tavern-host',
-    title: 'Tavern Host',
+    title: 'Server Forge',
     version: () => JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version,
-    file: (v) => `Tavern-Host-Setup-${v}.exe`,
+    file: (v) => `Server-Forge-Setup-${v}.exe`,
   },
   client: {
     repo: 'Volatile111/tavern-client-releases',
-    title: 'Tavern Client Mod Manager',
+    title: 'Mod Forge',
     version: () => JSON.parse(readFileSync(path.join(root, 'companion', 'builder.json'), 'utf8')).extraMetadata.version,
-    file: (v) => `Tavern-Client-Mod-Manager-Setup-${v}.exe`,
+    file: (v) => `Mod-Forge-Setup-${v}.exe`,
   },
 };
 const app = APPS[which];
@@ -57,14 +58,17 @@ let release = await api('GET', `/releases/tags/${tag}`);
 release = release
   ? await api('PATCH', `/releases/${release.id}`, JSON.stringify({ name: heading, body: notes }))
   : await api('POST', '/releases', JSON.stringify({ tag_name: tag, name: heading, body: notes, draft: false, prerelease: false }));
-const name = path.basename(installer);
-const old = release.assets.find((a) => a.name === name);
-if (old) await api('DELETE', `/releases/assets/${old.id}`);
-const size = statSync(installer).size;
-console.log(`Uploading ${name} (${(size / 1048576).toFixed(1)} MB)…`);
-const up = await api('POST', `https://uploads.github.com/repos/${app.repo}/releases/${release.id}/assets?name=${encodeURIComponent(name)}`, readFileSync(installer), {
-  'Content-Type': 'application/octet-stream',
-  'Content-Length': String(size),
-});
+// Upload both names: old installations require the legacy alias to discover this update.
+prepareAssets(root, which);
+for (const name of releaseNames(which, version)) {
+  const assetFile = path.join(root, 'release', name);
+  const old = release.assets.find((a) => a.name === name);
+  if (old) await api('DELETE', `/releases/assets/${old.id}`);
+  const size = statSync(assetFile).size;
+  console.log(`Uploading ${name} (${(size / 1048576).toFixed(1)} MB)…`);
+  const up = await api('POST', `https://uploads.github.com/repos/${app.repo}/releases/${release.id}/assets?name=${encodeURIComponent(name)}`, readFileSync(assetFile), {
+    'Content-Type': 'application/octet-stream', 'Content-Length': String(size),
+  });
+  console.log(`Checksum: ${up.digest ?? 'not listed'}`);
+}
 console.log(`Published ${heading}: ${release.html_url}`);
-console.log(`Checksum: ${up.digest ?? 'not listed'}`);

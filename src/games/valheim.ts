@@ -202,7 +202,7 @@ const WORLD_KEYS: { key: string; name: string; label: string; help: string }[] =
   { key: 'keyPassiveMobs', name: 'passivemobs', label: 'Passive enemies', help: 'Enemies don’t attack unless provoked.' },
   { key: 'keyNoMap', name: 'nomap', label: 'No map', help: 'Players can’t use the map or minimap.' },
 ];
-/** Arguments Tavern Host sets itself (extra arguments can't change them, so settings stay the truth). */
+/** Arguments Server Forge sets itself (extra arguments can't change them, so settings stay the truth). */
 const MANAGED_ARGS = ['-name', '-port', '-world', '-public', '-savedir', '-saveinterval', '-backups', '-backupshort', '-backuplong', '-logfile', '-password', '-crossplay', '-preset', '-modifier', '-setkey', '-instanceid', '-nographics', '-batchmode'];
 
 /** Splits "-a b "c d"" into ["-a", "b", "c d"]. */
@@ -299,7 +299,7 @@ export const valheim: GameModule = {
     const extraArgs = String(s.extraArgs ?? '').trim();
     if (extraArgs.length > 500 || /[\r\n]/.test(extraArgs)) throw new Error('Extra launch arguments must be one line (up to 500 characters).');
     const clash = splitArgs(extraArgs).find((a) => MANAGED_ARGS.includes(a.toLowerCase()));
-    if (clash) throw new Error(`Extra launch arguments: ${clash} is set by Tavern Host. Use the setting for it instead.`);
+    if (clash) throw new Error(`Extra launch arguments: ${clash} is set by Server Forge. Use the setting for it instead.`);
 
     return {
       serverName,

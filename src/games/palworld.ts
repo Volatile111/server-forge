@@ -1,7 +1,7 @@
 // Palworld dedicated server (Steam app 2394010, anonymous SteamCMD). It runs Pal\Binaries\Win64\
 // PalServer-Win64-Shipping-Cmd.exe directly (PalServer.exe only starts that and exits, which would lose the process),
 // under the runner so its console output lands in the log. Its settings are one long "OptionSettings=(...)" line in
-// Pal\Saved\Config\WindowsServer\PalWorldSettings.ini (created from DefaultPalWorldSettings.ini): Tavern Host changes
+// Pal\Saved\Config\WindowsServer\PalWorldSettings.ini (created from DefaultPalWorldSettings.ini): Server Forge changes
 // only its own keys in it, so every other setting stays as the owner set it.
 // Palworld's REST API (switched on here, on this system only, with the admin password) gives the player list,
 // announcements for countdowns, and a clean stop: save, then shut down.
@@ -107,7 +107,7 @@ function writeSettings(record: ServerRecord) {
       PalCaptureRate: flt(s.captureRate),
       bIsPvP: tf(s.pvp),
       bEnablePlayerToPlayerDamage: tf(s.pvp),
-      // Tavern Host's own access: the REST API on this system only.
+      // Server Forge's own access: the REST API on this system only.
       RESTAPIEnabled: 'True',
       RESTAPIPort: String(s.restPort),
       bShowPlayerList: 'True',
@@ -126,7 +126,7 @@ async function rest<T = unknown>(record: ServerRecord, method: 'GET' | 'POST', r
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(timeoutMs),
   });
-  if (!res.ok) throw new Error(`Palworld's API answered ${res.status}${res.status === 401 ? ' (admin password changed outside Tavern Host?)' : ''}.`);
+  if (!res.ok) throw new Error(`Palworld's API answered ${res.status}${res.status === 401 ? ' (admin password changed outside Server Forge?)' : ''}.`);
   const t = await res.text();
   try {
     return JSON.parse(t) as T;
@@ -177,7 +177,7 @@ export const palworld: GameModule = {
     { key: 'description', label: 'Description', type: 'text', restart: true },
     { key: 'port', label: 'Port', type: 'number', help: 'Default 8211 (UDP).', restart: true },
     { key: 'password', label: 'Password', type: 'password', help: 'Optional. Players type it to join.', restart: true },
-    { key: 'adminPassword', label: 'Admin password', type: 'password', help: 'For /AdminPassword in the game. Tavern Host also uses it for the server API (players, warnings, clean stops).', restart: true },
+    { key: 'adminPassword', label: 'Admin password', type: 'password', help: 'For /AdminPassword in the game. Server Forge also uses it for the server API (players, warnings, clean stops).', restart: true },
     { key: 'maxPlayers', label: 'Max players', type: 'number', help: 'Up to 32.', restart: true },
     { key: 'public', label: 'List as a community server', type: 'boolean', help: 'Show in the in-game community server list.', restart: true },
     { key: 'difficulty', label: 'Difficulty', type: 'select', options: DIFFICULTY, restart: true, section: 'World' },
@@ -185,13 +185,13 @@ export const palworld: GameModule = {
     { key: 'expRate', label: 'XP rate', type: 'number', help: '1 = normal.', restart: true, section: 'World' },
     { key: 'captureRate', label: 'Capture rate', type: 'number', help: '1 = normal.', restart: true, section: 'World' },
     { key: 'pvp', label: 'PvP', type: 'boolean', restart: true, section: 'World' },
-    { key: 'restPort', label: 'API port (this system only)', type: 'number', help: 'Default 8212. Used by Tavern Host; no need to forward it.', restart: true, section: 'Advanced' },
+    { key: 'restPort', label: 'API port (this system only)', type: 'number', help: 'Default 8212. Used by Server Forge; no need to forward it.', restart: true, section: 'Advanced' },
   ],
   quickFields: ['serverName', 'port', 'password', 'adminPassword', 'maxPlayers'],
 
   defaults: () => ({
     serverName: 'My Palworld Server',
-    description: 'Hosted with Tavern Host',
+    description: 'Hosted with Server Forge',
     port: 8211,
     password: '',
     adminPassword: newPassword(),
@@ -250,7 +250,7 @@ export const palworld: GameModule = {
   },
 
   captureOutput: true,
-  // Tavern Host's own API calls (every overview refresh) and the UTF-16 version line.
+  // Server Forge's own API calls (every overview refresh) and the UTF-16 version line.
   hideLine: (line) => /REST accessed endpoint|^\s*REST API stopped/.test(line) || /[　-鿿]{4,}/.test(line),
 
   /** Stop: save the world, then shut down (Palworld's own way, through its API). */
@@ -292,6 +292,15 @@ export const palworld: GameModule = {
   },
 
   createParser: createPalworldParser,
+
+  async probeReady(record) {
+    try {
+      const info = await rest<{ version?: string }>(record, 'GET', 'info', undefined, 2500);
+      return typeof info?.version === 'string' && info.version.length > 0;
+    } catch {
+      return false;
+    }
+  },
 
   connection: (record) => ({ port: Number(record.settings.port) || 8211, protocol: 'UDP', maxPlayers: Number(record.settings.maxPlayers) || null }),
 

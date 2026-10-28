@@ -4,7 +4,7 @@
 //   -servername <name>                 which settings/save set to use (Zomboid\Server\<name>.ini)
 //   -adminpassword <password>          the first start would otherwise ask for one on the console and wait forever
 // It reads typed commands, so it runs under the runner: Console tab, kick/ban, countdown messages ("servermsg"), and Stop
-// types "quit" (the server saves first). Tavern Host sets a few keys in <name>.ini before every start and keeps the
+// types "quit" (the server saves first). Server Forge sets a few keys in <name>.ini before every start and keeps the
 // rest; Steam Workshop mods are listed there too (WorkshopItems / Mods), and the server downloads them itself.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -104,7 +104,7 @@ export const zomboid: GameModule = {
 
   defaults: () => ({
     serverName: 'My Zomboid Server',
-    description: 'Hosted with Tavern Host',
+    description: 'Hosted with Server Forge',
     port: 16261,
     password: '',
     adminPassword: newPassword(),

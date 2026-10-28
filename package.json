@@ -1,9 +1,9 @@
 {
   "name": "tavern-host",
-  "productName": "Tavern Host",
-  "version": "0.8.1",
-  "description": "Tavern Host: a control panel for game servers (Valheim first, more games coming).",
-  "author": "Tavern Host",
+  "productName": "Server Forge",
+  "version": "0.9.0",
+  "description": "Server Forge: a control panel for hosting and managing game servers.",
+  "author": "CorruptedVariant",
   "private": true,
   "type": "module",
   "main": "desktop/main.js",
@@ -17,9 +17,9 @@
     "build": "tsc -p tsconfig.build.json",
     "snapshot": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/snapshot-source.ps1",
     "api-docs": "node tools/make-api-docs.mjs",
-    "dist": "npm run api-docs && npm run snapshot && tsc -p tsconfig.build.json && electron-builder --win nsis",
+    "dist": "npm run api-docs && npm run snapshot && tsc -p tsconfig.build.json && electron-builder --win nsis && node tools/forge-release-assets.mjs host",
     "client": "tsc -p tsconfig.build.json && electron companion",
-    "dist:client": "npm run snapshot && tsc -p tsconfig.build.json && electron-builder --config companion/builder.json --win nsis",
+    "dist:client": "npm run snapshot && tsc -p tsconfig.build.json && electron-builder --config companion/builder.json --win nsis && node tools/forge-release-assets.mjs client",
     "release": "npm run dist && node tools/publish-release.mjs host",
     "release:client": "npm run dist:client && node tools/publish-release.mjs client"
   },
@@ -31,7 +31,7 @@
   },
   "build": {
     "appId": "com.gameserverpanel.app",
-    "productName": "Tavern Host",
+    "productName": "Server Forge",
     "directories": {
       "output": "release"
     },
@@ -55,14 +55,14 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Tavern Host",
+      "shortcutName": "Server Forge",
       "runAfterFinish": true,
       "installerIcon": "desktop/icon.ico",
       "uninstallerIcon": "desktop/icon.ico",
       "deleteAppDataOnUninstall": false,
       "include": "desktop/installer.nsh",
       "license": "LICENSE",
-      "artifactName": "Tavern-Host-Setup-${version}.exe"
+      "artifactName": "Server-Forge-Setup-${version}.exe"
     },
     "publish": null
   }
